@@ -17,6 +17,8 @@ Requires Node 20+.
 | Variable | When | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | at launch | Real domain, e.g. `https://braceletbyammit.com`. Used for canonical URL, sitemap and share image. Falls back to the Vercel production URL. |
+| `NEXT_PUBLIC_GA_ID` | optional | Google Analytics 4 ID (G-…). Loads only after the visitor accepts cookies. |
+| `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Funnel fires Lead and InitiateCheckout. |
 | `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
 
 ## Security and SEO built in
@@ -42,8 +44,16 @@ Requires Node 20+.
 | `/consultation` | Numerology consultation |
 | `/bracelet-care` | Care guide (cleansing, recharging, restringing, do's and don'ts) |
 | `/reviews` | Customer reviews |
+| `/privacy` · `/terms` · `/shipping` · `/returns` | Policies (drafted from current practice; client to confirm terms marked below) |
+| `/size-guide` | How to measure + size table (women 14/15/16 cm, men 16/17/18 cm) |
+| `/numerology` · `/numerology/mulank-and-bhagyank` · `/numerology/lo-shu-grid` | Guides + free Lo Shu grid calculator with Ammit's combination videos |
+| `/tools/reading-card` | **Staff only** (noindex, blocked in robots): print the personal reading card for each order or save it as PDF for WhatsApp |
 
 All pages are static, have their own title/description/canonical, breadcrumbs (with BreadcrumbList schema) and are listed in `sitemap.xml`. Page copy lives in `src/data/pages.ts`; items marked **CONFIRM** there (crystals per intention, consultation details) need Ammit's sign-off.
+
+## Videos
+
+`src/data/videos.ts` maps Ammit's YouTube Shorts to bracelet, mulank, care, about and Lo Shu pages. They're click-to-play (nothing loads from YouTube until pressed) using the privacy-enhanced nocookie player. Reels featuring celebrities or public figures are deliberately excluded; Ammit should confirm each video before launch.
 
 ## Find-your-bracelet funnel
 

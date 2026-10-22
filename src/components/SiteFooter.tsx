@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Medallion from "./Medallion";
+import CookieSettingsLink from "./CookieSettingsLink";
 import { BUSINESS, CREDIT, FOOTER_DISCLAIMER, LINKS, PRICE } from "@/data/home";
 
 const EXT = { target: "_blank", rel: "noopener noreferrer" } as const;
@@ -21,6 +22,8 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Numerology",
     links: [
       { label: "Find your mulank", href: "/mulank" },
+      { label: "Lo Shu grid calculator", href: "/numerology/lo-shu-grid" },
+      { label: "Numerology guides", href: "/numerology" },
       { label: "Book a consultation", href: "/consultation" },
       { label: "About Ammit", href: "/about-ammit" },
     ],
@@ -31,6 +34,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       { label: "Bracelet care", href: "/bracelet-care" },
       { label: "If it breaks", href: "/bracelet-care" },
       { label: "Customer reviews", href: "/reviews" },
+      { label: "Size guide", href: "/size-guide" },
     ],
   },
 ];
@@ -193,6 +197,13 @@ export default function SiteFooter() {
           )}
         </dl>
         <p className="ft-disclaimer">{FOOTER_DISCLAIMER}</p>
+        <nav className="ft-policies" aria-label="Policies">
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/shipping">Shipping</Link>
+          <Link href="/returns">Returns &amp; restringing</Link>
+          <CookieSettingsLink />
+        </nav>
       </div>
 
       <div className="ft-bar">

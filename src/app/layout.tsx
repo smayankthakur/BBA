@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { SITE_LIVE, SITE_URL } from "@/lib/site";
+import ConsentBanner from "@/components/ConsentBanner";
+import JsonLd from "@/components/JsonLd";
+import { LINKS } from "@/data/home";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -47,7 +50,21 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${cormorant.variable} ${nunito.variable}`}>
-      <body>{children}</body>
+      <body>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Bracelet By Ammit",
+            url: SITE_URL,
+            logo: `${SITE_URL}/brand/emblem.png`,
+            founder: { "@type": "Person", name: "Ammit Kukreja", jobTitle: "Numerologist" },
+            sameAs: [LINKS.instagram, LINKS.youtube],
+          }}
+        />
+        {children}
+        <ConsentBanner />
+      </body>
     </html>
   );
 }

@@ -7,6 +7,8 @@ import OrderCta from "@/components/OrderCta";
 import JsonLd from "@/components/JsonLd";
 import { AMMIT, LINKS } from "@/data/home";
 import { SITE_URL } from "@/lib/site";
+import VideoEmbed from "@/components/VideoEmbed";
+import { ABOUT_VIDEO } from "@/data/videos";
 
 export const metadata: Metadata = {
   title: "About Ammit Kukreja, numerologist",
@@ -41,6 +43,12 @@ export default function AboutPage() {
         lede={<p>Right crystal, right direction. Every bracelet starts with Ammit reading your date of birth himself.</p>}
       />
       <NoteFromAmmit />
+      <section className="section-narrow video-section" aria-labelledby="avideo-title">
+        <h2 id="avideo-title" className="h3">
+          In Ammit&apos;s words
+        </h2>
+        <VideoEmbed video={ABOUT_VIDEO} />
+      </section>
       <section className="section-wide grid-section" aria-labelledby="work-title">
         <h2 id="work-title" className="h2 grid-title">
           What Ammit does

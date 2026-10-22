@@ -4,6 +4,8 @@ import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
 import { CARE, LINKS } from "@/data/home";
 import { CARE_GUIDE } from "@/data/pages";
+import VideoEmbed from "@/components/VideoEmbed";
+import { CARE_VIDEO } from "@/data/videos";
 
 export const metadata: Metadata = {
   title: "Crystal bracelet care: cleansing, recharging, restringing",
@@ -58,6 +60,7 @@ export default function CarePage() {
           </a>{" "}
           and message us on WhatsApp so we can restring the same crystals for you.
         </p>
+        <VideoEmbed video={CARE_VIDEO} />
       </section>
       <OrderCta
         title="Need a restring?"

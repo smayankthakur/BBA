@@ -6,6 +6,8 @@ import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
 import { MULANK, birthDaysFor } from "@/data/pages";
 import { LINKS } from "@/data/home";
+import VideoEmbed from "@/components/VideoEmbed";
+import { MULANK_VIDEOS } from "@/data/videos";
 
 type Params = { params: Promise<{ number: string }> };
 
@@ -92,6 +94,15 @@ export default async function MulankPage({ params }: Params) {
           .
         </p>
       </section>
+
+      {MULANK_VIDEOS[m.number] && (
+        <section className="section-narrow video-section" aria-labelledby="mvideo-title">
+          <h2 id="mvideo-title" className="h3">
+            Ammit on mulank {m.number}
+          </h2>
+          <VideoEmbed video={MULANK_VIDEOS[m.number]} />
+        </section>
+      )}
 
       <nav className="section-narrow pager" aria-label="Other numbers">
         <Link href={`/mulank/${prev}`}>← Mulank {prev}</Link>

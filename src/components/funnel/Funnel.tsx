@@ -9,6 +9,8 @@ import { BRACELETS, MULANK, braceletBySlug } from "@/data/pages";
 import { LINKS, PRICE, TESTIMONIALS } from "@/data/home";
 import { ageFrom, bhagyank, isValidDate, mulank } from "@/lib/numerology";
 import { prefilledOrderUrl, WRIST_OPTIONS, type Gender } from "@/lib/orderForm";
+import { track } from "@/lib/analytics";
+import ReadingCard from "../ReadingCard";
 
 /* ------------------------------------------------------------------ */
 /* Steps                                                               */
@@ -132,6 +134,8 @@ export default function Funnel() {
   // Move focus to the new question for keyboard and screen-reader users.
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
+    track("funnel_step", { step: STEPS[i], index: i });
+    if (STEPS[i] === "result") track("generate_lead", {}, "Lead");
   }, [i]);
 
   /** Single-choice tiles advance on their own after a short beat. */
@@ -548,6 +552,9 @@ export default function Funnel() {
               <button type="button" className="fn-link" onClick={() => pick("wrist", "unsure")}>
                 Not sure? Skip, and the team will confirm on WhatsApp
               </button>
+              <a className="fn-link" href="/size-guide" target="_blank" rel="noopener noreferrer">
+                How to measure (opens the size guide)
+              </a>
             </>
           )}
 
@@ -608,10 +615,19 @@ export default function Funnel() {
               </p>
               <div className="fn-actions is-stack">
                 {orderUrl && (
-                  <a className="btn btn-lapis" href={orderUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="btn btn-lapis"
+                    href={orderUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("begin_checkout", { bracelet: rec.slug }, "InitiateCheckout")}
+                  >
                     Confirm my order
                   </a>
                 )}
+                <button type="button" className="btn btn-line" onClick={() => window.print()}>
+                  Save my reading (PDF)
+                </button>
                 <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
                   Ask Ammit on WhatsApp first
                 </a>
@@ -623,6 +639,38 @@ export default function Funnel() {
               </ol>
               {gift && <p className="small-note">The form says &ldquo;your&rdquo; details: keep the wearer&apos;s name and birth date, and add your own mobile number and address.</p>}
               {recSlug === "3-in-1" && <p className="small-note">The form takes one purpose, so we&apos;ve filled in your first choice. Mention &ldquo;3 in 1&rdquo; when the team messages you.</p>}
+              <p className="small-note">
+                By ordering you agree to our{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">
+                  terms
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                  privacy policy
+                </a>
+                . See also{" "}
+                <a href="/shipping" target="_blank" rel="noopener noreferrer">
+                  shipping
+                </a>{" "}
+                and{" "}
+                <a href="/returns" target="_blank" rel="noopener noreferrer">
+                  returns
+                </a>
+                .
+              </p>
+              <div className="print-area print-only">
+                <ReadingCard
+                  d={{
+                    kind: "suggested",
+                    name: `${a.firstName.trim()} ${a.lastName.trim()}`.trim(),
+                    dob: `${a.day} ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][(a.month ?? 1) - 1]} ${a.year}`,
+                    mulank: m!,
+                    bhagyank: bh!,
+                    bracelet: rec.title,
+                    crystals: rec.crystals,
+                  }}
+                />
+              </div>
               <div className="fn-result-links">
                 <Link href={`/bracelets/${rec.slug}`}>About this bracelet</Link>
                 <button

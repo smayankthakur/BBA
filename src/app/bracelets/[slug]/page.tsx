@@ -8,6 +8,8 @@ import BraceletCard from "@/components/BraceletCard";
 import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
 import JsonLd from "@/components/JsonLd";
+import VideoEmbed from "@/components/VideoEmbed";
+import { BRACELET_VIDEOS } from "@/data/videos";
 import { BRACELETS, braceletBySlug } from "@/data/pages";
 import { PRICE } from "@/data/home";
 import { SITE_URL } from "@/lib/site";
@@ -34,6 +36,28 @@ export default async function BraceletPage({ params }: Params) {
   const b = braceletBySlug((await params).slug);
   if (!b) notFound();
   const others = BRACELETS.filter((o) => o.slug !== b.slug);
+  const faqs = [
+    {
+      q: `How is the ${b.title} bracelet made for me?`,
+      a: "Ammit reads the wearer's name and date of birth (mulank and bhagyank), chooses the crystals that suit those numbers for this intention, and the bracelet is strung by hand.",
+    },
+    {
+      q: "Which size should I choose?",
+      a: "Measure around the wrist bone with a thread and a ruler. Women's sizes are 14, 15 and 16 cm; men's are 16, 17 and 18 cm. If you're between sizes, choose the larger one. The size guide shows how to measure.",
+    },
+    {
+      q: "What if my bracelet breaks?",
+      a: "Collect every bead and message us on WhatsApp with a photo. We'll tell you how to send them back so Ammit can restring the same crystals.",
+    },
+    {
+      q: "How do I look after it?",
+      a: "Cleanse it once a week with dry rock salt or incense smoke, recharge it under the full moon, and keep it away from water, perfume and soap.",
+    },
+    {
+      q: "Can a crystal bracelet replace medical or professional advice?",
+      a: "No. Crystal and numerology guidance is traditional belief. Please keep following your doctor's or adviser's guidance.",
+    },
+  ];
   const amount = PRICE.replace(/[^\d]/g, "");
 
   return (
@@ -71,7 +95,10 @@ export default async function BraceletPage({ params }: Params) {
               Ask Ammit first
             </Link>
           </div>
-          <p className="product-hint">A 60-second reading works out your numbers, then opens the order form with your answers filled in.</p>
+          <p className="product-hint">
+            A 60-second reading works out your numbers, then opens the order form with your answers filled in.{" "}
+            <Link href="/size-guide">Size guide</Link>
+          </p>
         </div>
       </div>
 
@@ -84,6 +111,15 @@ export default async function BraceletPage({ params }: Params) {
         ))}
         {b.note && <p className="callout">{b.note}</p>}
       </section>
+
+      {BRACELET_VIDEOS[b.slug] && (
+        <section className="section-narrow video-section" aria-labelledby="video-title">
+          <h2 id="video-title" className="h3">
+            Ammit explains this bracelet
+          </h2>
+          <VideoEmbed video={BRACELET_VIDEOS[b.slug]} />
+        </section>
+      )}
 
       <section className="section-narrow split-lists">
         <div>
@@ -109,6 +145,25 @@ export default async function BraceletPage({ params }: Params) {
       </section>
 
       <HowItWorks />
+
+      <section className="section-narrow faq" aria-labelledby="faq-title">
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          }}
+        />
+        <h2 id="faq-title" className="h2">
+          Questions
+        </h2>
+        {faqs.map((f) => (
+          <details key={f.q}>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
 
       <section className="section-wide grid-section" aria-labelledby="others-title">
         <h2 id="others-title" className="h2 grid-title">
