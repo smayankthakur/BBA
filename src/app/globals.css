@@ -38,6 +38,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* keep anchored headings clear of the sticky header */
+  scroll-padding-top: 110px;
 }
 
 body {
@@ -72,7 +74,9 @@ a:hover {
   background-color: var(--mist);
   color: var(--lapis);
   font-family: var(--sans);
-  overflow: hidden;
+  /* clip (not hidden) so position: sticky still works for the header */
+  overflow-x: hidden;
+  overflow: clip;
 }
 
 /* ---------- Buttons ---------- */
@@ -306,6 +310,281 @@ a:hover {
   font-weight: 600;
   font-size: 27px;
   color: var(--lapis);
+}
+
+/* ---------- Sticky header ---------- */
+.header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: rgba(238, 241, 248, 0.92);
+  -webkit-backdrop-filter: saturate(1.2) blur(12px);
+  backdrop-filter: saturate(1.2) blur(12px);
+  transition: box-shadow 0.35s ease, background-color 0.35s ease;
+}
+.header-bar .header {
+  transition: padding 0.35s ease;
+}
+.header-bar .brand .medallion {
+  transition: scale 0.35s ease;
+}
+.header-bar.is-scrolled {
+  background-color: rgba(238, 241, 248, 0.97);
+  box-shadow: 0 1px 0 rgba(5, 14, 143, 0.12), 0 14px 30px -24px rgba(5, 14, 143, 0.45);
+}
+.header-bar.is-scrolled .header {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.header-bar.is-scrolled .brand .medallion {
+  scale: 0.86;
+}
+
+/* Mobile-only header controls (hidden on desktop) */
+.burger,
+.bag-icon {
+  display: none;
+}
+.burger {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+}
+.burger span {
+  display: block;
+  width: 24px;
+  height: 1.6px;
+  border-radius: 2px;
+  background-color: var(--lapis);
+}
+.burger span:nth-child(2) {
+  width: 16px;
+}
+.bag-icon {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--lapis);
+  text-decoration: none;
+}
+.bag-count {
+  position: absolute;
+  top: 5px;
+  right: -4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background-color: var(--lapis);
+  color: var(--cream);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--mist);
+}
+.burger:focus-visible,
+.bag-icon:focus-visible,
+.menu-close:focus-visible,
+.menu-link:focus-visible,
+.brand:focus-visible {
+  outline: 3px solid var(--amethyst);
+  outline-offset: 4px;
+}
+
+@media (max-width: 960px) {
+  .header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    gap: 8px;
+    padding: 14px 20px;
+  }
+  .header-bar.is-scrolled .header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  .burger,
+  .bag-icon {
+    display: flex;
+  }
+  .brand {
+    justify-self: center;
+    gap: 10px;
+  }
+  .brand .medallion {
+    width: 44px;
+    height: 44px;
+  }
+  .brand .medallion img {
+    width: 32px;
+    height: 35px;
+  }
+  .brand-name {
+    font-size: 24px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 380px) {
+  .header {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .brand-name {
+    font-size: 21px;
+  }
+  .brand .medallion {
+    width: 38px;
+    height: 38px;
+  }
+  .brand .medallion img {
+    width: 28px;
+    height: 31px;
+  }
+}
+
+/* ---------- Mobile menu drawer ---------- */
+.menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background-color: rgba(3, 8, 67, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.menu-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.menu-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 90;
+  width: min(86vw, 380px);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--lapis);
+  background-image: radial-gradient(circle at 20% 0%, rgba(122, 63, 192, 0.35), rgba(122, 63, 192, 0) 60%);
+  color: var(--cream);
+  box-shadow: 1px 0 0 rgba(227, 198, 124, 0.4), 30px 0 60px -30px rgba(3, 8, 67, 0.7);
+  transform: translateX(-102%);
+  visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.45s;
+}
+.menu-panel.is-open {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+}
+.menu-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 18px 24px;
+  box-shadow: inset 0 -1px 0 rgba(227, 198, 124, 0.25);
+}
+.menu-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 22px;
+}
+.menu-brand .medallion {
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 0 0 2px var(--lapis), 0 0 0 3px var(--gold-deep);
+}
+.menu-close {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.menu-close span {
+  position: absolute;
+  left: 11px;
+  top: 21px;
+  width: 22px;
+  height: 1.6px;
+  border-radius: 2px;
+  background-color: var(--cream);
+  rotate: 45deg;
+}
+.menu-close span + span {
+  rotate: -45deg;
+}
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 24px 16px;
+}
+.menu-label {
+  margin: 26px 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-text);
+}
+.menu-link {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1.1;
+  color: var(--cream);
+  text-decoration: none;
+  padding: 10px 0;
+  box-shadow: inset 0 -1px 0 rgba(227, 198, 124, 0.18);
+}
+.menu-link:hover {
+  color: var(--gold);
+}
+.menu-foot {
+  margin-top: auto;
+  padding: 28px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.menu-foot .btn {
+  width: 100%;
+  box-sizing: border-box;
+}
+.menu-social {
+  display: flex;
+  gap: 24px;
+}
+.menu-social a {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 15px;
+}
+.menu-social a:hover {
+  color: var(--cream);
 }
 
 /* ---------- Hero ---------- */
@@ -832,6 +1111,149 @@ a:hover {
   font-weight: 500;
 }
 
+/* ---------- Testimonials ---------- */
+.reviews {
+  background-color: var(--lapis);
+  color: var(--cream);
+  padding: 120px 24px;
+}
+.reviews-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.reviews-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 56px;
+}
+.reviews-head p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--on-lapis-muted);
+  max-width: 40ch;
+}
+.reviews-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 36px;
+}
+.review figure {
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 64px 36px 34px;
+  border-radius: 240px 240px 8px 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(227, 198, 124, 0.5), 0 0 0 6px var(--lapis), 0 0 0 7px rgba(227, 198, 124, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.review-mark {
+  display: block;
+  height: 44px;
+  font-family: var(--serif);
+  font-size: 110px;
+  line-height: 0.9;
+  color: var(--gold);
+}
+.review blockquote {
+  margin: 0;
+}
+.review blockquote p {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--cream);
+}
+.review figcaption {
+  margin-top: auto;
+  width: 100%;
+  padding-top: 20px;
+  box-shadow: inset 0 1px 0 rgba(227, 198, 124, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.review-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+.review-place {
+  font-size: 14px;
+  color: var(--on-lapis-muted);
+}
+.review-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(227, 198, 124, 0.45);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-text);
+}
+.review-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex: none;
+}
+.review-source {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.review-source:hover {
+  color: var(--cream);
+}
+@media (max-width: 900px) {
+  .reviews {
+    padding: 96px 24px;
+  }
+  /* swipeable row with the next card peeking in */
+  .reviews-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(80vw, 340px);
+    gap: 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 24px;
+    margin: 0 -24px;
+    padding: 8px 24px 20px;
+    scrollbar-width: none;
+  }
+  .reviews-list::-webkit-scrollbar {
+    display: none;
+  }
+  .review {
+    scroll-snap-align: start;
+  }
+  .review figure {
+    padding: 56px 26px 28px;
+  }
+  .review blockquote p {
+    font-size: 22px;
+  }
+}
+
 /* ---------- Care ---------- */
 .care {
   background-color: var(--white);
@@ -951,6 +1373,14 @@ a:hover {
   }
   .loader {
     display: none;
+  }
+  .header-bar,
+  .header-bar .header,
+  .header-bar .brand .medallion,
+  .menu-panel,
+  .menu-panel.is-open,
+  .menu-scrim {
+    transition: none;
   }
   .hring,
   .charm {

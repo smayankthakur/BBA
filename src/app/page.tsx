@@ -7,6 +7,7 @@ import ThreeInOne from "@/components/ThreeInOne";
 import MulankPicker from "@/components/MulankPicker";
 import NoteFromAmmit from "@/components/NoteFromAmmit";
 import Gifts from "@/components/Gifts";
+import Testimonials from "@/components/Testimonials";
 import CareSection from "@/components/CareSection";
 import SiteFooter from "@/components/SiteFooter";
 import { SHOW_LOADER } from "@/data/home";
@@ -24,6 +25,7 @@ export default function HomePage() {
         <MulankPicker />
         <NoteFromAmmit />
         <Gifts />
+        <Testimonials />
         <CareSection />
       </main>
       <SiteFooter />

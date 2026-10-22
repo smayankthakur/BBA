@@ -1,28 +1,204 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Medallion from "./Medallion";
 import { LINKS } from "@/data/home";
 
-export default function SiteHeader({ bagCount = 0 }: { bagCount?: number }) {
+const SHOP_LINKS = [
+  { href: "#edit", label: "Intentions" },
+  { href: "#number", label: "By number" },
+  { href: "#gifts", label: "Gifts" },
+];
+
+const ABOUT_LINKS = [
+  { href: "#note", label: "Ammit" },
+  { href: LINKS.consultation, label: "Consultation" },
+];
+
+function BagIcon() {
   return (
-    <header className="header">
-      <nav aria-label="Shop" className="header-nav">
-        <a className="navlink" href="#edit">Intentions</a>
-        <a className="navlink" href="#number">By number</a>
-        <a className="navlink" href="#gifts">Gifts</a>
-      </nav>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 8h14l-1 12H6L5 8Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 10V7a3 3 0 0 1 6 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-      <Link href="/" aria-label="Bracelet By Ammit home" className="brand">
-        <Medallion width={38} height={42} priority />
-        <span className="brand-name">Bracelet By Ammit</span>
-      </Link>
+export default function SiteHeader({ bagCount = 0 }: { bagCount?: number }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-      <div className="header-nav right">
-        <a className="navlink" href="#note">Ammit</a>
-        <a className="navlink" href={LINKS.consultation}>Consultation</a>
-        <a className="navlink" href={LINKS.bag} aria-label={`Bag, ${bagCount} items`}>
-          Bag ({bagCount})
-        </a>
+  // Compact the bar once the page has scrolled past the announcement strip.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setScrolled(window.scrollY > 48));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  const close = useCallback((returnFocus = true) => {
+    setOpen(false);
+    if (returnFocus) burgerRef.current?.focus();
+  }, []);
+
+  // Drawer: lock page scroll, focus first link, Esc to close, keep Tab inside.
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusables = () =>
+      Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? []);
+    focusables()[1]?.focus(); // [0] is the close button; start on the first link
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const els = focusables();
+      if (!els.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+
+    // Close if the viewport grows to desktop while open.
+    const mq = window.matchMedia("(min-width: 961px)");
+    const onMq = () => mq.matches && close(false);
+    mq.addEventListener("change", onMq);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+      mq.removeEventListener("change", onMq);
+    };
+  }, [open, close]);
+
+  return (
+    <>
+      <div className={`header-bar${scrolled ? " is-scrolled" : ""}`}>
+        <header className="header">
+          {/* Mobile: hamburger */}
+          <button
+            ref={burgerRef}
+            type="button"
+            className="burger"
+            aria-label="Open menu"
+            aria-expanded={open}
+            aria-controls="site-menu"
+            onClick={() => setOpen(true)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <nav aria-label="Shop" className="header-nav desktop-only">
+            {SHOP_LINKS.map((l) => (
+              <a key={l.href} className="navlink" href={l.href}>
+                {l.label}
+              </a>
+            ))}
+          </nav>
+
+          <Link href="/" aria-label="Bracelet By Ammit home" className="brand">
+            <Medallion width={38} height={42} priority />
+            <span className="brand-name">Bracelet By Ammit</span>
+          </Link>
+
+          <div className="header-nav right desktop-only">
+            {ABOUT_LINKS.map((l) => (
+              <a key={l.label} className="navlink" href={l.href}>
+                {l.label}
+              </a>
+            ))}
+            <a className="navlink" href={LINKS.bag} aria-label={`Bag, ${bagCount} items`}>
+              Bag ({bagCount})
+            </a>
+          </div>
+
+          {/* Mobile: bag icon with count */}
+          <a className="bag-icon" href={LINKS.bag} aria-label={`Bag, ${bagCount} items`}>
+            <BagIcon />
+            <span className="bag-count" aria-hidden="true">
+              {bagCount}
+            </span>
+          </a>
+        </header>
       </div>
-    </header>
+
+      {/* Mobile drawer */}
+      <div className={`menu-scrim${open ? " is-open" : ""}`} onClick={() => close(false)} aria-hidden="true" />
+      <div
+        id="site-menu"
+        ref={panelRef}
+        className={`menu-panel${open ? " is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        inert={!open}
+      >
+        <div className="menu-top">
+          <span className="menu-brand">
+            <Medallion width={30} height={33} />
+            <span>Bracelet By Ammit</span>
+          </span>
+          <button type="button" className="menu-close" aria-label="Close menu" onClick={() => close()}>
+            <span />
+            <span />
+          </button>
+        </div>
+
+        <nav aria-label="Menu" className="menu-nav">
+          <p className="menu-label">Shop</p>
+          {SHOP_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="menu-link" onClick={() => close(false)}>
+              {l.label}
+            </a>
+          ))}
+          <p className="menu-label">Bracelet By Ammit</p>
+          {ABOUT_LINKS.map((l) => (
+            <a key={l.label} href={l.href} className="menu-link" onClick={() => close(false)}>
+              {l.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="menu-foot">
+          <a className="btn btn-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+            Ask Ammit on WhatsApp
+          </a>
+          <div className="menu-social">
+            <a href={LINKS.instagram} target="_blank" rel="noopener noreferrer">
+              Instagram
+            </a>
+            <a href={LINKS.youtube} target="_blank" rel="noopener noreferrer">
+              YouTube
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

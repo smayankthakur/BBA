@@ -190,3 +190,36 @@ export const CARE = [
   { term: "Recharging", detail: "[Moonlight, sunlight or salt: what suits each crystal.]" },
   { term: "Restringing", detail: "[Send the beads back and we'll restring them. Cost and timing.]" },
 ] as const;
+
+export type Testimonial = {
+  /** The customer's own words — only publish with their permission. */
+  quote: string;
+  name: string;
+  place: string;
+  /** Slug from INTENTIONS — shows which bracelet they wear. */
+  intention: Intention["slug"];
+  /** Optional link to where the review was posted (Instagram, Google, YouTube…). */
+  source?: { label: string; href: string };
+};
+
+// PLACEHOLDERS — replace with real customer reviews before launch.
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "[Customer's words, in their own voice: what they asked for and what changed after wearing it.]",
+    name: "[Customer name]",
+    place: "[City]",
+    intention: "love",
+  },
+  {
+    quote: "[A second review — ideally one that mentions Ammit reading their birth date.]",
+    name: "[Customer name]",
+    place: "[City]",
+    intention: "buri-nazar",
+  },
+  {
+    quote: "[A third review — e.g. a gift for family, or a parent buying for a child's studies.]",
+    name: "[Customer name]",
+    place: "[City]",
+    intention: "career-money",
+  },
+];
