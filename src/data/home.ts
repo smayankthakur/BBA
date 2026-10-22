@@ -217,20 +217,42 @@ export const CARE = [
 ] as const;
 
 export type Testimonial = {
-  /** The customer's own words — only publish with their permission. */
+  /** The customer's own words (lightly edited for spelling only). */
   quote: string;
   name: string;
-  place: string;
-  /** Slug from INTENTIONS — shows which bracelet they wear. */
-  intention: Intention["slug"];
-  /** Optional link to where the review was posted (Instagram, Google, YouTube…). */
+  place?: string;
+  /** Slug from INTENTIONS, only when we know which bracelet they wear. */
+  intention?: Intention["slug"];
+  /** Where the review was originally posted, so it can be traced. */
   source?: { label: string; href: string };
 };
 
-// Add real customer reviews here (with their permission) — e.g. from the
-// Instagram "Reviews" highlight. While this list is empty, the section shows a
-// link to the reviews on Instagram instead of cards.
-export const TESTIMONIALS: Testimonial[] = [];
+const REVIEWS_HIGHLIGHT = "https://www.instagram.com/stories/highlights/17972703031853261/";
+
+// Real customer messages, published by Bracelet By Ammit in the "Reviews"
+// highlight on Instagram. Names are shown only where the customer's first name
+// already appeared publicly. Reviews describing health outcomes were left out
+// on purpose (advertising rules on health claims).
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    quote:
+      "Thank you sir for the bracelet which you have made especially for me. It is making things easier for me. People and situations are changing for me, and I'm feeling more positive than ever. Thank you so much.",
+    name: "Customer on WhatsApp",
+    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+  },
+  {
+    quote:
+      "Aapse bracelet liya hai, 1 month hone ko aaya hai. Positive ho rahi hoon, thoughts ki clarity ho rahi hai, study mein mann lag raha hai. I'm so grateful.",
+    name: "Customer on WhatsApp",
+    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+  },
+  {
+    quote:
+      "Aap jo bracelet banate ho, woh bahut achhe hain. Mujh par bracelet ka bahut hi achha asar ho raha hai. Main family ke liye aur bracelet lene wali hoon. Thank you so much.",
+    name: "Kavita",
+    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+  },
+];
 
 export const AMMIT = {
   name: "Ammit Kukreja",
@@ -243,3 +265,28 @@ export const AMMIT = {
   photo: "/ammit/ammit-kukreja.jpg",
   photoAlt: "Ammit Kukreja, numerologist and founder of Bracelet By Ammit",
 } as const;
+
+/**
+ * Business details shown in the footer (Consumer Protection (E-Commerce)
+ * Rules, 2020). Empty fields are not rendered. Fill in the legal entity,
+ * registered address, email/phone and GSTIN before selling online.
+ */
+export const BUSINESS: {
+  brand: string;
+  legalName: string;
+  founder: string;
+  address: string;
+  email: string;
+  phone: string;
+  gstin: string;
+  grievanceOfficer: { name: string; designation: string };
+} = {
+  brand: "Bracelet By Ammit",
+  legalName: "", // e.g. "Ammit Kukreja (Proprietor)" or the registered company name
+  founder: "Ammit Kukreja, Numerologist",
+  address: "",
+  email: "",
+  phone: "",
+  gstin: "",
+  grievanceOfficer: { name: "Ammit Kukreja", designation: "Founder" },
+};

@@ -33,7 +33,7 @@ export default function Testimonials() {
         {hasReviews && (
         <ul className="reviews-list" tabIndex={0} aria-label="Customer reviews">
           {TESTIMONIALS.map((t, idx) => {
-            const it = bySlug[t.intention];
+            const it = t.intention ? bySlug[t.intention] : undefined;
             return (
               <li key={idx} className="review">
                 <figure>
@@ -45,7 +45,7 @@ export default function Testimonials() {
                   </blockquote>
                   <figcaption>
                     <span className="review-name">{t.name}</span>
-                    <span className="review-place">{t.place}</span>
+                    {t.place && <span className="review-place">{t.place}</span>}
                     {it && (
                       <span className="review-tag">
                         <span
@@ -70,6 +70,14 @@ export default function Testimonials() {
             );
           })}
         </ul>
+        )}
+
+        {hasReviews && (
+          <div className="reviews-more">
+            <a className="btn btn-gold" href={LINKS.instagramReviews} target="_blank" rel="noopener noreferrer">
+              Read more reviews on Instagram
+            </a>
+          </div>
         )}
       </div>
     </section>

@@ -55,11 +55,11 @@ public/brand/        emblem.png, wordmark.png
 ## Before launch: still needed from the client
 
 - **Ammit's portrait**: save it as `public/ammit/ammit-kukreja.jpg` (portrait, ~4:5, 800px+ wide). The note section switches from the medallion to the photo automatically.
-- **Real reviews**: add them to `TESTIMONIALS` in `src/data/home.ts`, with the customers' permission. Until then the section links to the Instagram Reviews highlight.
+- **Reviews**: three real customer messages from the Instagram "Reviews" highlight are on the site (`TESTIMONIALS` in `src/data/home.ts`), each linked to its source. Ask the client to confirm he's happy to reuse them; reviews claiming health results were deliberately left out.
 - **Product photos**: 3 per intention (hover fan) and one per gift. Bead-ring illustrations are shown until then.
 - **Approve the copy**: Ammit's note, care instructions, gift blurbs and footer disclaimer were drafted for his review.
 - **Shipping and returns**: delivery time, shipping charges and returns policy. Add a page and footer link once known.
-- **Business details**: legal entity, address, contact and grievance officer for the footer before selling online.
+- **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.
 - Prices are `PRICE` (₹1,199) in `src/data/home.ts`. Ordering is WhatsApp-only, so every Choose/Build/Consultation/Order action opens WhatsApp.
 
 ## Notes
