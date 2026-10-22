@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { INTENTIONS, PRICE, type Intention } from "@/data/home";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
@@ -38,25 +39,18 @@ export default function IntentionEdit() {
     <section id="edit" className="section-wide edit">
       <div className="edit-head">
         <h2 className="h2">The intention edit</h2>
-        <p>Six bracelets, six purposes, each {PRICE}. Choose one and send Ammit your date of birth on WhatsApp.</p>
+        <p>Six bracelets, six purposes, each {PRICE}. Hover to see each one, then choose.</p>
       </div>
       <div className="edit-list">
         {INTENTIONS.map((it) => (
-          <a
-            key={it.slug}
-            className="row"
-            href={it.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`${it.title}, ${it.price}. Order on WhatsApp`}
-          >
+          <Link key={it.slug} className="row" href={`/bracelets/${it.slug}`} aria-label={`${it.title}, ${it.price}`}>
             <PhotoStack it={it} />
             <span className="sphere" aria-hidden="true" style={sphereStyle(it)} />
             <span className="row-title">{it.title}</span>
             <span className="muted">{it.blurb}</span>
             <span className="price">{it.price}</span>
             <span className="go">Choose</span>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

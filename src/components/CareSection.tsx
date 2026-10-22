@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CARE, LINKS } from "@/data/home";
 
 export default function CareSection() {
@@ -10,7 +11,7 @@ export default function CareSection() {
             It&apos;s the question people ask us most. Ammit&apos;s answer on YouTube has been watched
             more than 14,000 times.
           </p>
-          <div>
+          <div className="btn-row">
             <a
               className="btn btn-lapis on-white"
               href={LINKS.youtubeShorts}
@@ -19,6 +20,9 @@ export default function CareSection() {
             >
               Watch Ammit&apos;s answer
             </a>
+            <Link className="btn btn-line" href="/bracelet-care">
+              Full care guide
+            </Link>
           </div>
         </div>
         <dl className="care-list">

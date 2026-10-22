@@ -1,4 +1,5 @@
-import { LINKS, PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
+import Link from "next/link";
+import { PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
 
 export default function ThreeInOne() {
   return (
@@ -17,9 +18,9 @@ export default function ThreeInOne() {
           </p>
           <p className="three-price">{PRICE}</p>
           <div>
-            <a className="btn btn-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+            <Link className="btn btn-gold" href="/bracelets/3-in-1">
               Build my 3 in 1
-            </a>
+            </Link>
           </div>
         </div>
       </div>

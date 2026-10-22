@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BUSINESS, CREDIT, FOOTER_DISCLAIMER, LINKS, PRICE } from "@/data/home";
 
 const EXT = { target: "_blank", rel: "noopener noreferrer" } as const;
@@ -7,17 +8,17 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
   {
     title: "Shop",
     links: [
-      { label: "Shop by intention", href: "/#edit" },
-      { label: "Find your number", href: "/#number" },
-      { label: "3 in 1 bracelet", href: "/#three-in-one" },
-      { label: "Gifts", href: "/#gifts" },
+      { label: "Shop by intention", href: "/bracelets" },
+      { label: "Find your number", href: "/mulank" },
+      { label: "3 in 1 bracelet", href: "/bracelets/3-in-1" },
+      { label: "Gifts", href: "/gifts" },
     ],
   },
   {
     title: "Ammit",
     links: [
-      { label: "A note from Ammit", href: "/#note" },
-      { label: "Book a consultation", href: LINKS.whatsapp, external: true },
+      { label: "About Ammit", href: "/about-ammit" },
+      { label: "Book a consultation", href: "/consultation" },
       { label: "Watch on YouTube", href: LINKS.youtube, external: true },
       { label: "Follow on Instagram", href: LINKS.instagram, external: true },
     ],
@@ -25,9 +26,9 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
   {
     title: "Help",
     links: [
-      { label: "Bracelet care", href: "/#care" },
-      { label: "If your bracelet breaks", href: "/#care" },
-      { label: "Customer reviews", href: "/#reviews" },
+      { label: "Bracelet care", href: "/bracelet-care" },
+      { label: "If your bracelet breaks", href: "/bracelet-care" },
+      { label: "Customer reviews", href: "/reviews" },
       { label: "Order on WhatsApp", href: LINKS.whatsapp, external: true },
     ],
   },
@@ -127,9 +128,13 @@ export default function SiteFooter() {
               <ul>
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    <a href={l.href} {...(l.external ? EXT : {})}>
-                      {l.label}
-                    </a>
+                    {l.external ? (
+                      <a href={l.href} {...EXT}>
+                        {l.label}
+                      </a>
+                    ) : (
+                      <Link href={l.href}>{l.label}</Link>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GIFTS } from "@/data/home";
 
 export default function Gifts() {
@@ -9,7 +10,7 @@ export default function Gifts() {
       </div>
       <div className="gifts-grid">
         {GIFTS.map((g) => (
-          <a key={g.title} href={g.href} className="gift" target="_blank" rel="noopener noreferrer">
+          <Link key={g.slug} href={`/gifts/${g.slug}`} className="gift">
             {/* Illustration until product photos arrive: swap for <Image fill …/> */}
             <div role="img" aria-label={g.alt} className="arch" style={{ backgroundImage: g.gradient }}>
               <span
@@ -21,7 +22,7 @@ export default function Gifts() {
             </div>
             <span className="gift-title">{g.title}</span>
             <span className="gift-blurb">{g.blurb}</span>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

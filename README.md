@@ -26,6 +26,24 @@ Requires Node 20+.
 - Branded 404 page (`src/app/not-found.tsx`), skip-to-content link, axe-clean at desktop and mobile widths.
 - If you add analytics, a chat widget, embeds or forms later, add their domains to the CSP and add a privacy policy + cookie consent first.
 
+## Pages and URLs
+
+| URL | Page |
+|---|---|
+| `/` | Homepage |
+| `/bracelets` | Shop by intention (all 7 bracelets) |
+| `/bracelets/better-married-life` · `/buri-nazar-protection` · `/better-studies` · `/health-and-mental-healing` · `/love-and-relationships` · `/career-and-money` · `/3-in-1` | Bracelet pages (₹1,199, Order on WhatsApp, Product schema) |
+| `/mulank` | Find your mulank |
+| `/mulank/1` … `/mulank/9` | One page per number (planet, birth days, traits) |
+| `/gifts` | Gifts |
+| `/gifts/rakhi` · `/gifts/for-your-mother` · `/gifts/anniversary` | Gift pages |
+| `/about-ammit` | About Ammit Kukreja (portrait frame, Person schema) |
+| `/consultation` | Numerology consultation |
+| `/bracelet-care` | Care guide (cleansing, recharging, restringing, do's and don'ts) |
+| `/reviews` | Customer reviews |
+
+All pages are static, have their own title/description/canonical, breadcrumbs (with BreadcrumbList schema) and are listed in `sitemap.xml`. Page copy lives in `src/data/pages.ts`; items marked **CONFIRM** there (crystals per intention, consultation details) need Ammit's sign-off.
+
 ## Structure
 
 ```

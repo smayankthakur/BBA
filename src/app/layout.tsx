@@ -24,7 +24,7 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: TITLE,
+  title: { default: TITLE, template: "%s | Bracelet By Ammit" },
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {

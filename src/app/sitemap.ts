@@ -1,6 +1,25 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { BRACELETS, MULANK } from "@/data/pages";
+import { GIFTS } from "@/data/home";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [{ url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 }];
+  const paths = [
+    "/",
+    "/bracelets",
+    ...BRACELETS.map((b) => `/bracelets/${b.slug}`),
+    "/mulank",
+    ...MULANK.map((m) => `/mulank/${m.number}`),
+    "/gifts",
+    ...GIFTS.map((g) => `/gifts/${g.slug}`),
+    "/about-ammit",
+    "/consultation",
+    "/bracelet-care",
+    "/reviews",
+  ];
+  return paths.map((p) => ({
+    url: `${SITE_URL}${p === "/" ? "/" : p}`,
+    changeFrequency: "weekly",
+    priority: p === "/" ? 1 : p.split("/").length === 2 ? 0.8 : 0.6,
+  }));
 }

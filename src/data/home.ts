@@ -31,8 +31,6 @@ export type Intention = {
   title: string;
   blurb: string;
   price: string;
-  /** Where "Choose" goes — WhatsApp until product pages exist */
-  href: string;
   /** Base bead colour of the sphere in the row */
   sphere: string;
   /** Edge shade of the sphere (rgba) */
@@ -47,11 +45,10 @@ export type Intention = {
 
 export const INTENTIONS: Intention[] = [
   {
-    slug: "married-life",
+    slug: "better-married-life",
     title: "Better married life",
     blurb: "Patience, warmth and fewer arguments at home.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#F2A7A0",
     sphereShade: "rgba(120,20,40,.35)",
     cards: [
@@ -66,11 +63,10 @@ export const INTENTIONS: Intention[] = [
     ],
   },
   {
-    slug: "buri-nazar",
+    slug: "buri-nazar-protection",
     title: "Buri nazar protection",
     blurb: "A shield against the evil eye for you and your family.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#1C1C26",
     sphereShade: "rgba(0,0,0,.45)",
     sphereGloss: 0.85,
@@ -86,11 +82,10 @@ export const INTENTIONS: Intention[] = [
     ],
   },
   {
-    slug: "studies",
+    slug: "better-studies",
     title: "Better studies",
     blurb: "Focus, memory and calm before exams.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#7A3FC0",
     sphereShade: "rgba(40,10,70,.45)",
     cards: [
@@ -105,11 +100,10 @@ export const INTENTIONS: Intention[] = [
     ],
   },
   {
-    slug: "health-healing",
+    slug: "health-and-mental-healing",
     title: "Health and mental healing",
     blurb: "Support for body and mind while you recover.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#2E9E4F",
     sphereShade: "rgba(10,50,20,.4)",
     cards: [
@@ -124,11 +118,10 @@ export const INTENTIONS: Intention[] = [
     ],
   },
   {
-    slug: "love",
+    slug: "love-and-relationships",
     title: "Love and relationships",
     blurb: "Attract the right person, or bring closeness back.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#D96B86",
     sphereShade: "rgba(110,20,50,.38)",
     cards: [
@@ -143,11 +136,10 @@ export const INTENTIONS: Intention[] = [
     ],
   },
   {
-    slug: "career-money",
+    slug: "career-and-money",
     title: "Career and money",
     blurb: "Growth at work, steady income, sharper decisions.",
     price: PRICE,
-    href: LINKS.whatsapp,
     sphere: "#E7B32A",
     sphereShade: "rgba(110,70,10,.4)",
     cards: [
@@ -173,28 +165,28 @@ export const MULANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export const GIFTS = [
   {
+    slug: "rakhi",
     title: "Rakhi for brother, sister and bhabhi",
     blurb: "Send each sibling's date of birth and every rakhi is read for them, not just for the day.",
     alt: "Illustration of a red, gold and blush crystal rakhi bracelet",
     gradient: "linear-gradient(170deg,#F7D7DA,#DCE0EE)",
     beads: ["#8E1F3A", "#E7B32A", "#F2A7A0"],
-    href: LINKS.whatsapp,
   },
   {
+    slug: "for-your-mother",
     title: "For your mother",
     blurb: "Chosen for her numbers: calm, health and protection for the woman who looks after everyone.",
     alt: "Illustration of a rose quartz, amethyst and moonstone bracelet",
     gradient: "linear-gradient(170deg,#E6DAF6,#DCE0EE)",
     beads: ["#D96B86", "#7A3FC0", "#EDEFF5"],
-    href: LINKS.whatsapp,
   },
   {
+    slug: "anniversary",
     title: "For an anniversary",
     blurb: "A pair read from both your birth dates, so the crystals support the two of you together.",
     alt: "Illustration of a matching pair of rose and gold crystal bracelets",
     gradient: "linear-gradient(170deg,#F4ECC8,#DCE0EE)",
     beads: ["#F2A7A0", "#E7B32A", "#050E8F"],
-    href: LINKS.whatsapp,
   },
 ] as const;
 

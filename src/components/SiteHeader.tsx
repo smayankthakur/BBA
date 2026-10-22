@@ -2,18 +2,25 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Medallion from "./Medallion";
 import { LINKS } from "@/data/home";
 
 const SHOP_LINKS = [
-  { href: "#edit", label: "Intentions" },
-  { href: "#number", label: "By number" },
-  { href: "#gifts", label: "Gifts" },
+  { href: "/bracelets", label: "Intentions" },
+  { href: "/mulank", label: "By number" },
+  { href: "/gifts", label: "Gifts" },
 ];
 
-const ABOUT_LINKS: { href: string; label: string; external?: boolean }[] = [
-  { href: "#note", label: "Ammit" },
-  { href: LINKS.whatsapp, label: "Consultation", external: true },
+const ABOUT_LINKS = [
+  { href: "/about-ammit", label: "Ammit" },
+  { href: "/consultation", label: "Consultation" },
+];
+
+/** Mobile menu extras below the main sections. */
+const MORE_LINKS = [
+  { href: "/bracelet-care", label: "Bracelet care" },
+  { href: "/reviews", label: "Reviews" },
 ];
 
 const ext = (external?: boolean) => (external ? { target: "_blank", rel: "noopener noreferrer" } : {});
@@ -37,6 +44,8 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   // Compact the bar once the page has scrolled past the announcement strip.
   useEffect(() => {
@@ -123,9 +132,9 @@ export default function SiteHeader() {
 
           <nav aria-label="Shop" className="header-nav desktop-only">
             {SHOP_LINKS.map((l) => (
-              <a key={l.href} className="navlink" href={l.href}>
+              <Link key={l.href} className="navlink" href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -136,9 +145,9 @@ export default function SiteHeader() {
 
           <div className="header-nav right desktop-only">
             {ABOUT_LINKS.map((l) => (
-              <a key={l.label} className="navlink" href={l.href} {...ext(l.external)}>
+              <Link key={l.href} className="navlink" href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                 {l.label}
-              </a>
+              </Link>
             ))}
             <a className="navlink" href={LINKS.whatsapp} {...ext(true)}>
               Order on WhatsApp
@@ -177,15 +186,38 @@ export default function SiteHeader() {
         <nav aria-label="Menu" className="menu-nav">
           <p className="menu-label">Shop</p>
           {SHOP_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="menu-link" onClick={() => close(false)}>
+            <Link
+              key={l.href}
+              href={l.href}
+              className="menu-link"
+              onClick={() => close(false)}
+              aria-current={isActive(l.href) ? "page" : undefined}
+            >
               {l.label}
-            </a>
+            </Link>
           ))}
           <p className="menu-label">Bracelet By Ammit</p>
           {ABOUT_LINKS.map((l) => (
-            <a key={l.label} href={l.href} className="menu-link" onClick={() => close(false)} {...ext(l.external)}>
+            <Link
+              key={l.href}
+              href={l.href}
+              className="menu-link"
+              onClick={() => close(false)}
+              aria-current={isActive(l.href) ? "page" : undefined}
+            >
               {l.label}
-            </a>
+            </Link>
+          ))}
+          {MORE_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="menu-link"
+              onClick={() => close(false)}
+              aria-current={isActive(l.href) ? "page" : undefined}
+            >
+              {l.label}
+            </Link>
           ))}
         </nav>
 
