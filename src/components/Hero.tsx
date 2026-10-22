@@ -22,7 +22,9 @@ export default function Hero() {
         </p>
         <div className="btn-row">
           <a className="btn btn-lapis" href="#edit">Shop by intention</a>
-          <a className="btn btn-line" href={LINKS.buildBracelet}>Build my bracelet</a>
+          <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+            Build my bracelet
+          </a>
         </div>
       </div>
 

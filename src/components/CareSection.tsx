@@ -6,7 +6,10 @@ export default function CareSection() {
       <div className="care-inner">
         <div className="care-copy">
           <h2 className="h2">What if my bracelet breaks?</h2>
-          <p>It&apos;s the question people ask us most. Ammit&apos;s answer has been watched 14,000 times.</p>
+          <p>
+            It&apos;s the question people ask us most. Ammit&apos;s answer on YouTube has been watched
+            more than 14,000 times.
+          </p>
           <div>
             <a
               className="btn btn-lapis on-white"

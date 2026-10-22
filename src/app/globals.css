@@ -964,6 +964,13 @@ a:hover {
   flex-direction: column;
   gap: 20px;
 }
+.three-copy .three-price {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--gold-text);
+}
 .three-copy p {
   margin: 0;
   font-size: 18px;
@@ -1024,24 +1031,83 @@ a:hover {
   padding: 120px 24px;
 }
 .note-card {
-  max-width: 880px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 64px clamp(28px, 6vw, 80px);
+  padding: 64px clamp(28px, 6vw, 72px);
   border-radius: 6px;
   background-color: var(--white);
   box-shadow: 0 0 0 1px var(--lilac-line), 0 40px 80px -50px rgba(5, 14, 143, 0.5);
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  position: relative;
+}
+.note-photo {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.note-arch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 200px 200px 6px 6px;
+  overflow: hidden;
+  background-color: var(--lapis);
+  box-shadow: 0 0 0 1px var(--gold-deep), 0 0 0 8px var(--white), 0 0 0 9px rgba(184, 145, 61, 0.45),
+    0 30px 50px -30px rgba(5, 14, 143, 0.6);
+}
+.note-img {
+  object-fit: cover;
+  object-position: center top;
+}
+.note-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: radial-gradient(circle at 50% 40%, rgba(122, 63, 192, 0.45), rgba(122, 63, 192, 0) 65%);
+}
+.note-photo-fallback img {
+  width: 58%;
+  height: auto;
+}
+.note-photo figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.note-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 24px;
+  color: var(--lapis);
+}
+.note-role {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.note-text {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  position: relative;
 }
-.note-card .medallion {
-  position: absolute;
-  right: 40px;
-  top: -36px;
-  width: 72px;
-  height: 72px;
-  box-shadow: 0 0 0 3px var(--white), 0 0 0 4px var(--gold-deep);
+@media (max-width: 760px) {
+  .note-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    padding-top: 48px;
+  }
+  .note-photo {
+    width: min(240px, 70%);
+    justify-self: center;
+  }
 }
 .note-card h2 {
   margin: 0;
@@ -1076,7 +1142,9 @@ a:hover {
 }
 .signature {
   font-family: var(--serif);
-  font-size: 30px;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 34px;
   color: var(--lapis);
 }
 
@@ -1134,6 +1202,25 @@ a:hover {
   font-size: 32px;
   font-weight: 500;
 }
+.gift-blurb {
+  margin-top: -8px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 32ch;
+}
+.gift-ring {
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, transparent 0 60%, #000 62% 76%, transparent 78%);
+  mask-image: radial-gradient(circle, transparent 0 60%, #000 62% 76%, transparent 78%);
+  filter: drop-shadow(0 10px 14px rgba(5, 14, 143, 0.25));
+  transition: rotate 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gift:hover .gift-ring {
+  rotate: 45deg;
+}
 
 /* ---------- Testimonials ---------- */
 .reviews {
@@ -1189,6 +1276,29 @@ a:hover {
   font-size: 110px;
   line-height: 0.9;
   color: var(--gold);
+}
+.reviews-empty {
+  max-width: 620px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 64px 40px 48px;
+  border-radius: 320px 320px 8px 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(227, 198, 124, 0.5), 0 0 0 6px var(--lapis), 0 0 0 7px rgba(227, 198, 124, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+.reviews-empty p {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--cream);
 }
 .review blockquote {
   margin: 0;
@@ -1465,7 +1575,8 @@ a:hover {
   .numb,
   .stack,
   .pc,
-  .stack .tag {
+  .stack .tag,
+  .gift-ring {
     transition: none;
   }
   .row .go {

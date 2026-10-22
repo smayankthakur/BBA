@@ -1,18 +1,20 @@
 // All homepage copy, links and per-item colours live here so the
-// components stay presentational. Replace the [bracketed] placeholders
-// with real content/prices before launch.
+// components stay presentational.
+//
+// Ordering is WhatsApp-only for now (no cart/checkout), so every "Choose",
+// "Build" and "Consultation" action opens WhatsApp. When a shop exists,
+// point these at product pages instead.
 
 export const LINKS = {
   whatsapp: "https://wa.me/message/ENJCQVDZ2QU4L1",
   youtube: "https://www.youtube.com/@braceletbyammit",
   youtubeShorts: "https://www.youtube.com/@braceletbyammit/shorts",
   instagram: "https://www.instagram.com/braceletbyammit/",
-  consultation: "#",
-  bag: "#",
-  buildBracelet: "#",
-  build3in1: "#",
-  shipping: "#",
+  instagramReviews: "https://www.instagram.com/braceletbyammit/",
 } as const;
+
+/** Every bracelet is the same price for now. */
+export const PRICE = "₹1,199";
 
 /**
  * Shown in the footer. Needed because the site describes health, relationship
@@ -29,6 +31,7 @@ export type Intention = {
   title: string;
   blurb: string;
   price: string;
+  /** Where "Choose" goes — WhatsApp until product pages exist */
   href: string;
   /** Base bead colour of the sphere in the row */
   sphere: string;
@@ -47,8 +50,8 @@ export const INTENTIONS: Intention[] = [
     slug: "married-life",
     title: "Better married life",
     blurb: "Patience, warmth and fewer arguments at home.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#F2A7A0",
     sphereShade: "rgba(120,20,40,.35)",
     cards: [
@@ -66,8 +69,8 @@ export const INTENTIONS: Intention[] = [
     slug: "buri-nazar",
     title: "Buri nazar protection",
     blurb: "A shield against the evil eye for you and your family.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#1C1C26",
     sphereShade: "rgba(0,0,0,.45)",
     sphereGloss: 0.85,
@@ -86,8 +89,8 @@ export const INTENTIONS: Intention[] = [
     slug: "studies",
     title: "Better studies",
     blurb: "Focus, memory and calm before exams.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#7A3FC0",
     sphereShade: "rgba(40,10,70,.45)",
     cards: [
@@ -105,8 +108,8 @@ export const INTENTIONS: Intention[] = [
     slug: "health-healing",
     title: "Health and mental healing",
     blurb: "Support for body and mind while you recover.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#2E9E4F",
     sphereShade: "rgba(10,50,20,.4)",
     cards: [
@@ -124,8 +127,8 @@ export const INTENTIONS: Intention[] = [
     slug: "love",
     title: "Love and relationships",
     blurb: "Attract the right person, or bring closeness back.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#D96B86",
     sphereShade: "rgba(110,20,50,.38)",
     cards: [
@@ -143,8 +146,8 @@ export const INTENTIONS: Intention[] = [
     slug: "career-money",
     title: "Career and money",
     blurb: "Growth at work, steady income, sharper decisions.",
-    price: "[₹ PRICE]",
-    href: "#",
+    price: PRICE,
+    href: LINKS.whatsapp,
     sphere: "#E7B32A",
     sphereShade: "rgba(110,70,10,.4)",
     cards: [
@@ -171,31 +174,46 @@ export const MULANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 export const GIFTS = [
   {
     title: "Rakhi for brother, sister and bhabhi",
-    placeholder: "[Rakhi bracelet photo]",
-    alt: "Placeholder for a Rakhi bracelet photograph",
+    blurb: "Send each sibling's date of birth and every rakhi is read for them, not just for the day.",
+    alt: "Illustration of a red, gold and blush crystal rakhi bracelet",
     gradient: "linear-gradient(170deg,#F7D7DA,#DCE0EE)",
-    href: "#",
+    beads: ["#8E1F3A", "#E7B32A", "#F2A7A0"],
+    href: LINKS.whatsapp,
   },
   {
     title: "For your mother",
-    placeholder: "[Mother's Day photo]",
-    alt: "Placeholder for a Mother's Day bracelet photograph",
+    blurb: "Chosen for her numbers: calm, health and protection for the woman who looks after everyone.",
+    alt: "Illustration of a rose quartz, amethyst and moonstone bracelet",
     gradient: "linear-gradient(170deg,#E6DAF6,#DCE0EE)",
-    href: "#",
+    beads: ["#D96B86", "#7A3FC0", "#EDEFF5"],
+    href: LINKS.whatsapp,
   },
   {
     title: "For an anniversary",
-    placeholder: "[Couple bracelet photo]",
-    alt: "Placeholder for a couple's bracelet photograph",
+    blurb: "A pair read from both your birth dates, so the crystals support the two of you together.",
+    alt: "Illustration of a matching pair of rose and gold crystal bracelets",
     gradient: "linear-gradient(170deg,#F4ECC8,#DCE0EE)",
-    href: "#",
+    beads: ["#F2A7A0", "#E7B32A", "#050E8F"],
+    href: LINKS.whatsapp,
   },
 ] as const;
 
 export const CARE = [
-  { term: "Cleansing", detail: "[How and how often to cleanse, in Ammit's words.]" },
-  { term: "Recharging", detail: "[Moonlight, sunlight or salt: what suits each crystal.]" },
-  { term: "Restringing", detail: "[Send the beads back and we'll restring them. Cost and timing.]" },
+  {
+    term: "Cleansing",
+    detail:
+      "Once a week, hold the bracelet in a bowl of dry rock salt or under a stream of smoke from a diya or incense for a few minutes. Avoid soaking it in water: some crystals fade or crack.",
+  },
+  {
+    term: "Recharging",
+    detail:
+      "Leave it on a windowsill overnight under the full moon; this suits almost every crystal. Morning sunlight is fine for citrine, tiger eye and pyrite, but keep amethyst and rose quartz out of strong sun so their colour stays.",
+  },
+  {
+    term: "Restringing",
+    detail:
+      "If the thread breaks, collect every bead and don't throw any away. Send us a photo on WhatsApp and we'll tell you how to send them back so Ammit can restring the same crystals for you.",
+  },
 ] as const;
 
 export type Testimonial = {
@@ -209,24 +227,19 @@ export type Testimonial = {
   source?: { label: string; href: string };
 };
 
-// PLACEHOLDERS — replace with real customer reviews before launch.
-export const TESTIMONIALS: Testimonial[] = [
-  {
-    quote: "[Customer's words, in their own voice: what they asked for and what changed after wearing it.]",
-    name: "[Customer name]",
-    place: "[City]",
-    intention: "love",
-  },
-  {
-    quote: "[A second review — ideally one that mentions Ammit reading their birth date.]",
-    name: "[Customer name]",
-    place: "[City]",
-    intention: "buri-nazar",
-  },
-  {
-    quote: "[A third review — e.g. a gift for family, or a parent buying for a child's studies.]",
-    name: "[Customer name]",
-    place: "[City]",
-    intention: "career-money",
-  },
-];
+// Add real customer reviews here (with their permission) — e.g. from the
+// Instagram "Reviews" highlight. While this list is empty, the section shows a
+// link to the reviews on Instagram instead of cards.
+export const TESTIMONIALS: Testimonial[] = [];
+
+export const AMMIT = {
+  name: "Ammit Kukreja",
+  role: "Numerologist, Bracelet By Ammit",
+  /**
+   * Drop the portrait at public/ammit/ammit-kukreja.jpg (portrait, ~4:5,
+   * at least 800px wide). The note section picks it up automatically on the
+   * next build; until then it shows the BBA medallion in the frame.
+   */
+  photo: "/ammit/ammit-kukreja.jpg",
+  photoAlt: "Ammit Kukreja, numerologist and founder of Bracelet By Ammit",
+} as const;

@@ -11,21 +11,28 @@ const SHOP_LINKS = [
   { href: "#gifts", label: "Gifts" },
 ];
 
-const ABOUT_LINKS = [
+const ABOUT_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: "#note", label: "Ammit" },
-  { href: LINKS.consultation, label: "Consultation" },
+  { href: LINKS.whatsapp, label: "Consultation", external: true },
 ];
 
-function BagIcon() {
+const ext = (external?: boolean) => (external ? { target: "_blank", rel: "noopener noreferrer" } : {});
+
+function ChatIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 8h14l-1 12H6L5 8Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M9 10V7a3 3 0 0 1 6 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 11.5a7.5 7.5 0 1 1 3.6 6.4L4 19l1.1-3.4A7.5 7.5 0 0 1 4 11.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M9 10.5h6M9 13.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
 
-export default function SiteHeader({ bagCount = 0 }: { bagCount?: number }) {
+export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -129,21 +136,18 @@ export default function SiteHeader({ bagCount = 0 }: { bagCount?: number }) {
 
           <div className="header-nav right desktop-only">
             {ABOUT_LINKS.map((l) => (
-              <a key={l.label} className="navlink" href={l.href}>
+              <a key={l.label} className="navlink" href={l.href} {...ext(l.external)}>
                 {l.label}
               </a>
             ))}
-            <a className="navlink" href={LINKS.bag} aria-label={`Bag, ${bagCount} items`}>
-              Bag ({bagCount})
+            <a className="navlink" href={LINKS.whatsapp} {...ext(true)}>
+              Order on WhatsApp
             </a>
           </div>
 
-          {/* Mobile: bag icon with count */}
-          <a className="bag-icon" href={LINKS.bag} aria-label={`Bag, ${bagCount} items`}>
-            <BagIcon />
-            <span className="bag-count" aria-hidden="true">
-              {bagCount}
-            </span>
+          {/* Mobile: order on WhatsApp */}
+          <a className="bag-icon" href={LINKS.whatsapp} aria-label="Order on WhatsApp" {...ext(true)}>
+            <ChatIcon />
           </a>
         </header>
       </div>
@@ -179,7 +183,7 @@ export default function SiteHeader({ bagCount = 0 }: { bagCount?: number }) {
           ))}
           <p className="menu-label">Bracelet By Ammit</p>
           {ABOUT_LINKS.map((l) => (
-            <a key={l.label} href={l.href} className="menu-link" onClick={() => close(false)}>
+            <a key={l.label} href={l.href} className="menu-link" onClick={() => close(false)} {...ext(l.external)}>
               {l.label}
             </a>
           ))}

@@ -52,18 +52,15 @@ src/
 public/brand/        emblem.png, wordmark.png
 ```
 
-## Before launch: placeholders to replace (all in `src/data/home.ts` unless noted)
+## Before launch: still needed from the client
 
-- `[₹ PRICE]` on the six intentions
-- `href: "#"` links: product pages, Consultation, Bag, Build my bracelet, Build my 3 in 1, Shipping and returns, gift links
-- Intention hover photos: `[Photo 1/2/3]`. Add real photos as `<Image className="ph-img" …/>` inside each card in `IntentionEdit.tsx`
-- Gift photos: `[Rakhi bracelet photo]` etc. in `Gifts.tsx`
-- Ammit's welcome text and signature in `NoteFromAmmit.tsx`
-- Care copy (Cleansing / Recharging / Restringing)
-- Testimonials: `TESTIMONIALS` in `data/home.ts`. Use real customer words with their permission; `intention` links each review to the bracelet they wear, `source` can link to the original post
-- Footer disclaimer (`FOOTER_DISCLAIMER` in `data/home.ts`): client to approve the wording
-- Verify the "watched 14,000 times" figure in `CareSection.tsx` is current
-- Mulank buttons link to `#mulank-n` for now. Point them at the number pages when they exist
+- **Ammit's portrait**: save it as `public/ammit/ammit-kukreja.jpg` (portrait, ~4:5, 800px+ wide). The note section switches from the medallion to the photo automatically.
+- **Real reviews**: add them to `TESTIMONIALS` in `src/data/home.ts`, with the customers' permission. Until then the section links to the Instagram Reviews highlight.
+- **Product photos**: 3 per intention (hover fan) and one per gift. Bead-ring illustrations are shown until then.
+- **Approve the copy**: Ammit's note, care instructions, gift blurbs and footer disclaimer were drafted for his review.
+- **Shipping and returns**: delivery time, shipping charges and returns policy. Add a page and footer link once known.
+- **Business details**: legal entity, address, contact and grievance officer for the footer before selling online.
+- Prices are `PRICE` (₹1,199) in `src/data/home.ts`. Ordering is WhatsApp-only, so every Choose/Build/Consultation/Order action opens WhatsApp.
 
 ## Notes
 

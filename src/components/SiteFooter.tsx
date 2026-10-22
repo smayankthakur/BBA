@@ -19,7 +19,7 @@ export default function SiteFooter() {
           <nav aria-label="Footer" className="footer-nav">
             <a href={LINKS.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href={LINKS.youtube} target="_blank" rel="noopener noreferrer">YouTube</a>
-            <a href={LINKS.shipping}>Shipping and returns</a>
+            <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a>
           </nav>
         </div>
         <div className="footer-legal">

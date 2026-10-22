@@ -1,4 +1,4 @@
-import { LINKS, THREE_IN_ONE_RINGS } from "@/data/home";
+import { LINKS, PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
 
 export default function ThreeInOne() {
   return (
@@ -15,8 +15,11 @@ export default function ThreeInOne() {
             The 3 in 1 combines love, protection and prosperity on a single strand, balanced for your
             numbers so the crystals work together.
           </p>
+          <p className="three-price">{PRICE}</p>
           <div>
-            <a className="btn btn-gold" href={LINKS.build3in1}>Build my 3 in 1</a>
+            <a className="btn btn-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+              Build my 3 in 1
+            </a>
           </div>
         </div>
       </div>

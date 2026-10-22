@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { INTENTIONS, type Intention } from "@/data/home";
+import { INTENTIONS, PRICE, type Intention } from "@/data/home";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
   backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
@@ -13,20 +13,19 @@ const sphereStyle = (it: Intention): CSSProperties => ({
 /**
  * Hover fan of three photo cards. Cards are rendered in the order 1, 3, 2
  * so the middle card (c2) sits on top, matching the design.
- * Swap the [Photo n] placeholders for <Image className="ph-img" …/> later.
+ * Bead-ring illustrations until product photos arrive; add <Image className="ph-img" …/> per card.
  */
 function PhotoStack({ it }: { it: Intention }) {
   const order = [
-    { cls: "c1", label: "[Photo 1]", i: 0 },
-    { cls: "c3", label: "[Photo 3]", i: 1 },
-    { cls: "c2", label: "[Photo 2]", i: 2 },
+    { cls: "c1", i: 0 },
+    { cls: "c3", i: 1 },
+    { cls: "c2", i: 2 },
   ];
   return (
     <span className="stack" aria-hidden="true">
-      {order.map(({ cls, label, i }) => (
+      {order.map(({ cls, i }) => (
         <span key={cls} className={`pc ${cls}`} style={{ backgroundImage: it.cards[i] }}>
           <span className="ring" style={ringStyle(it.rings[i])} />
-          <span className="ph">{label}</span>
         </span>
       ))}
       <span className="tag">{it.title}</span>
@@ -39,11 +38,18 @@ export default function IntentionEdit() {
     <section id="edit" className="section-wide edit">
       <div className="edit-head">
         <h2 className="h2">The intention edit</h2>
-        <p>Six bracelets, six purposes. Hover to see each one, then choose.</p>
+        <p>Six bracelets, six purposes, each {PRICE}. Choose one and send Ammit your date of birth on WhatsApp.</p>
       </div>
       <div className="edit-list">
         {INTENTIONS.map((it) => (
-          <a key={it.slug} className="row" href={it.href}>
+          <a
+            key={it.slug}
+            className="row"
+            href={it.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${it.title}, ${it.price}. Order on WhatsApp`}
+          >
             <PhotoStack it={it} />
             <span className="sphere" aria-hidden="true" style={sphereStyle(it)} />
             <span className="row-title">{it.title}</span>

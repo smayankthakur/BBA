@@ -1,9 +1,9 @@
-import { INTENTIONS, TESTIMONIALS } from "@/data/home";
+import { INTENTIONS, LINKS, TESTIMONIALS } from "@/data/home";
 
 const bySlug = Object.fromEntries(INTENTIONS.map((i) => [i.slug, i]));
 
 export default function Testimonials() {
-  if (!TESTIMONIALS.length) return null;
+  const hasReviews = TESTIMONIALS.length > 0;
 
   return (
     <section id="reviews" className="reviews" aria-labelledby="reviews-title">
@@ -15,6 +15,22 @@ export default function Testimonials() {
           <p>From people wearing a bracelet Ammit chose for them.</p>
         </div>
 
+        {!hasReviews && (
+          <div className="reviews-empty">
+            <span className="review-mark" aria-hidden="true">
+              &ldquo;
+            </span>
+            <p>
+              Customers share photos and messages about their bracelets with Ammit. You can read them
+              in the Reviews highlight on our Instagram.
+            </p>
+            <a className="btn btn-gold" href={LINKS.instagramReviews} target="_blank" rel="noopener noreferrer">
+              Read reviews on Instagram
+            </a>
+          </div>
+        )}
+
+        {hasReviews && (
         <ul className="reviews-list" tabIndex={0} aria-label="Customer reviews">
           {TESTIMONIALS.map((t, idx) => {
             const it = bySlug[t.intention];
@@ -54,6 +70,7 @@ export default function Testimonials() {
             );
           })}
         </ul>
+        )}
       </div>
     </section>
   );

@@ -9,12 +9,18 @@ export default function Gifts() {
       </div>
       <div className="gifts-grid">
         {GIFTS.map((g) => (
-          <a key={g.title} href={g.href} className="gift">
-            {/* Replace the placeholder text with <Image fill className="ph-img" …/> once photos exist */}
+          <a key={g.title} href={g.href} className="gift" target="_blank" rel="noopener noreferrer">
+            {/* Illustration until product photos arrive: swap for <Image fill …/> */}
             <div role="img" aria-label={g.alt} className="arch" style={{ backgroundImage: g.gradient }}>
-              {g.placeholder}
+              <span
+                className="gift-ring"
+                style={{
+                  backgroundImage: `repeating-conic-gradient(${g.beads[0]} 0 15deg,${g.beads[1]} 15deg 30deg,${g.beads[2]} 30deg 45deg)`,
+                }}
+              />
             </div>
             <span className="gift-title">{g.title}</span>
+            <span className="gift-blurb">{g.blurb}</span>
           </a>
         ))}
       </div>
