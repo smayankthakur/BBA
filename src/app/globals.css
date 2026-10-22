@@ -149,6 +149,30 @@ a:hover {
   outline-offset: 6px;
 }
 
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 200;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background-color: var(--lapis);
+  color: var(--cream);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 0 0 3px var(--mist), 0 0 0 4px var(--gold-deep);
+}
+.skip-link:focus {
+  top: 12px;
+  color: var(--cream);
+  outline: 3px solid var(--amethyst);
+  outline-offset: 4px;
+}
+.reviews-list:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 6px;
+}
+
 /* ---------- Loader ---------- */
 .loader {
   position: fixed;
@@ -1364,6 +1388,54 @@ a:hover {
 }
 .footer-nav a:hover {
   color: var(--cream);
+}
+
+.footer-legal {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--on-lapis-muted);
+}
+.footer-legal p {
+  margin: 0;
+}
+.footer-legal p:first-child {
+  max-width: 72ch;
+}
+
+/* ---------- 404 ---------- */
+.nf {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 96px 24px 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+.nf-code {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(96px, 16vw, 180px);
+  line-height: 0.9;
+  color: var(--gold-deep);
+}
+.nf-text {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  max-width: 44ch;
+}
+.nf .btn-row {
+  justify-content: center;
 }
 
 /* ---------- Reduced motion ---------- */

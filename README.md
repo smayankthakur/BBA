@@ -12,6 +12,20 @@ npm run build && npm start   # production
 
 Requires Node 20+.
 
+## Environment variables (set in Vercel → Project → Settings → Environment Variables)
+
+| Variable | When | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | at launch | Real domain, e.g. `https://braceletbyammit.com`. Used for canonical URL, sitemap and share image. Falls back to the Vercel production URL. |
+| `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
+
+## Security and SEO built in
+
+- Security headers on every response (`next.config.ts`): HSTS, CSP (same-origin only), X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy; `x-powered-by` removed.
+- `robots.txt`, `sitemap.xml`, canonical URL, Open Graph/Twitter card with `src/app/opengraph-image.png`, app icons.
+- Branded 404 page (`src/app/not-found.tsx`), skip-to-content link, axe-clean at desktop and mobile widths.
+- If you add analytics, a chat widget, embeds or forms later, add their domains to the CSP and add a privacy policy + cookie consent first.
+
 ## Structure
 
 ```
@@ -47,6 +61,8 @@ public/brand/        emblem.png, wordmark.png
 - Ammit's welcome text and signature in `NoteFromAmmit.tsx`
 - Care copy (Cleansing / Recharging / Restringing)
 - Testimonials: `TESTIMONIALS` in `data/home.ts`. Use real customer words with their permission; `intention` links each review to the bracelet they wear, `source` can link to the original post
+- Footer disclaimer (`FOOTER_DISCLAIMER` in `data/home.ts`): client to approve the wording
+- Verify the "watched 14,000 times" figure in `CareSection.tsx` is current
 - Mulank buttons link to `#mulank-n` for now. Point them at the number pages when they exist
 
 ## Notes

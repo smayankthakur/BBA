@@ -14,6 +14,13 @@ export const LINKS = {
   shipping: "#",
 } as const;
 
+/**
+ * Shown in the footer. Needed because the site describes health, relationship
+ * and money outcomes. Have the client (and ideally a lawyer) approve the wording.
+ */
+export const FOOTER_DISCLAIMER =
+  "Crystal and numerology guidance reflects traditional belief and personal experience. It is not a substitute for medical, psychological, legal or financial advice. Results vary from person to person.";
+
 /** Show the brand intro loader on page load. */
 export const SHOW_LOADER = true;
 

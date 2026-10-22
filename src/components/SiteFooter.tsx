@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { LINKS } from "@/data/home";
+import { FOOTER_DISCLAIMER, LINKS } from "@/data/home";
 
 export default function SiteFooter() {
   return (
@@ -21,6 +21,10 @@ export default function SiteFooter() {
             <a href={LINKS.youtube} target="_blank" rel="noopener noreferrer">YouTube</a>
             <a href={LINKS.shipping}>Shipping and returns</a>
           </nav>
+        </div>
+        <div className="footer-legal">
+          <p>{FOOTER_DISCLAIMER}</p>
+          <p>© {new Date().getFullYear()} Bracelet By Ammit</p>
         </div>
       </div>
     </footer>

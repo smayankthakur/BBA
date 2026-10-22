@@ -15,7 +15,7 @@ export default function Testimonials() {
           <p>From people wearing a bracelet Ammit chose for them.</p>
         </div>
 
-        <ul className="reviews-list">
+        <ul className="reviews-list" tabIndex={0} aria-label="Customer reviews">
           {TESTIMONIALS.map((t, idx) => {
             const it = bySlug[t.intention];
             return (

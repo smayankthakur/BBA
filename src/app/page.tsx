@@ -16,9 +16,12 @@ export default function HomePage() {
   return (
     <div className={`page${SHOW_LOADER ? " withload" : ""}`}>
       {SHOW_LOADER && <Loader />}
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <AnnouncementBar />
       <SiteHeader />
-      <main>
+      <main id="main">
         <Hero />
         <IntentionEdit />
         <ThreeInOne />
