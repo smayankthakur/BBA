@@ -49,7 +49,12 @@ export default function ConsultationPage() {
           qualified professional.
         </p>
       </section>
-      <OrderCta title="Have your date of birth ready" text="Message Ammit on WhatsApp to book a time." secondary={{ label: "Find your mulank", href: "/mulank" }} />
+      <OrderCta
+        title="Have your date of birth ready"
+        text="Message Ammit on WhatsApp to book a time."
+        primary={{ label: "Book on WhatsApp", href: LINKS.whatsapp, external: true }}
+        secondary={{ label: "Or order a bracelet", href: "/find-your-bracelet" }}
+      />
     </PageShell>
   );
 }

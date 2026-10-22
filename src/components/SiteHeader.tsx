@@ -24,18 +24,11 @@ const MORE_LINKS = [
   { href: "/reviews", label: "Reviews" },
 ];
 
-const ext = (external?: boolean) => (external ? { target: "_blank", rel: "noopener noreferrer" } : {});
-
-function ChatIcon() {
+function BagIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 11.5a7.5 7.5 0 1 1 3.6 6.4L4 19l1.1-3.4A7.5 7.5 0 0 1 4 11.5Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path d="M9 10.5h6M9 13.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M5 8h14l-1 12H6L5 8Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 10V7a3 3 0 0 1 6 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -150,15 +143,15 @@ export default function SiteHeader() {
                 {l.label}
               </Link>
             ))}
-            <a className="navlink" href={LINKS.whatsapp} {...ext(true)}>
-              Order on WhatsApp
-            </a>
+            <Link className="navlink navlink-order" href="/find-your-bracelet">
+              Order now
+            </Link>
           </div>
 
-          {/* Mobile: order on WhatsApp */}
-          <a className="bag-icon" href={LINKS.whatsapp} aria-label="Order on WhatsApp" {...ext(true)}>
-            <ChatIcon />
-          </a>
+          {/* Mobile: order */}
+          <Link className="bag-icon" href="/find-your-bracelet" aria-label="Order a bracelet">
+            <BagIcon />
+          </Link>
         </header>
       </div>
 
@@ -223,7 +216,10 @@ export default function SiteHeader() {
         </nav>
 
         <div className="menu-foot">
-          <a className="btn btn-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+          <Link className="btn btn-gold" href="/find-your-bracelet" onClick={() => close(false)}>
+            Order a bracelet
+          </Link>
+          <a className="btn btn-ghost-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
             Ask Ammit on WhatsApp
           </a>
           <div className="menu-social">

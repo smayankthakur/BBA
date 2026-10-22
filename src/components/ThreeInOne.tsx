@@ -18,7 +18,7 @@ export default function ThreeInOne() {
           </p>
           <p className="three-price">{PRICE}</p>
           <div>
-            <Link className="btn btn-gold" href="/bracelets/3-in-1">
+            <Link className="btn btn-gold" href="/find-your-bracelet?intention=3-in-1">
               Build my 3 in 1
             </Link>
           </div>

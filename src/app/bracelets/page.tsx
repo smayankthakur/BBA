@@ -40,7 +40,7 @@ export default function BraceletsPage() {
         </div>
       </section>
       <HowItWorks />
-      <OrderCta title="Not sure which one?" text="Tell Ammit what you're going through and he'll suggest the right intention for your numbers." secondary={{ label: "Book a consultation", href: "/consultation" }} />
+      <OrderCta title="Not sure which one?" text="Take the 60-second reading: we'll work out your numbers and suggest the bracelet that suits them." secondary={{ label: "Book a consultation", href: "/consultation" }} />
     </PageShell>
   );
 }

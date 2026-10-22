@@ -9,7 +9,7 @@ import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
 import JsonLd from "@/components/JsonLd";
 import { BRACELETS, braceletBySlug } from "@/data/pages";
-import { LINKS, PRICE } from "@/data/home";
+import { PRICE } from "@/data/home";
 import { SITE_URL } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -64,14 +64,14 @@ export default async function BraceletPage({ params }: Params) {
             {PRICE} <span>read for your date of birth · strung by hand</span>
           </p>
           <div className="btn-row">
-            <a className="btn btn-lapis" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-              Order on WhatsApp
-            </a>
+            <Link className="btn btn-lapis" href={`/find-your-bracelet?intention=${b.slug}`}>
+              Order this bracelet
+            </Link>
             <Link className="btn btn-line" href="/consultation">
               Ask Ammit first
             </Link>
           </div>
-          <p className="product-hint">Send your full date of birth with your order. For a gift, send the wearer&apos;s.</p>
+          <p className="product-hint">A 60-second reading works out your numbers, then opens the order form with your answers filled in.</p>
         </div>
       </div>
 
@@ -121,7 +121,10 @@ export default async function BraceletPage({ params }: Params) {
         </div>
       </section>
 
-      <OrderCta secondary={{ label: "Read customer reviews", href: "/reviews" }} />
+      <OrderCta
+        primary={{ label: "Order this bracelet", href: `/find-your-bracelet?intention=${b.slug}` }}
+        secondary={{ label: "Read customer reviews", href: "/reviews" }}
+      />
     </PageShell>
   );
 }

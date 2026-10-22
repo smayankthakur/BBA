@@ -59,7 +59,12 @@ export default function CarePage() {
           and message us on WhatsApp so we can restring the same crystals for you.
         </p>
       </section>
-      <OrderCta title="Need a restring?" text="Send us a photo of the beads on WhatsApp and we'll tell you how to send them back." />
+      <OrderCta
+        title="Need a restring?"
+        text="Send us a photo of the beads on WhatsApp and we'll tell you how to send them back."
+        primary={{ label: "Message us on WhatsApp", href: LINKS.whatsapp, external: true }}
+        secondary={{ label: "Order a new bracelet", href: "/find-your-bracelet" }}
+      />
     </PageShell>
   );
 }

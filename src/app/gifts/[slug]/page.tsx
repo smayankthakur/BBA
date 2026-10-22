@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
-import { GIFTS, LINKS, PRICE } from "@/data/home";
+import { GIFTS, PRICE } from "@/data/home";
 import { GIFT_DETAILS } from "@/data/pages";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -59,9 +59,9 @@ export default async function GiftPage({ params }: Params) {
             {PRICE} <span>per bracelet · read for the wearer</span>
           </p>
           <div className="btn-row">
-            <a className="btn btn-lapis" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-              Order this gift on WhatsApp
-            </a>
+            <Link className="btn btn-lapis" href="/find-your-bracelet?for=gift">
+              Order this gift
+            </Link>
           </div>
         </div>
       </div>
@@ -93,7 +93,12 @@ export default async function GiftPage({ params }: Params) {
         ))}
       </nav>
 
-      <OrderCta secondary={{ label: "All gifts", href: "/gifts" }} />
+      <OrderCta
+        title="Have their date of birth ready?"
+        text="Answer a few questions about the wearer and we'll suggest the bracelet that suits their numbers."
+        primary={{ label: "Order this gift", href: "/find-your-bracelet?for=gift" }}
+        secondary={{ label: "All gifts", href: "/gifts" }}
+      />
     </PageShell>
   );
 }

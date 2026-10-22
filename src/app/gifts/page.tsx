@@ -41,7 +41,11 @@ export default function GiftsIndex() {
         </div>
       </section>
       <HowItWorks title="How a gift is made" />
-      <OrderCta title="Have a date of birth ready?" text="Send it on WhatsApp with who the gift is for, and Ammit will take it from there." />
+      <OrderCta
+        title="Have their date of birth ready?"
+        text="Answer a few questions about the wearer and we'll suggest the bracelet that suits their numbers."
+        primary={{ label: "Order a gift", href: "/find-your-bracelet?for=gift" }}
+      />
     </PageShell>
   );
 }

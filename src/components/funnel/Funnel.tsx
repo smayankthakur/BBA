@@ -99,6 +99,18 @@ export default function Funnel() {
   };
 
   useEffect(() => {
+    // Order buttons link here with ?intention=<slug> or ?for=gift to pre-select answers.
+    const q = new URLSearchParams(window.location.search);
+    const wanted = q.get("intention");
+    const preset =
+      wanted === "3-in-1"
+        ? ["love-and-relationships", "buri-nazar-protection", "career-and-money"]
+        : INTENTION_CHOICES.some((b) => b.slug === wanted)
+          ? [wanted as string]
+          : [];
+    if (preset.length || q.get("for") === "gift") {
+      setA((s) => ({ ...s, intentions: preset, who: q.get("for") === "gift" ? "gift" : s.who }));
+    }
     // Always start at the beginning: answers live only in memory.
     window.history.replaceState({ fn: 0 }, "", urlFor("who"));
     const onPop = (e: PopStateEvent) => {

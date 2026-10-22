@@ -30,7 +30,7 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
       { label: "Bracelet care", href: "/bracelet-care" },
       { label: "If your bracelet breaks", href: "/bracelet-care" },
       { label: "Customer reviews", href: "/reviews" },
-      { label: "Order on WhatsApp", href: LINKS.whatsapp, external: true },
+      { label: "Order a bracelet", href: "/find-your-bracelet" },
     ],
   },
 ];
