@@ -290,3 +290,6 @@ export const BUSINESS: {
   gstin: "",
   grievanceOfficer: { name: "Ammit Kukreja", designation: "Founder" },
 };
+
+/** Studio credit in the footer bar. */
+export const CREDIT = { label: "Sitelytc", href: "https://www.sitelytc.com/" } as const;

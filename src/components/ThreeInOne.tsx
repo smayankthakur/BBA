@@ -2,7 +2,7 @@ import { LINKS, PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
 
 export default function ThreeInOne() {
   return (
-    <section className="three">
+    <section id="three-in-one" className="three">
       <div className="three-inner">
         <div aria-hidden="true" className="three-rings">
           {THREE_IN_ONE_RINGS.map((c) => (
