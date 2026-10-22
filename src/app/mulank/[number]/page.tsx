@@ -50,8 +50,8 @@ export default async function MulankPage({ params }: Params) {
             <a className="btn btn-lapis" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
               Ask Ammit about my crystals
             </a>
-            <Link className="btn btn-line" href="/bracelets">
-              Shop by intention
+            <Link className="btn btn-line" href="/find-your-bracelet">
+              Find my bracelet
             </Link>
           </PageHero>
         </div>

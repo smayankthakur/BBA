@@ -48,7 +48,7 @@ export default function MulankIndex() {
           together. That&apos;s why Ammit reads your whole date of birth before choosing a single crystal.
         </p>
       </section>
-      <OrderCta title="Know your number?" text="Send Ammit your full date of birth on WhatsApp and he'll tell you which crystals suit it." secondary={{ label: "Shop by intention", href: "/bracelets" }} />
+      <OrderCta title="Know your number?" text="Send Ammit your full date of birth on WhatsApp and he'll tell you which crystals suit it." secondary={{ label: "Find my bracelet", href: "/find-your-bracelet" }} />
     </PageShell>
   );
 }

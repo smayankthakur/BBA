@@ -31,6 +31,7 @@ Requires Node 20+.
 | URL | Page |
 |---|---|
 | `/` | Homepage |
+| `/find-your-bracelet` | Quiz funnel: 7 questions → mulank/bhagyank → recommended bracelet → pre-filled Google order form |
 | `/bracelets` | Shop by intention (all 7 bracelets) |
 | `/bracelets/better-married-life` · `/buri-nazar-protection` · `/better-studies` · `/health-and-mental-healing` · `/love-and-relationships` · `/career-and-money` · `/3-in-1` | Bracelet pages (₹1,199, Order on WhatsApp, Product schema) |
 | `/mulank` | Find your mulank |
@@ -43,6 +44,19 @@ Requires Node 20+.
 | `/reviews` | Customer reviews |
 
 All pages are static, have their own title/description/canonical, breadcrumbs (with BreadcrumbList schema) and are listed in `sitemap.xml`. Page copy lives in `src/data/pages.ts`; items marked **CONFIRM** there (crystals per intention, consultation details) need Ammit's sign-off.
+
+## Find-your-bracelet funnel
+
+`src/components/funnel/Funnel.tsx` (client component), `src/lib/numerology.ts`, `src/lib/orderForm.ts`.
+
+- One question per screen, progress bar, back arrow and browser back/forward (`?step=` in the URL; UTM parameters are preserved).
+- Steps: who it's for → gender → up to 3 intentions → focus → a real review → name → date of birth (rejects impossible dates; under-18 wearers need a parent/guardian tick) → mulank & bhagyank reveal → wrist size → matching → result.
+- 2+ intentions within love / married life / buri nazar / career → recommends the **3 in 1**; otherwise the first intention picked.
+- **Confirm my order** opens the Google order form pre-filled (name, birth date, gender, wrist size, purpose). Entry IDs and option labels live in `src/lib/orderForm.ts`; update them if the form changes.
+- Answers are held in memory only (no cookies, storage or analytics) until the visitor chooses to open the form or WhatsApp.
+- No countdowns, fake scarcity or invented social proof.
+
+**Before public launch:** because the site now hands visitors to a form that collects personal data, a privacy policy page is required (pre-launch audit L1). Suggested form fixes: add a "3 in 1" purpose option and a "Website" option under "Referred by".
 
 ## Structure
 

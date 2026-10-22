@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import BraceletCard from "@/components/BraceletCard";
@@ -26,7 +27,11 @@ export default function BraceletsPage() {
             them by hand. Every bracelet is {PRICE}.
           </p>
         }
-      />
+      >
+        <Link className="btn btn-lapis" href="/find-your-bracelet">
+          Not sure? Take the 60-second reading
+        </Link>
+      </PageHero>
       <section className="section-wide grid-section" aria-label="Bracelets">
         <div className="b-grid">
           {BRACELETS.map((b) => (

@@ -6,6 +6,7 @@ import { GIFTS } from "@/data/home";
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "/",
+    "/find-your-bracelet",
     "/bracelets",
     ...BRACELETS.map((b) => `/bracelets/${b.slug}`),
     "/mulank",

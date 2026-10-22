@@ -8,6 +8,7 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
   {
     title: "Shop",
     links: [
+      { label: "Find your bracelet", href: "/find-your-bracelet" },
       { label: "Shop by intention", href: "/bracelets" },
       { label: "Find your number", href: "/mulank" },
       { label: "3 in 1 bracelet", href: "/bracelets/3-in-1" },

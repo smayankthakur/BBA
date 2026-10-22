@@ -19,6 +19,7 @@ const ABOUT_LINKS = [
 
 /** Mobile menu extras below the main sections. */
 const MORE_LINKS = [
+  { href: "/find-your-bracelet", label: "Find my bracelet" },
   { href: "/bracelet-care", label: "Bracelet care" },
   { href: "/reviews", label: "Reviews" },
 ];

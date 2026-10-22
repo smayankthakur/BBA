@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { HERO_BEADS, LINKS } from "@/data/home";
+import Link from "next/link";
+import { HERO_BEADS } from "@/data/home";
 
 const RADIUS = 190; // px from centre to bead
 const STEP = 15; // degrees between bead and spacer
@@ -22,9 +23,9 @@ export default function Hero() {
         </p>
         <div className="btn-row">
           <a className="btn btn-lapis" href="#edit">Shop by intention</a>
-          <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-            Build my bracelet
-          </a>
+          <Link className="btn btn-line" href="/find-your-bracelet">
+            Find my bracelet
+          </Link>
         </div>
       </div>
 
