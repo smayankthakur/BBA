@@ -1,82 +1,82 @@
 import Image from "next/image";
 import Link from "next/link";
+import Medallion from "./Medallion";
 import { BUSINESS, CREDIT, FOOTER_DISCLAIMER, LINKS, PRICE } from "@/data/home";
 
 const EXT = { target: "_blank", rel: "noopener noreferrer" } as const;
 
-const COLUMNS: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
+type FooterLink = { label: string; href: string; external?: boolean };
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Shop",
     links: [
       { label: "Find your bracelet", href: "/find-your-bracelet" },
       { label: "Shop by intention", href: "/bracelets" },
-      { label: "Find your number", href: "/mulank" },
       { label: "3 in 1 bracelet", href: "/bracelets/3-in-1" },
       { label: "Gifts", href: "/gifts" },
     ],
   },
   {
-    title: "Ammit",
+    title: "Numerology",
     links: [
-      { label: "About Ammit", href: "/about-ammit" },
+      { label: "Find your mulank", href: "/mulank" },
       { label: "Book a consultation", href: "/consultation" },
-      { label: "Watch on YouTube", href: LINKS.youtube, external: true },
-      { label: "Follow on Instagram", href: LINKS.instagram, external: true },
+      { label: "About Ammit", href: "/about-ammit" },
     ],
   },
   {
-    title: "Help",
+    title: "Care",
     links: [
       { label: "Bracelet care", href: "/bracelet-care" },
-      { label: "If your bracelet breaks", href: "/bracelet-care" },
+      { label: "If it breaks", href: "/bracelet-care" },
       { label: "Customer reviews", href: "/reviews" },
-      { label: "Order a bracelet", href: "/find-your-bracelet" },
     ],
   },
 ];
 
-// Bead strand divider — same palette as the intention spheres.
-const STRAND = ["#F2A7A0", "#1C1C26", "#7A3FC0", "#2E9E4F", "#D96B86", "#E7B32A", "#050E8F"];
+const SOCIAL: FooterLink[] = [
+  { label: "Instagram", href: LINKS.instagram, external: true },
+  { label: "YouTube", href: LINKS.youtube, external: true },
+  { label: "WhatsApp", href: LINKS.whatsapp, external: true },
+];
 
-/** Original geometric mandala: concentric rings, 16 petals, 32 dots. */
-function Mandala() {
-  const petals = Array.from({ length: 16 }, (_, i) => i * 22.5);
-  const dots = Array.from({ length: 32 }, (_, i) => i * 11.25);
+function FLink({ l, className }: { l: FooterLink; className?: string }) {
+  return l.external ? (
+    <a href={l.href} className={className} {...EXT}>
+      {l.label}
+    </a>
+  ) : (
+    <Link href={l.href} className={className}>
+      {l.label}
+    </Link>
+  );
+}
+
+/** Small lotus rosette (original geometric motif) used as a watermark. */
+function Rosette() {
+  const petals = Array.from({ length: 12 }, (_, i) => i * 30);
   return (
-    <svg className="footer-mandala" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
-      <g fill="none" stroke="currentColor" strokeWidth="0.8">
-        <circle cx="200" cy="200" r="196" />
-        <circle cx="200" cy="200" r="184" strokeDasharray="2 6" />
-        <circle cx="200" cy="200" r="150" />
-        <circle cx="200" cy="200" r="96" />
-        <circle cx="200" cy="200" r="58" />
+    <svg className="ft-rosette" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" strokeWidth="0.9">
+        <circle cx="100" cy="100" r="96" />
+        <circle cx="100" cy="100" r="88" strokeDasharray="1.5 5" />
+        <circle cx="100" cy="100" r="30" />
         {petals.map((a) => (
-          <g key={a} transform={`rotate(${a} 200 200)`}>
-            <path d="M200 50 C 222 80, 222 120, 200 146 C 178 120, 178 80, 200 50 Z" />
-            <path d="M200 104 C 210 118, 210 132, 200 142 C 190 132, 190 118, 200 104 Z" />
-          </g>
-        ))}
-      </g>
-      <g fill="currentColor">
-        {dots.map((a) => (
-          <circle key={a} cx="200" cy="34" r="2.2" transform={`rotate(${a} 200 200)`} />
+          <path key={a} transform={`rotate(${a} 100 100)`} d="M100 18 C 116 42, 116 64, 100 74 C 84 64, 84 42, 100 18 Z" />
         ))}
       </g>
     </svg>
   );
 }
 
-function Strand() {
+/** Thin gold rule with a diamond in the middle. */
+function Rule() {
   return (
-    <div className="footer-strand" aria-hidden="true">
-      <span className="strand-line" />
-      {STRAND.map((c, i) => (
-        <span key={c} className="strand-unit">
-          {i > 0 && <span className="strand-spacer" />}
-          <span className="strand-bead" style={{ backgroundColor: c }} />
-        </span>
-      ))}
-      <span className="strand-line" />
+    <div className="ft-rule" aria-hidden="true">
+      <span />
+      <i />
+      <span />
     </div>
   );
 }
@@ -85,57 +85,55 @@ export default function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="footer">
-      <div className="footer-jaali" aria-hidden="true" />
+    <footer className="ft">
+      {/* Zari-style woven border */}
+      <div className="ft-zari" aria-hidden="true" />
 
-      <div className="footer-inner">
-        {/* Call to action under a slowly turning mandala */}
-        <div className="footer-cta">
-          <Mandala />
-          <p className="footer-kicker">
-            <span aria-hidden="true">◆</span> Read for your date of birth <span aria-hidden="true">◆</span>
-          </p>
-          <h2>Ask Ammit which crystal is yours</h2>
-          <p className="footer-cta-text">
-            Send your date of birth on WhatsApp and Ammit will suggest the crystals that suit your numbers.
-          </p>
-          <div className="footer-cta-actions">
-            <a className="btn btn-gold-dark" href={LINKS.whatsapp} {...EXT}>
-              Message on WhatsApp
-            </a>
-            <a className="btn btn-ghost-gold" href={LINKS.youtube} {...EXT}>
-              Watch Ammit on YouTube
+      <div className="ft-inner">
+        {/* Framed call to action with the BBA crest */}
+        <section className="ft-cta" aria-labelledby="ft-cta-title">
+          <Medallion width={34} height={38} className="ft-crest" />
+          <Rosette />
+          <div className="ft-cta-copy">
+            <p className="ft-kicker">Read for your date of birth</p>
+            <h2 id="ft-cta-title">Ask Ammit which crystal is yours</h2>
+            <p className="ft-cta-text">A 60-second reading works out your numbers and the bracelet that suits them.</p>
+          </div>
+          <div className="ft-cta-actions">
+            <Link className="btn btn-gold-dark" href="/find-your-bracelet">
+              Order my bracelet
+            </Link>
+            <a className="btn btn-ghost-gold" href={LINKS.whatsapp} {...EXT}>
+              Ask on WhatsApp
             </a>
           </div>
-        </div>
+        </section>
 
-        <Strand />
-
-        {/* Brand + link columns */}
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <Image src="/brand/wordmark.png" alt="Bracelet By Ammit" width={140} height={65} />
-            <p className="footer-tagline">Wear the right crystals, not just any.</p>
-            <p className="footer-promise">
-              Every bracelet {PRICE} · Read for your birth date · Strung by hand
+        {/* Brand + links */}
+        <div className="ft-grid">
+          <div className="ft-brand">
+            <Image src="/brand/wordmark.png" alt="Bracelet By Ammit" width={120} height={56} />
+            <p className="ft-tagline">Wear the right crystals, not just any.</p>
+            <p className="ft-promise">
+              {PRICE} <span aria-hidden="true">·</span> read for your birth date <span aria-hidden="true">·</span> strung by
+              hand
             </p>
+            <ul className="ft-social" aria-label="Bracelet By Ammit elsewhere">
+              {SOCIAL.map((s) => (
+                <li key={s.label}>
+                  <FLink l={s} />
+                </li>
+              ))}
+            </ul>
           </div>
 
           {COLUMNS.map((col) => (
-            <nav key={col.title} className="footer-col" aria-label={`Footer: ${col.title}`}>
-              <h3>
-                <span aria-hidden="true">◆</span> {col.title}
-              </h3>
+            <nav key={col.title} className="ft-col" aria-label={`Footer: ${col.title}`}>
+              <h3>{col.title}</h3>
               <ul>
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    {l.external ? (
-                      <a href={l.href} {...EXT}>
-                        {l.label}
-                      </a>
-                    ) : (
-                      <Link href={l.href}>{l.label}</Link>
-                    )}
+                    <FLink l={l} />
                   </li>
                 ))}
               </ul>
@@ -143,8 +141,10 @@ export default function SiteFooter() {
           ))}
         </div>
 
+        <Rule />
+
         {/* Business details (Consumer Protection (E-Commerce) Rules) */}
-        <dl className="footer-business" aria-label="Business details">
+        <dl className="ft-biz" aria-label="Business details">
           <div>
             <dt>Business</dt>
             <dd>{BUSINESS.legalName || BUSINESS.brand}</dd>
@@ -162,7 +162,9 @@ export default function SiteFooter() {
           <div>
             <dt>Contact</dt>
             <dd>
-              <a href={LINKS.whatsapp} {...EXT}>WhatsApp</a>
+              <a href={LINKS.whatsapp} {...EXT}>
+                WhatsApp
+              </a>
               {BUSINESS.email && (
                 <>
                   {" · "}
@@ -190,15 +192,13 @@ export default function SiteFooter() {
             </div>
           )}
         </dl>
-
-        <p className="footer-disclaimer">{FOOTER_DISCLAIMER}</p>
+        <p className="ft-disclaimer">{FOOTER_DISCLAIMER}</p>
       </div>
 
-      {/* Bottom bar */}
-      <div className="footer-bar">
-        <div className="footer-bar-inner">
+      <div className="ft-bar">
+        <div className="ft-bar-inner">
           <p>© {year} Bracelet By Ammit. All rights reserved.</p>
-          <p className="footer-credit">
+          <p className="ft-credit">
             Designed by{" "}
             <a href={CREDIT.href} {...EXT}>
               {CREDIT.label}
