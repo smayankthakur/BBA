@@ -17,6 +17,11 @@ Requires Node 20+.
 | Variable | When | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | at launch | Real domain, e.g. `https://braceletbyammit.com`. Used for canonical URL, sitemap and share image. Falls back to the Vercel production URL. |
+| `RAZORPAY_KEY_ID` | for checkout | Razorpay key ID (test `rzp_test_…` first, then live). Server only. |
+| `RAZORPAY_KEY_SECRET` | for checkout | Razorpay key secret. **Server only, never NEXT_PUBLIC.** |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | for checkout | Same key ID as above; switches the funnel from the Google Form to the on-site checkout and opens the Razorpay hosts in the CSP. |
+| `RAZORPAY_WEBHOOK_SECRET` | for checkout | Secret set on the Razorpay webhook (URL `/api/razorpay/webhook`, events `order.paid`, `payment.captured`, `payment.failed`). |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | optional | Order database. Run `supabase/migrations/20261024000000_orders.sql` first. Without these, every order is still recorded in Razorpay (all details are in the order notes). |
 | `NEXT_PUBLIC_GA_ID` | optional | Google Analytics 4 ID (G-…). Loads only after the visitor accepts cookies. |
 | `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Funnel fires Lead and InitiateCheckout. |
 | `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
@@ -50,6 +55,19 @@ Requires Node 20+.
 | `/tools/reading-card` | **Staff only** (noindex, blocked in robots): print the personal reading card for each order or save it as PDF for WhatsApp |
 
 All pages are static, have their own title/description/canonical, breadcrumbs (with BreadcrumbList schema) and are listed in `sitemap.xml`. Page copy lives in `src/data/pages.ts`; items marked **CONFIRM** there (crystals per intention, consultation details) need Ammit's sign-off.
+
+## Checkout (Razorpay)
+
+- Funnel result → **Delivery and payment** step (contact, address, consent, optional WhatsApp marketing opt-in) → Razorpay Checkout → **Order confirmed** with reference `BBA-XXXXXXXX`.
+- `POST /api/checkout/create`: validates with zod, sets the price **on the server** (`PRICE_INR`), rate-limited, 8 KB body cap, creates the Razorpay order with the customer's details in its notes, saves a pending row if a database is configured.
+- `POST /api/checkout/verify`: checks the Checkout signature (HMAC) and re-fetches the payment from Razorpay to confirm order, amount and status before marking paid.
+- `POST /api/razorpay/webhook`: verifies `X-Razorpay-Signature` on the raw body; idempotent updates so Razorpay retries are safe.
+- Prepaid only (no COD), free shipping, delivery 5–7 days (`SHIPPING` in `src/data/home.ts`).
+- Without Razorpay keys the funnel falls back to the pre-filled Google order form.
+
+## Product photos
+
+Drop photos into `public/products/<bracelet-slug>/1.jpg, 2.jpg, 3.jpg` (on wrist, close-up, packaging). They replace the illustrations on the bracelet page and homepage hover cards on the next deploy, and are added to the product's structured data. See `public/products/README.txt`.
 
 ## Videos
 
@@ -100,7 +118,7 @@ public/brand/        emblem.png, wordmark.png
 - **Reviews**: three real customer messages from the Instagram "Reviews" highlight are on the site (`TESTIMONIALS` in `src/data/home.ts`), each linked to its source. Ask the client to confirm he's happy to reuse them; reviews claiming health results were deliberately left out.
 - **Product photos**: 3 per intention (hover fan) and one per gift. Bead-ring illustrations are shown until then.
 - **Approve the copy**: Ammit's note, care instructions, gift blurbs and footer disclaimer were drafted for his review.
-- **Shipping and returns**: delivery time, shipping charges and returns policy. Add a page and footer link once known.
+- **Shipping & payments (placeholder decisions by Mayank, 24 Oct)**: free shipping, prepaid only, 5–7 days, refunds started within 7 working days. Confirm with Ammit.
 - **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.
 - Prices are `PRICE` (₹1,199) in `src/data/home.ts`. Ordering is WhatsApp-only, so every Choose/Build/Consultation/Order action opens WhatsApp.
 

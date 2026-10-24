@@ -39,8 +39,9 @@ export default function TermsPage() {
 
       <h2>Prices and payment</h2>
       <p>
-        Prices are shown in Indian rupees. The total you pay, including any delivery charge, is confirmed with you
-        before payment. An order is accepted once we confirm it with you on WhatsApp.
+        Prices are shown in Indian rupees and include free delivery within India. Orders are prepaid online through
+        Razorpay (UPI, cards, net banking); we don&apos;t offer cash on delivery. Your order is accepted once your payment
+        is confirmed, and we&apos;ll send updates on WhatsApp. If we can&apos;t fulfil an order, we&apos;ll refund it in full.
       </p>
 
       <h2>Delivery, returns and restringing</h2>

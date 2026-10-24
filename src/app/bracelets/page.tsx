@@ -7,6 +7,7 @@ import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
 import { BRACELETS } from "@/data/pages";
 import { PRICE } from "@/data/home";
+import TrustBar from "@/components/TrustBar";
 
 export const metadata: Metadata = {
   title: "Shop by intention",
@@ -32,6 +33,9 @@ export default function BraceletsPage() {
           Not sure? Take the 60-second reading
         </Link>
       </PageHero>
+      <div className="section-wide trust-wrap">
+        <TrustBar />
+      </div>
       <section className="section-wide grid-section" aria-label="Bracelets">
         <div className="b-grid">
           {BRACELETS.map((b) => (

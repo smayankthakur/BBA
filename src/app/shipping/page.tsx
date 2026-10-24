@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
-import { LINKS } from "@/data/home";
+import { LINKS, SHIPPING } from "@/data/home";
 
 export const metadata: Metadata = {
   title: "Shipping and delivery",
@@ -14,7 +14,7 @@ export default function ShippingPage() {
     <LegalPage
       title="Shipping and delivery"
       crumb="Shipping"
-      lede="Every bracelet is read and strung by hand after you order, then sent to you. Here's how that works."
+      lede="Free delivery across India, usually within 5–7 days of your order. Every bracelet is read and strung by hand first."
     >
       <h2>Making your bracelet</h2>
       <p>
@@ -31,10 +31,20 @@ export default function ShippingPage() {
         before ordering.
       </p>
 
-      <h2>Delivery time and charges</h2>
+      <h2>Delivery charges</h2>
+      <p>Shipping is free on every order within India. The price you see is the price you pay.</p>
+
+      <h2>Delivery time</h2>
       <p>
-        The expected delivery date and any delivery charge are confirmed with you on WhatsApp before you pay, so
-        there are no surprises.
+        Most orders arrive within {SHIPPING.minDays}–{SHIPPING.maxDays} days of payment, including the time Ammit takes to
+        read your numbers and string the bracelet. We show an estimated delivery date before you pay. Remote PIN codes
+        and festival periods can take a little longer; we&apos;ll tell you on WhatsApp if that happens.
+      </p>
+
+      <h2>Payment</h2>
+      <p>
+        All orders are prepaid online through Razorpay: UPI, debit and credit cards, and net banking. We don&apos;t offer
+        cash on delivery.
       </p>
 
       <h2>Your address</h2>

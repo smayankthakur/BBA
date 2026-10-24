@@ -6,7 +6,10 @@ import Medallion from "../Medallion";
 import Sphere from "../Sphere";
 import ProductVisual from "../ProductVisual";
 import { BRACELETS, MULANK, braceletBySlug } from "@/data/pages";
-import { LINKS, PRICE, TESTIMONIALS } from "@/data/home";
+import { LINKS, PRICE, PRICE_INR, SHIPPING, TESTIMONIALS } from "@/data/home";
+import TrustBar from "../TrustBar";
+import { INDIAN_STATES } from "@/lib/checkoutSchema";
+import { deliveryWindow } from "@/lib/delivery";
 import { ageFrom, bhagyank, isValidDate, mulank } from "@/lib/numerology";
 import { prefilledOrderUrl, WRIST_OPTIONS, type Gender } from "@/lib/orderForm";
 import { track } from "@/lib/analytics";
@@ -16,7 +19,7 @@ import ReadingCard from "../ReadingCard";
 /* Steps                                                               */
 /* ------------------------------------------------------------------ */
 
-const STEPS = ["who", "gender", "intention", "focus", "proof", "name", "dob", "reveal", "wrist", "matching", "result"] as const;
+const STEPS = ["who", "gender", "intention", "focus", "proof", "name", "dob", "reveal", "wrist", "matching", "result", "checkout", "confirmed"] as const;
 type StepId = (typeof STEPS)[number];
 /** Steps that count towards "Question x of y" */
 const QUESTIONS: StepId[] = ["who", "gender", "intention", "focus", "name", "dob", "wrist"];
@@ -45,6 +48,71 @@ type Answers = {
 };
 
 const EMPTY: Answers = { intentions: [], firstName: "", lastName: "", guardian: false };
+
+/** Native checkout is on when a Razorpay key is configured; otherwise the Google order form is used. */
+const CHECKOUT_ENABLED = !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+type Contact = {
+  deliveryName: string;
+  mobile: string;
+  email: string;
+  line1: string;
+  line2: string;
+  landmark: string;
+  city: string;
+  state: string;
+  pincode: string;
+  giftNote: string;
+  consent: boolean;
+  marketing: boolean;
+};
+const EMPTY_CONTACT: Contact = {
+  deliveryName: "",
+  mobile: "",
+  email: "",
+  line1: "",
+  line2: "",
+  landmark: "",
+  city: "",
+  state: "",
+  pincode: "",
+  giftNote: "",
+  consent: false,
+  marketing: false,
+};
+
+type RzpResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+type RzpInstance = { open: () => void; on: (e: string, cb: (r: { error?: { description?: string } }) => void) => void };
+declare global {
+  interface Window {
+    Razorpay?: new (opts: Record<string, unknown>) => RzpInstance;
+  }
+}
+
+function loadRazorpay(): Promise<boolean> {
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.async = true;
+    s.onload = () => resolve(!!window.Razorpay);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
+
+const contactErrors = (c: Contact) => {
+  const e: Partial<Record<keyof Contact, string>> = {};
+  if (!c.deliveryName.trim()) e.deliveryName = "Enter the name for delivery";
+  if (!/^[6-9]\d{9}$/.test(c.mobile.trim())) e.mobile = "Enter a 10-digit mobile number";
+  if (c.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email.trim())) e.email = "Check your email address";
+  if (!c.line1.trim()) e.line1 = "Enter flat / house number and building";
+  if (!c.city.trim()) e.city = "Enter your city";
+  if (!c.state) e.state = "Choose your state";
+  if (!/^[1-9]\d{5}$/.test(c.pincode.trim())) e.pincode = "Enter a 6-digit PIN code";
+  if (!c.consent) e.consent = "Please accept the terms to continue";
+  return e;
+};
 
 /* ------------------------------------------------------------------ */
 /* Small UI pieces                                                     */
@@ -86,6 +154,11 @@ function Glyph({ children }: { children: React.ReactNode }) {
 export default function Funnel() {
   const [i, setI] = useState(0);
   const [a, setA] = useState<Answers>(EMPTY);
+  const [co, setCo] = useState<Contact>(EMPTY_CONTACT);
+  const [showErrors, setShowErrors] = useState(false);
+  const [payState, setPayState] = useState<{ status: "idle" | "working" | "error"; message?: string }>({ status: "idle" });
+  const [orderRef, setOrderRef] = useState("");
+  const utmRef = useRef<Record<string, string>>({});
   const headingRef = useRef<HTMLHeadingElement>(null);
   const step = STEPS[i];
   const gift = a.who === "gift";
@@ -103,6 +176,9 @@ export default function Funnel() {
   useEffect(() => {
     // Order buttons link here with ?intention=<slug> or ?for=gift to pre-select answers.
     const q = new URLSearchParams(window.location.search);
+    q.forEach((v, k) => {
+      if (k.startsWith("utm_") && Object.keys(utmRef.current).length < 8) utmRef.current[k] = v.slice(0, 100);
+    });
     const wanted = q.get("intention");
     const preset =
       wanted === "3-in-1"
@@ -175,7 +251,7 @@ export default function Funnel() {
 
   const qIndex = QUESTIONS.indexOf(step);
   const answeredQs = QUESTIONS.filter((q) => STEPS.indexOf(q) < i).length;
-  const progress = step === "result" ? 1 : Math.max(0.04, answeredQs / QUESTIONS.length);
+  const progress = STEPS.indexOf(step) >= STEPS.indexOf("result") ? 1 : Math.max(0.04, answeredQs / QUESTIONS.length);
 
   const orderUrl =
     dobValid && a.gender
@@ -197,7 +273,7 @@ export default function Funnel() {
     <div className="fn">
       <header className="fn-top">
         <div className="fn-top-row">
-          {i > 0 && step !== "result" ? (
+          {i > 0 && step !== "result" && step !== "confirmed" ? (
             <button type="button" className="fn-back" onClick={back} aria-label="Previous question">
               ←
             </button>
@@ -613,8 +689,21 @@ export default function Funnel() {
               <p className="fn-price">
                 {PRICE} <span>read for your numbers · strung by hand</span>
               </p>
+              <TrustBar compact />
               <div className="fn-actions is-stack">
-                {orderUrl && (
+                {CHECKOUT_ENABLED && (
+                  <button
+                    type="button"
+                    className="btn btn-lapis"
+                    onClick={() => {
+                      setCo((c) => ({ ...c, deliveryName: c.deliveryName || (gift ? "" : `${a.firstName} ${a.lastName}`.trim()) }));
+                      goTo(STEPS.indexOf("checkout"));
+                    }}
+                  >
+                    Continue to checkout
+                  </button>
+                )}
+                {!CHECKOUT_ENABLED && orderUrl && (
                   <a
                     className="btn btn-lapis"
                     href={orderUrl}
@@ -633,12 +722,16 @@ export default function Funnel() {
                 </a>
               </div>
               <ol className="num-list fn-next">
-                <li>The order form opens with these answers filled in. Add a mobile number and delivery address.</li>
+                {CHECKOUT_ENABLED ? (
+                  <li>Add a delivery address and pay securely: UPI, cards or net banking.</li>
+                ) : (
+                  <li>The order form opens with these answers filled in. Add a mobile number and delivery address.</li>
+                )}
                 <li>Ammit reads the full numbers and confirms the crystals with you on WhatsApp.</li>
-                <li>The bracelet is strung by hand and sent to you.</li>
+                <li>The bracelet is strung by hand and delivered free in {SHIPPING.minDays}–{SHIPPING.maxDays} days.</li>
               </ol>
-              {gift && <p className="small-note">The form says &ldquo;your&rdquo; details: keep the wearer&apos;s name and birth date, and add your own mobile number and address.</p>}
-              {recSlug === "3-in-1" && <p className="small-note">The form takes one purpose, so we&apos;ve filled in your first choice. Mention &ldquo;3 in 1&rdquo; when the team messages you.</p>}
+              {!CHECKOUT_ENABLED && gift && <p className="small-note">The form says &ldquo;your&rdquo; details: keep the wearer&apos;s name and birth date, and add your own mobile number and address.</p>}
+              {!CHECKOUT_ENABLED && recSlug === "3-in-1" && <p className="small-note">The form takes one purpose, so we&apos;ve filled in your first choice. Mention &ldquo;3 in 1&rdquo; when the team messages you.</p>}
               <p className="small-note">
                 By ordering you agree to our{" "}
                 <a href="/terms" target="_blank" rel="noopener noreferrer">
@@ -658,19 +751,6 @@ export default function Funnel() {
                 </a>
                 .
               </p>
-              <div className="print-area print-only">
-                <ReadingCard
-                  d={{
-                    kind: "suggested",
-                    name: `${a.firstName.trim()} ${a.lastName.trim()}`.trim(),
-                    dob: `${a.day} ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][(a.month ?? 1) - 1]} ${a.year}`,
-                    mulank: m!,
-                    bhagyank: bh!,
-                    bracelet: rec.title,
-                    crystals: rec.crystals,
-                  }}
-                />
-              </div>
               <div className="fn-result-links">
                 <Link href={`/bracelets/${rec.slug}`}>About this bracelet</Link>
                 <button
@@ -686,8 +766,290 @@ export default function Funnel() {
               </div>
             </div>
           )}
+
+          {/* 12 — checkout (Razorpay) */}
+          {step === "checkout" && rec && dobValid && (
+            <form
+              className="fn-form fn-checkout"
+              noValidate
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const errs = contactErrors(co);
+                if (Object.keys(errs).length) {
+                  setShowErrors(true);
+                  return;
+                }
+                setPayState({ status: "working" });
+                track("begin_checkout", { bracelet: rec.slug, value: PRICE_INR, currency: "INR" }, "InitiateCheckout");
+                try {
+                  const res = await fetch("/api/checkout/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      bracelet: rec.slug,
+                      wearer: {
+                        firstName: a.firstName.trim(),
+                        lastName: a.lastName.trim(),
+                        day: a.day,
+                        month: a.month,
+                        year: a.year,
+                        gender: a.gender,
+                        wrist: a.wrist ?? "unsure",
+                      },
+                      intentions: a.intentions,
+                      focus: a.focus ?? "",
+                      isGift: gift,
+                      giftNote: gift ? co.giftNote : "",
+                      contact: { deliveryName: co.deliveryName, mobile: co.mobile.trim(), email: co.email.trim() },
+                      address: {
+                        line1: co.line1,
+                        line2: co.line2,
+                        landmark: co.landmark,
+                        city: co.city,
+                        state: co.state,
+                        pincode: co.pincode.trim(),
+                      },
+                      consent: co.consent,
+                      marketing: co.marketing,
+                      utm: utmRef.current,
+                    }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    setPayState({ status: "error", message: data.error ?? "Something went wrong. Please try again." });
+                    return;
+                  }
+                  if (!(await loadRazorpay()) || !window.Razorpay) {
+                    setPayState({ status: "error", message: "The payment window couldn't load. Check your connection and try again." });
+                    return;
+                  }
+                  const rzp = new window.Razorpay({
+                    key: data.keyId,
+                    order_id: data.orderId,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: "Bracelet By Ammit",
+                    description: `${rec.title} bracelet`,
+                    image: `${window.location.origin}/brand/emblem.png`,
+                    prefill: { name: co.deliveryName, email: co.email.trim() || undefined, contact: `+91${co.mobile.trim()}` },
+                    notes: { ref: data.ref },
+                    theme: { color: "#050E8F" },
+                    modal: {
+                      ondismiss: () => setPayState({ status: "error", message: "Payment wasn't completed. You can try again." }),
+                    },
+                    handler: async (r: RzpResponse) => {
+                      setPayState({ status: "working", message: "Confirming your payment…" });
+                      const v = await fetch("/api/checkout/verify", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(r),
+                      }).catch(() => null);
+                      const vd = v ? await v.json().catch(() => ({})) : {};
+                      if (v && v.ok) {
+                        setOrderRef(data.ref);
+                        setPayState({ status: "idle" });
+                        track("purchase", { transaction_id: data.ref, value: PRICE_INR, currency: "INR" }, "Purchase");
+                        goTo(STEPS.indexOf("confirmed"));
+                      } else {
+                        setPayState({
+                          status: "error",
+                          message: vd.error ?? `We couldn't confirm the payment. If money was taken, message us on WhatsApp with reference ${data.ref}.`,
+                        });
+                      }
+                    },
+                  });
+                  rzp.on("payment.failed", (r) =>
+                    setPayState({ status: "error", message: r.error?.description ?? "Payment failed. Please try again." }),
+                  );
+                  rzp.open();
+                } catch {
+                  setPayState({ status: "error", message: "Something went wrong. Please try again." });
+                }
+              }}
+            >
+              <h1 ref={headingRef} tabIndex={-1} className="fn-title">
+                Delivery and payment
+              </h1>
+
+              <div className="fn-summary" aria-label="Order summary">
+                <div className="fn-summary-row">
+                  <span>
+                    <b>{rec.title}</b>
+                    <small>
+                      For {a.firstName.trim()} · Mulank {m} · Bhagyank {bh}
+                      {a.wrist && a.wrist !== "unsure" ? ` · ${a.wrist}` : ""}
+                    </small>
+                  </span>
+                  <span>{PRICE}</span>
+                </div>
+                <div className="fn-summary-row">
+                  <span>Shipping</span>
+                  <span>Free</span>
+                </div>
+                <div className="fn-summary-row is-total">
+                  <span>Total</span>
+                  <span>{PRICE}</span>
+                </div>
+                <p className="fn-summary-eta">Estimated delivery: {deliveryWindow()}</p>
+              </div>
+
+              <fieldset className="fn-fieldset">
+                <legend>Contact</legend>
+                <div className="fn-fields cols-2">
+                  <label className="fn-field">
+                    <span>Full name for delivery</span>
+                    <input value={co.deliveryName} onChange={(e) => setCo({ ...co, deliveryName: e.target.value })} autoComplete="name" maxLength={80} aria-invalid={showErrors && !!contactErrors(co).deliveryName} />
+                    {showErrors && contactErrors(co).deliveryName && <em className="fn-err">{contactErrors(co).deliveryName}</em>}
+                  </label>
+                  <label className="fn-field">
+                    <span>Mobile number (for WhatsApp updates)</span>
+                    <input value={co.mobile} onChange={(e) => setCo({ ...co, mobile: e.target.value.replace(/[^\d]/g, "").slice(0, 10) })} inputMode="numeric" autoComplete="tel-national" placeholder="10 digits" aria-invalid={showErrors && !!contactErrors(co).mobile} />
+                    {showErrors && contactErrors(co).mobile && <em className="fn-err">{contactErrors(co).mobile}</em>}
+                  </label>
+                </div>
+                <label className="fn-field">
+                  <span>Email (optional, for your receipt)</span>
+                  <input type="email" value={co.email} onChange={(e) => setCo({ ...co, email: e.target.value })} autoComplete="email" maxLength={120} aria-invalid={showErrors && !!contactErrors(co).email} />
+                  {showErrors && contactErrors(co).email && <em className="fn-err">{contactErrors(co).email}</em>}
+                </label>
+              </fieldset>
+
+              <fieldset className="fn-fieldset">
+                <legend>Delivery address</legend>
+                <label className="fn-field">
+                  <span>Flat / house no. and building</span>
+                  <input value={co.line1} onChange={(e) => setCo({ ...co, line1: e.target.value })} autoComplete="address-line1" maxLength={120} aria-invalid={showErrors && !!contactErrors(co).line1} />
+                  {showErrors && contactErrors(co).line1 && <em className="fn-err">{contactErrors(co).line1}</em>}
+                </label>
+                <label className="fn-field">
+                  <span>Street and area (optional)</span>
+                  <input value={co.line2} onChange={(e) => setCo({ ...co, line2: e.target.value })} autoComplete="address-line2" maxLength={120} />
+                </label>
+                <label className="fn-field">
+                  <span>Landmark (optional)</span>
+                  <input value={co.landmark} onChange={(e) => setCo({ ...co, landmark: e.target.value })} maxLength={80} />
+                </label>
+                <div className="fn-fields cols-3-addr">
+                  <label className="fn-field">
+                    <span>City</span>
+                    <input value={co.city} onChange={(e) => setCo({ ...co, city: e.target.value })} autoComplete="address-level2" maxLength={60} aria-invalid={showErrors && !!contactErrors(co).city} />
+                    {showErrors && contactErrors(co).city && <em className="fn-err">{contactErrors(co).city}</em>}
+                  </label>
+                  <label className="fn-field">
+                    <span>State</span>
+                    <select value={co.state} onChange={(e) => setCo({ ...co, state: e.target.value })} autoComplete="address-level1" aria-invalid={showErrors && !!contactErrors(co).state}>
+                      <option value="">Choose</option>
+                      {INDIAN_STATES.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                    {showErrors && contactErrors(co).state && <em className="fn-err">{contactErrors(co).state}</em>}
+                  </label>
+                  <label className="fn-field">
+                    <span>PIN code</span>
+                    <input value={co.pincode} onChange={(e) => setCo({ ...co, pincode: e.target.value.replace(/[^\d]/g, "").slice(0, 6) })} inputMode="numeric" autoComplete="postal-code" aria-invalid={showErrors && !!contactErrors(co).pincode} />
+                    {showErrors && contactErrors(co).pincode && <em className="fn-err">{contactErrors(co).pincode}</em>}
+                  </label>
+                </div>
+              </fieldset>
+
+              {gift && (
+                <label className="fn-field">
+                  <span>Gift note (optional, written on a card)</span>
+                  <textarea rows={2} value={co.giftNote} onChange={(e) => setCo({ ...co, giftNote: e.target.value })} maxLength={240} />
+                </label>
+              )}
+
+              <label className="fn-check">
+                <input type="checkbox" checked={co.consent} onChange={(e) => setCo({ ...co, consent: e.target.checked })} />
+                <span>
+                  I agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer">
+                    terms
+                  </a>
+                  ,{" "}
+                  <a href="/shipping" target="_blank" rel="noopener noreferrer">
+                    shipping
+                  </a>{" "}
+                  and{" "}
+                  <a href="/returns" target="_blank" rel="noopener noreferrer">
+                    returns
+                  </a>{" "}
+                  policies, and to my details being used to make and deliver this order as described in the{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                    privacy policy
+                  </a>
+                  .
+                </span>
+              </label>
+              {showErrors && contactErrors(co).consent && <em className="fn-err">{contactErrors(co).consent}</em>}
+              <label className="fn-check is-light">
+                <input type="checkbox" checked={co.marketing} onChange={(e) => setCo({ ...co, marketing: e.target.checked })} />
+                <span>Send me crystal care reminders and offers on WhatsApp (optional).</span>
+              </label>
+
+              {payState.status === "error" && (
+                <p className="fn-error" role="alert">
+                  {payState.message}
+                </p>
+              )}
+              <div className="fn-actions is-stack">
+                <button type="submit" className="btn btn-lapis" disabled={payState.status === "working"}>
+                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${PRICE} securely`}
+                </button>
+              </div>
+              <TrustBar compact />
+              <p className="small-note">Payments are processed by Razorpay. We never see or store your card or UPI details.</p>
+            </form>
+          )}
+
+          {/* 13 — confirmed */}
+          {step === "confirmed" && rec && (
+            <div className="fn-result">
+              <p className="fn-kicker">
+                <span aria-hidden="true">◆</span> Order {orderRef}
+              </p>
+              <h1 ref={headingRef} tabIndex={-1} className="fn-title is-hero">
+                Thank you{a.firstName.trim() && !gift ? `, ${a.firstName.trim()}` : ""}
+              </h1>
+              <p className="fn-sub">
+                Your {rec.title} bracelet is ordered and paid. Keep your order number <b>{orderRef}</b> handy.
+              </p>
+              <ol className="num-list fn-next">
+                <li>Ammit reads {gift ? `${a.firstName.trim()}'s` : "your"} full name and date of birth and chooses the crystals.</li>
+                <li>We&apos;ll message you on WhatsApp at +91 {co.mobile} with any questions and your tracking details.</li>
+                <li>Free delivery, estimated {deliveryWindow()}.</li>
+              </ol>
+              <div className="fn-actions is-stack">
+                <button type="button" className="btn btn-lapis" onClick={() => window.print()}>
+                  Save my reading (PDF)
+                </button>
+                <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+                  Message us on WhatsApp
+                </a>
+              </div>
+              <p className="small-note">Questions about your order? Mention {orderRef} when you message us.</p>
+            </div>
+          )}
         </div>
       </main>
+      {rec && mInfo && dobValid && (
+        <div className="print-area print-only">
+                <ReadingCard
+                  d={{
+                    kind: "suggested",
+                    name: `${a.firstName.trim()} ${a.lastName.trim()}`.trim(),
+                    dob: `${a.day} ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][(a.month ?? 1) - 1]} ${a.year}`,
+                    mulank: m!,
+                    bhagyank: bh!,
+                    bracelet: rec.title,
+                    crystals: rec.crystals,
+                  }}
+                />
+        </div>
+      )}
     </div>
   );
 }

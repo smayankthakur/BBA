@@ -10,14 +10,31 @@ const isProd = process.env.NODE_ENV === "production";
 //    scripts themselves load only after the visitor accepts cookies.
 const GA = !!process.env.NEXT_PUBLIC_GA_ID;
 const META = !!process.env.NEXT_PUBLIC_META_PIXEL_ID;
+// Razorpay Checkout hosts, only when checkout is configured.
+const RZP = !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
-const scriptSrc = ["'self'", "'unsafe-inline'", GA && "https://www.googletagmanager.com", META && "https://connect.facebook.net"];
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  GA && "https://www.googletagmanager.com",
+  META && "https://connect.facebook.net",
+  RZP && "https://checkout.razorpay.com",
+];
 const connectSrc = [
   "'self'",
   GA && "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
   META && "https://www.facebook.com https://connect.facebook.net",
+  RZP && "https://api.razorpay.com https://lumberjack.razorpay.com",
 ];
-const imgSrc = ["'self'", "data:", "blob:", GA && "https://*.google-analytics.com https://www.googletagmanager.com", META && "https://www.facebook.com"];
+const imgSrc = [
+  "'self'",
+  "data:",
+  "blob:",
+  GA && "https://*.google-analytics.com https://www.googletagmanager.com",
+  META && "https://www.facebook.com",
+  RZP && "https://cdn.razorpay.com",
+];
+const frameSrc = ["https://www.youtube-nocookie.com", RZP && "https://api.razorpay.com https://checkout.razorpay.com"];
 
 const csp = [
   "default-src 'self'",
@@ -26,7 +43,7 @@ const csp = [
   `img-src ${imgSrc.filter(Boolean).join(" ")}`,
   "font-src 'self'",
   `connect-src ${connectSrc.filter(Boolean).join(" ")}`,
-  "frame-src https://www.youtube-nocookie.com",
+  `frame-src ${frameSrc.filter(Boolean).join(" ")}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -39,7 +56,10 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
+  {
+    key: "Permissions-Policy",
+    value: `camera=(), microphone=(), geolocation=(), payment=${RZP ? '(self "https://api.razorpay.com" "https://checkout.razorpay.com")' : "()"}, usb=(), interest-cohort=()`,
+  },
   // CSP only in production: `next dev` needs eval for fast refresh.
   ...(isProd ? [{ key: "Content-Security-Policy", value: csp }] : []),
 ];

@@ -41,7 +41,7 @@ export default function PrivacyPage() {
         WhatsApp.
       </p>
       <h3>When you order</h3>
-      <p>Orders are placed through our order form (Google Forms) and WhatsApp. We collect:</p>
+      <p>Orders are placed through our website checkout (and, in some cases, our Google order form or WhatsApp). We collect:</p>
       <ul>
         <li>name, mobile number and email address;</li>
         <li>date of birth and gender of the person who will wear the bracelet;</li>
@@ -61,6 +61,8 @@ export default function PrivacyPage() {
 
       <h2>Who we share it with</h2>
       <ul>
+        <li>Razorpay, which processes payments. Your card, UPI and bank details go directly to Razorpay; we never see or store them;</li>
+        <li>our order database provider, which stores order details securely for us;</li>
         <li>Google (order form and spreadsheet) and Meta (WhatsApp), which handle messages and order details for us;</li>
         <li>courier partners, who need your name, phone number and address to deliver;</li>
         <li>Vercel, which hosts this website;</li>

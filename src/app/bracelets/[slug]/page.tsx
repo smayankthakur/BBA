@@ -10,8 +10,10 @@ import OrderCta from "@/components/OrderCta";
 import JsonLd from "@/components/JsonLd";
 import VideoEmbed from "@/components/VideoEmbed";
 import { BRACELET_VIDEOS } from "@/data/videos";
+import TrustBar from "@/components/TrustBar";
+import { productPhotos } from "@/lib/server/photos";
 import { BRACELETS, braceletBySlug } from "@/data/pages";
-import { PRICE } from "@/data/home";
+import { PRICE, SHIPPING } from "@/data/home";
 import { SITE_URL } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -59,6 +61,7 @@ export default async function BraceletPage({ params }: Params) {
     },
   ];
   const amount = PRICE.replace(/[^\d]/g, "");
+  const photos = productPhotos(b.slug);
 
   return (
     <PageShell>
@@ -70,12 +73,28 @@ export default async function BraceletPage({ params }: Params) {
           description: b.blurb,
           brand: { "@type": "Brand", name: "Bracelet By Ammit" },
           url: `${SITE_URL}/bracelets/${b.slug}`,
-          offers: { "@type": "Offer", price: amount, priceCurrency: "INR", url: `${SITE_URL}/bracelets/${b.slug}` },
+          ...(photos.length ? { image: photos.map((p) => `${SITE_URL}${p}`) } : {}),
+          offers: {
+            "@type": "Offer",
+            price: amount,
+            priceCurrency: "INR",
+            url: `${SITE_URL}/bracelets/${b.slug}`,
+            shippingDetails: {
+              "@type": "OfferShippingDetails",
+              shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "INR" },
+              shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+              deliveryTime: {
+                "@type": "ShippingDeliveryTime",
+                handlingTime: { "@type": "QuantitativeValue", minValue: 2, maxValue: 3, unitCode: "DAY" },
+                transitTime: { "@type": "QuantitativeValue", minValue: SHIPPING.minDays - 2, maxValue: SHIPPING.maxDays - 3, unitCode: "DAY" },
+              },
+            },
+          },
         }}
       />
       <div className="product">
         <div className="product-visual">
-          <ProductVisual cards={b.cards} rings={b.rings} label={`Illustration of the ${b.title} bracelet`} />
+          <ProductVisual cards={b.cards} rings={b.rings} label={`Illustration of the ${b.title} bracelet`} photos={photos} />
         </div>
         <div className="product-info">
           <PageHero
@@ -87,6 +106,7 @@ export default async function BraceletPage({ params }: Params) {
           <p className="product-price">
             {PRICE} <span>read for your date of birth · strung by hand</span>
           </p>
+          <TrustBar />
           <div className="btn-row">
             <Link className="btn btn-lapis" href={`/find-your-bracelet?intention=${b.slug}`}>
               Order this bracelet
@@ -96,7 +116,9 @@ export default async function BraceletPage({ params }: Params) {
             </Link>
           </div>
           <p className="product-hint">
-            A 60-second reading works out your numbers, then opens the order form with your answers filled in.{" "}
+            {process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+              ? "A 60-second reading works out your numbers, then takes you to secure checkout."
+              : "A 60-second reading works out your numbers, then opens the order form with your answers filled in."}{" "}
             <Link href="/size-guide">Size guide</Link>
           </p>
         </div>

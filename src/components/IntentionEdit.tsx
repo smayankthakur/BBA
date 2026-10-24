@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { INTENTIONS, PRICE, type Intention } from "@/data/home";
+import { productPhotos } from "@/lib/server/photos";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
   backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
@@ -17,6 +19,7 @@ const sphereStyle = (it: Intention): CSSProperties => ({
  * Bead-ring illustrations until product photos arrive; add <Image className="ph-img" …/> per card.
  */
 function PhotoStack({ it }: { it: Intention }) {
+  const photos = productPhotos(it.slug);
   const order = [
     { cls: "c1", i: 0 },
     { cls: "c3", i: 1 },
@@ -26,7 +29,11 @@ function PhotoStack({ it }: { it: Intention }) {
     <span className="stack" aria-hidden="true">
       {order.map(({ cls, i }) => (
         <span key={cls} className={`pc ${cls}`} style={{ backgroundImage: it.cards[i] }}>
-          <span className="ring" style={ringStyle(it.rings[i])} />
+          {photos.length ? (
+            <Image src={photos[[1, 2, 0][i]] ?? photos[0]} alt="" fill sizes="150px" className="ph-img" />
+          ) : (
+            <span className="ring" style={ringStyle(it.rings[i])} />
+          )}
         </span>
       ))}
       <span className="tag">{it.title}</span>

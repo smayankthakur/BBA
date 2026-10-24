@@ -6,6 +6,7 @@ import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
 import { GIFTS, PRICE } from "@/data/home";
 import { GIFT_DETAILS } from "@/data/pages";
+import TrustBar from "@/components/TrustBar";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -58,6 +59,7 @@ export default async function GiftPage({ params }: Params) {
           <p className="product-price">
             {PRICE} <span>per bracelet · read for the wearer</span>
           </p>
+          <TrustBar />
           <div className="btn-row">
             <Link className="btn btn-lapis" href="/find-your-bracelet?for=gift">
               Order this gift

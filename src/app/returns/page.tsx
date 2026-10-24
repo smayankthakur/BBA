@@ -47,7 +47,8 @@ export default function ReturnsPage() {
 
       <h2>Refunds</h2>
       <p>
-        Where a refund is due, we&apos;ll confirm the amount with you and pay it back using the method you paid with.
+        Where a refund is due, we&apos;ll confirm it with you on WhatsApp and start it within 7 working days, back to the
+        method you paid with. Your bank or UPI app may take a further 5–7 working days to show it.
       </p>
     </LegalPage>
   );

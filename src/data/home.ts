@@ -13,8 +13,17 @@ export const LINKS = {
   instagramReviews: "https://www.instagram.com/braceletbyammit/",
 } as const;
 
-/** Every bracelet is the same price for now. */
-export const PRICE = "₹1,199";
+/** Every bracelet is the same price for now. The server charges PRICE_INR (never a client-sent amount). */
+export const PRICE_INR = 1199;
+export const PRICE = `₹${PRICE_INR.toLocaleString("en-IN")}`;
+
+/** Shipping promise shown next to prices (decided with Mayank, 24 Oct 2026). */
+export const SHIPPING = {
+  free: true,
+  prepaidOnly: true,
+  minDays: 5,
+  maxDays: 7,
+} as const;
 
 /**
  * Shown in the footer. Needed because the site describes health, relationship
