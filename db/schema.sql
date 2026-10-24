@@ -1,6 +1,7 @@
--- Orders for Bracelet By Ammit. Only the server (service role) reads/writes;
--- RLS is on with no policies, so the public/anon key has no access.
-create table if not exists public.orders (
+-- Orders for Bracelet By Ammit (Postgres / Neon).
+-- The app also runs this automatically (CREATE ... IF NOT EXISTS) the first
+-- time it needs the table, so no manual step is required.
+create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
   ref text not null unique,
   status text not null default 'pending' check (status in ('pending', 'paid', 'failed')),
@@ -36,8 +37,4 @@ create table if not exists public.orders (
   paid_at timestamptz,
   created_at timestamptz not null default now()
 );
-
-create index if not exists orders_status_created_idx on public.orders (status, created_at desc);
-
-alter table public.orders enable row level security;
-revoke all on public.orders from anon, authenticated;
+create index if not exists orders_status_created_idx on orders (status, created_at desc);

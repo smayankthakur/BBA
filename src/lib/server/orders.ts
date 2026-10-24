@@ -1,19 +1,64 @@
 import "server-only";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-// Order store. Uses the Supabase REST API with the service-role key when
-// SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set. Without them, the Razorpay
-// order itself (with its notes) is the record, so checkout still works.
+// Order store on Postgres (Neon via the Vercel integration, which sets
+// DATABASE_URL). All queries are parameterised. Without DATABASE_URL the
+// Razorpay order itself (with its notes) is the record, so checkout still works.
 
-const URL_ = process.env.SUPABASE_URL ?? "";
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-export const dbConfigured = () => !!(URL_ && KEY);
+const URL_ = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
+export const dbConfigured = () => !!URL_;
 
-const headers = () => ({
-  apikey: KEY,
-  Authorization: `Bearer ${KEY}`,
-  "Content-Type": "application/json",
-  Prefer: "return=minimal",
-});
+let sqlFn: NeonQueryFunction<false, false> | null = null;
+const db = () => (sqlFn ??= neon(URL_));
+
+let schemaReady: Promise<void> | null = null;
+/** Creates the table on first use (idempotent), once per server instance. */
+export function ensureSchema() {
+  schemaReady ??= (async () => {
+    const sql = db();
+    await sql`create table if not exists orders (
+      id uuid primary key default gen_random_uuid(),
+      ref text not null unique,
+      status text not null default 'pending' check (status in ('pending', 'paid', 'failed')),
+      bracelet_slug text not null,
+      bracelet_title text not null,
+      amount_paise integer not null check (amount_paise > 0),
+      wearer_first_name text not null,
+      wearer_last_name text not null default '',
+      wearer_dob date not null,
+      wearer_gender text not null,
+      mulank smallint not null,
+      bhagyank smallint not null,
+      wrist text not null,
+      intentions text[] not null default '{}',
+      focus text,
+      is_gift boolean not null default false,
+      gift_note text,
+      delivery_name text not null,
+      mobile text not null,
+      email text,
+      address_line1 text not null,
+      address_line2 text,
+      landmark text,
+      city text not null,
+      state text not null,
+      pincode text not null,
+      marketing_opt_in boolean not null default false,
+      terms_accepted_at timestamptz not null,
+      utm jsonb not null default '{}'::jsonb,
+      razorpay_order_id text not null unique,
+      razorpay_payment_id text,
+      payment_method text,
+      paid_at timestamptz,
+      created_at timestamptz not null default now()
+    )`;
+    await sql`create index if not exists orders_status_created_idx on orders (status, created_at desc)`;
+  })().catch((e) => {
+    schemaReady = null; // retry next time
+    throw e;
+  });
+  return schemaReady;
+}
 
 export type OrderRecord = {
   ref: string;
@@ -49,35 +94,39 @@ export type OrderRecord = {
 
 export async function insertOrder(o: OrderRecord) {
   if (!dbConfigured()) return;
-  const res = await fetch(`${URL_}/rest/v1/orders`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(o),
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!res.ok) throw new Error(`orders insert failed: ${res.status}`);
+  await ensureSchema();
+  await db()`insert into orders (
+      ref, status, bracelet_slug, bracelet_title, amount_paise,
+      wearer_first_name, wearer_last_name, wearer_dob, wearer_gender, mulank, bhagyank, wrist,
+      intentions, focus, is_gift, gift_note, delivery_name, mobile, email,
+      address_line1, address_line2, landmark, city, state, pincode,
+      marketing_opt_in, terms_accepted_at, utm, razorpay_order_id
+    ) values (
+      ${o.ref}, ${o.status}, ${o.bracelet_slug}, ${o.bracelet_title}, ${o.amount_paise},
+      ${o.wearer_first_name}, ${o.wearer_last_name}, ${o.wearer_dob}, ${o.wearer_gender}, ${o.mulank}, ${o.bhagyank}, ${o.wrist},
+      ${o.intentions}, ${o.focus}, ${o.is_gift}, ${o.gift_note}, ${o.delivery_name}, ${o.mobile}, ${o.email},
+      ${o.address_line1}, ${o.address_line2}, ${o.landmark}, ${o.city}, ${o.state}, ${o.pincode},
+      ${o.marketing_opt_in}, ${o.terms_accepted_at}, ${JSON.stringify(o.utm)}::jsonb, ${o.razorpay_order_id}
+    ) on conflict (razorpay_order_id) do nothing`;
 }
 
 /** Idempotent: only moves pending/failed → paid. */
 export async function markPaid(razorpayOrderId: string, paymentId: string, method?: string) {
   if (!dbConfigured()) return;
-  const q = `razorpay_order_id=eq.${encodeURIComponent(razorpayOrderId)}&status=neq.paid`;
-  const res = await fetch(`${URL_}/rest/v1/orders?${q}`, {
-    method: "PATCH",
-    headers: headers(),
-    body: JSON.stringify({ status: "paid", razorpay_payment_id: paymentId, payment_method: method ?? null, paid_at: new Date().toISOString() }),
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!res.ok) throw new Error(`orders update failed: ${res.status}`);
+  await ensureSchema();
+  await db()`update orders
+    set status = 'paid', razorpay_payment_id = ${paymentId}, payment_method = ${method ?? null}, paid_at = now()
+    where razorpay_order_id = ${razorpayOrderId} and status <> 'paid'`;
 }
 
 export async function markFailed(razorpayOrderId: string) {
   if (!dbConfigured()) return;
-  const q = `razorpay_order_id=eq.${encodeURIComponent(razorpayOrderId)}&status=eq.pending`;
-  await fetch(`${URL_}/rest/v1/orders?${q}`, {
-    method: "PATCH",
-    headers: headers(),
-    body: JSON.stringify({ status: "failed" }),
-    signal: AbortSignal.timeout(8_000),
-  });
+  await ensureSchema();
+  await db()`update orders set status = 'failed' where razorpay_order_id = ${razorpayOrderId} and status = 'pending'`;
+}
+
+/** For the health check: confirms the connection and the table exist. */
+export async function dbHealth() {
+  await ensureSchema();
+  await db()`select 1 from orders limit 1`;
 }
