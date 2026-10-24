@@ -15,6 +15,15 @@ export const metadata: Metadata = {
   description:
     "Ammit Kukreja is the numerologist behind Bracelet By Ammit. He reads every date of birth himself before choosing crystals, and strings each bracelet by hand.",
   alternates: { canonical: "/about-ammit" },
+  openGraph: {
+    type: "profile",
+    siteName: "Bracelet By Ammit",
+    locale: "en_IN",
+    url: "/about-ammit",
+    title: "About Ammit Kukreja, numerologist | Bracelet By Ammit",
+    description: "The numerologist who reads every date of birth himself before choosing crystals.",
+    images: [{ url: AMMIT.photo, width: 825, height: 1024, alt: AMMIT.photoAlt }],
+  },
 };
 
 const WORK = [
@@ -32,6 +41,7 @@ export default function AboutPage() {
           "@type": "Person",
           name: AMMIT.name,
           jobTitle: "Numerologist",
+          image: `${SITE_URL}${AMMIT.photo}`,
           worksFor: { "@type": "Organization", name: "Bracelet By Ammit", url: SITE_URL },
           sameAs: [LINKS.instagram, LINKS.youtube],
         }}
