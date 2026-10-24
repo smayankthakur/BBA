@@ -7,6 +7,7 @@ import OrderCta from "@/components/OrderCta";
 import { GIFTS, PRICE } from "@/data/home";
 import { GIFT_DETAILS } from "@/data/pages";
 import TrustBar from "@/components/TrustBar";
+import GiftVisual from "@/components/GiftVisual";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -38,14 +39,7 @@ export default async function GiftPage({ params }: Params) {
     <PageShell>
       <div className="product">
         <div className="product-visual">
-          <div role="img" aria-label={g.alt} className="arch gift-hero-arch" style={{ backgroundImage: g.gradient }}>
-            <span
-              className="gift-ring"
-              style={{
-                backgroundImage: `repeating-conic-gradient(${g.beads[0]} 0 15deg,${g.beads[1]} 15deg 30deg,${g.beads[2]} 30deg 45deg)`,
-              }}
-            />
-          </div>
+          <GiftVisual gift={g} className="arch gift-hero-arch" sizes="(max-width: 760px) 80vw, 380px" priority />
         </div>
         <div className="product-info">
           <PageHero

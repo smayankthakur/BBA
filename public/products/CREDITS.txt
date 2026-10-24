@@ -22,4 +22,7 @@ career-and-money/2.jpg  https://images.unsplash.com/photo-1756276944474-6b73bab9
 career-and-money/3.jpg  https://images.unsplash.com/photo-1643081268678-a2c29b3a4c99  photo by Alexey Demidov
 3-in-1/1.jpg  https://images.unsplash.com/photo-1787831389345-9700d580f677  photo by Inna Nasonova
 3-in-1/2.jpg  https://images.unsplash.com/photo-1638768892257-8aec93a524e5  photo by Alexey Demidov
-3-in-1/3.jpg  https://images.unsplash.com/photo-1637808248242-57a6265593ed  photo by Alexey Demidov
+3-in-1/3.jpg  https://images.unsplash.com/photo-1749672197593-5682fde3702f  photo by Jan Kraus
+gifts/rakhi.jpg  https://images.unsplash.com/photo-1740819912840-428e2be64a0f  photo by sacred tibet
+gifts/for-your-mother.jpg  https://images.unsplash.com/photo-1743127671067-62af70aa67c2  photo by Keekon
+gifts/anniversary.jpg  https://images.unsplash.com/photo-1636520326725-ef3fe2bf0557  photo by Alexey Demidov

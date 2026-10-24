@@ -5,6 +5,7 @@ import PageHero from "@/components/PageHero";
 import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
 import { GIFTS, PRICE } from "@/data/home";
+import GiftVisual from "@/components/GiftVisual";
 
 export const metadata: Metadata = {
   title: "Gifts that mean something",
@@ -26,14 +27,7 @@ export default function GiftsIndex() {
         <div className="gifts-grid">
           {GIFTS.map((g) => (
             <Link key={g.slug} href={`/gifts/${g.slug}`} className="gift">
-              <div role="img" aria-label={g.alt} className="arch" style={{ backgroundImage: g.gradient }}>
-                <span
-                  className="gift-ring"
-                  style={{
-                    backgroundImage: `repeating-conic-gradient(${g.beads[0]} 0 15deg,${g.beads[1]} 15deg 30deg,${g.beads[2]} 30deg 45deg)`,
-                  }}
-                />
-              </div>
+              <GiftVisual gift={g} className="arch" />
               <span className="gift-title">{g.title}</span>
               <span className="gift-blurb">{g.blurb}</span>
             </Link>

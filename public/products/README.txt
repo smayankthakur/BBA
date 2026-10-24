@@ -10,3 +10,5 @@ Inside each folder:
   3.jpg  in the packaging
 
 Portrait 4:5 (for example 1200 x 1500 px), under 400 KB each. .jpg, .webp or .png.
+
+Gift photos: one per gift, in gifts/  ->  rakhi.jpg  for-your-mother.jpg  anniversary.jpg

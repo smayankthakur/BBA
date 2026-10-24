@@ -1221,6 +1221,13 @@ a:hover {
 .gift:hover .gift-ring {
   rotate: 45deg;
 }
+.gift-photo {
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.gift:hover .gift-photo {
+  transform: scale(1.04);
+}
 
 /* ---------- Testimonials ---------- */
 .reviews {
@@ -3967,6 +3974,7 @@ a:hover {
   .pc,
   .stack .tag,
   .gift-ring,
+  .gift-photo,
   .ft-col a,
   .ft-social a {
     transition: none;
