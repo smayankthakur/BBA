@@ -4,7 +4,7 @@ import "./globals.css";
 import { SITE_LIVE, SITE_URL } from "@/lib/site";
 import ConsentBanner from "@/components/ConsentBanner";
 import JsonLd from "@/components/JsonLd";
-import { LINKS } from "@/data/home";
+import { BUSINESS, LINKS } from "@/data/home";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -59,6 +59,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             url: SITE_URL,
             logo: `${SITE_URL}/brand/emblem.png`,
             founder: { "@type": "Person", name: "Ammit Kukreja", jobTitle: "Numerologist" },
+            telephone: BUSINESS.phone,
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "GuruAtman, Gauripada, Kalyan West",
+              addressLocality: "Thane",
+              addressRegion: "Maharashtra",
+              postalCode: "421301",
+              addressCountry: "IN",
+            },
             sameAs: [LINKS.instagram, LINKS.youtube],
           }}
         />

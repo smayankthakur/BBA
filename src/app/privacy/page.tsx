@@ -98,9 +98,8 @@ export default function PrivacyPage() {
       <h2>Grievance officer</h2>
       <p>
         {BUSINESS.grievanceOfficer.name}, {BUSINESS.grievanceOfficer.designation}
-        {BUSINESS.email ? `, ${BUSINESS.email}` : ""}. Contact via{" "}
-        WhatsApp (link in the footer)
-        .
+        {BUSINESS.email ? `, ${BUSINESS.email}` : ""}. Phone: {BUSINESS.phone}. Address: {BUSINESS.address}. You can
+        also reach us on WhatsApp (link in the footer).
       </p>
 
       <h2>Changes</h2>

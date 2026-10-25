@@ -66,8 +66,8 @@ export default function TermsPage() {
       <p>
         Message us on{" "}
         WhatsApp (link in the footer)
-        . Our grievance officer is {BUSINESS.grievanceOfficer.name}, {BUSINESS.grievanceOfficer.designation}. These terms
-        are governed by the laws of India.
+        or call {BUSINESS.phone}. Our grievance officer is {BUSINESS.grievanceOfficer.name},{" "}
+        {BUSINESS.grievanceOfficer.designation}, {BUSINESS.address}. These terms are governed by the laws of India.
       </p>
     </LegalPage>
   );

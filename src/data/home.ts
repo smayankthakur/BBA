@@ -10,19 +10,20 @@ export const LINKS = {
   youtube: "https://www.youtube.com/@braceletbyammit",
   youtubeShorts: "https://www.youtube.com/@braceletbyammit/shorts",
   instagram: "https://www.instagram.com/braceletbyammit/",
-  instagramReviews: "https://www.instagram.com/braceletbyammit/",
+  // Ammit's feedback highlight on Instagram (customer messages and photos)
+  instagramReviews: "https://www.instagram.com/stories/highlights/18046452023799577/",
 } as const;
 
 /** Every bracelet is the same price for now. The server charges PRICE_INR (never a client-sent amount). */
 export const PRICE_INR = 1199;
 export const PRICE = `₹${PRICE_INR.toLocaleString("en-IN")}`;
 
-/** Shipping promise shown next to prices (decided with Mayank, 24 Oct 2026). */
+/** Shipping promise shown next to prices (confirmed by Ammit, 25 Oct 2026). */
 export const SHIPPING = {
   free: true,
   prepaidOnly: true,
-  minDays: 5,
-  maxDays: 7,
+  minDays: 8,
+  maxDays: 9,
 } as const;
 
 /**
@@ -235,29 +236,87 @@ export type Testimonial = {
 };
 
 const REVIEWS_HIGHLIGHT = "https://www.instagram.com/stories/highlights/17972703031853261/";
+const MORE_REVIEWS = "https://www.instagram.com/stories/highlights/18046452023799577/";
 
-// Real customer messages, published by Bracelet By Ammit in the "Reviews"
-// highlight on Instagram. Names are shown only where the customer's first name
-// already appeared publicly. Reviews describing health outcomes were left out
-// on purpose (advertising rules on health claims).
+// Real customer messages, published by Bracelet By Ammit in the "Reviews" and
+// "More Reviews" highlights on Instagram (Ammit asked us to use them, 25 Oct 2026).
+// First names are shown only where they already appear publicly in the highlight.
+// Lightly edited for spelling; "…" marks a shortened message. Reviews describing
+// health outcomes were left out on purpose (advertising rules on health claims).
+const IG = (href: string) => ({ label: "Shared on Instagram", href });
+
 export const TESTIMONIALS: Testimonial[] = [
+  {
+    quote:
+      "I wore the bracelet in August 2025 and now I have finally received a job offer in a prestigious position in Germany. After wearing it I felt very positive and confident, and my job interviews were successful. I want to thank you from my heart.",
+    name: "Sagnik",
+    intention: "career-and-money",
+    source: IG(MORE_REVIEWS),
+  },
+  {
+    quote:
+      "I am wearing the spiritual bracelet you made for me as per the mentioned day and time, and I truly feel thankful for your work. I received great news today and I'm feeling very grateful. Your dedication and positive energy really reflect in your work.",
+    name: "Vishakha",
+    source: IG(MORE_REVIEWS),
+  },
+  {
+    quote:
+      "This is my 2nd purchase. My first was the love bracelet. I can't even explain it, it was magic: when I started wearing it, everything changed in our relationship. Now this one is for my career. Loads of love, Ammit sir and team.",
+    name: "Customer on WhatsApp",
+    intention: "love-and-relationships",
+    source: IG(MORE_REVIEWS),
+  },
+  {
+    quote:
+      "Maine aapse 3rd time bracelet purchase kiya hai. 2021 mein liya tha, phir 2023 mein, aur ab 2026 mein career aur financial ke liye. Aur sach mein yeh bahut achha kaam karta hai. Thank you so much, Ammit sir.",
+    name: "Vijaya",
+    intention: "career-and-money",
+    source: IG(MORE_REVIEWS),
+  },
   {
     quote:
       "Thank you sir for the bracelet which you have made especially for me. It is making things easier for me. People and situations are changing for me, and I'm feeling more positive than ever. Thank you so much.",
     name: "Customer on WhatsApp",
-    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+    source: IG(REVIEWS_HIGHLIGHT),
+  },
+  {
+    quote: "The bracelet designed by Ammit ji is working for me. Wanted to thank you guys, and specifically Ammit ji.",
+    name: "Alpana",
+    source: IG(MORE_REVIEWS),
   },
   {
     quote:
-      "Aapse bracelet liya hai, 1 month hone ko aaya hai. Positive ho rahi hoon, thoughts ki clarity ho rahi hai, study mein mann lag raha hai. I'm so grateful.",
-    name: "Customer on WhatsApp",
-    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+      "Thank you so much for the beautiful bracelet, just received. Bracelet ko open karte hi bahut positive vibes feel hui. Thank you so much.",
+    name: "Deepika",
+    source: IG(MORE_REVIEWS),
   },
   {
     quote:
       "Aap jo bracelet banate ho, woh bahut achhe hain. Mujh par bracelet ka bahut hi achha asar ho raha hai. Main family ke liye aur bracelet lene wali hoon. Thank you so much.",
     name: "Kavita",
-    source: { label: "Shared on Instagram", href: REVIEWS_HIGHLIGHT },
+    source: IG(REVIEWS_HIGHLIGHT),
+  },
+  {
+    quote:
+      "Aapse bracelet liya hai, 1 month hone ko aaya hai. Positive ho rahi hoon, thoughts ki clarity ho rahi hai, study mein mann lag raha hai. I'm so grateful.",
+    name: "Customer on WhatsApp",
+    source: IG(REVIEWS_HIGHLIGHT),
+  },
+  {
+    quote: "I received the bracelet today. It's very beautiful and gives positive vibes. Thank you sir.",
+    name: "Ambika",
+    source: IG(MORE_REVIEWS),
+  },
+  {
+    quote:
+      "Sir, maine 2 baar bracelet banwaye hain aur mujhe isse bahut zyada achha effect mehsoos hua hai. It really works. Thank you so much.",
+    name: "Customer on WhatsApp",
+    source: IG(MORE_REVIEWS),
+  },
+  {
+    quote: "Aapka bracelet sahi mein bahut kaam karta hai. Thank you!",
+    name: "Somya",
+    source: IG(MORE_REVIEWS),
   },
 ];
 
@@ -289,12 +348,12 @@ export const BUSINESS: {
   grievanceOfficer: { name: string; designation: string };
 } = {
   brand: "Bracelet By Ammit",
-  legalName: "", // e.g. "Ammit Kukreja (Proprietor)" or the registered company name
+  legalName: "Bracelet By Ammit",
   founder: "Ammit Kukreja, Numerologist",
-  address: "",
+  address: "GuruAtman, Gauripada, Kalyan West, Thane, Maharashtra 421301",
   email: "",
-  phone: "",
-  gstin: "",
+  phone: "+91 78888 35454",
+  gstin: "", // not GST-registered (confirmed by Ammit, 25 Oct 2026)
   grievanceOfficer: { name: "Ammit Kukreja", designation: "Founder" },
 };
 

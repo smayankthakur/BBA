@@ -14,7 +14,7 @@ export default function ShippingPage() {
     <LegalPage
       title="Shipping and delivery"
       crumb="Shipping"
-      lede="Free delivery across India, usually within 5–7 days of your order. Every bracelet is read and strung by hand first."
+      lede={`Free delivery across India, usually within ${SHIPPING.minDays}–${SHIPPING.maxDays} days of your order. Every bracelet is read and strung by hand first.`}
     >
       <h2>Making your bracelet</h2>
       <p>
