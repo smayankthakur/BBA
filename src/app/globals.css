@@ -958,6 +958,75 @@ a:hover {
 .three-rings span + span {
   margin-left: -70px;
 }
+.three-visual {
+  flex: 1 1 380px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.three-frame {
+  position: relative;
+  width: min(360px, 82vw);
+  aspect-ratio: 4 / 5;
+  border-radius: 400px 400px 6px 6px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--gold), 0 0 0 9px var(--lapis), 0 0 0 10px rgba(227, 198, 124, 0.55),
+    0 40px 70px -30px rgba(0, 0, 0, 0.6);
+}
+.three-photo {
+  object-fit: cover;
+}
+.three-stones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 26px;
+}
+.three-stones li {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+  align-items: center;
+}
+.three-dot {
+  grid-row: span 2;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(227, 198, 124, 0.7);
+}
+.three-stone-name {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.1;
+}
+.three-stone-for {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-lapis-muted);
+}
+.three-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 26px;
+}
+.three-more {
+  color: var(--gold-text);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+.three-more:hover {
+  color: var(--cream);
+}
 .three-copy {
   flex: 1 1 420px;
   display: flex;
