@@ -19,9 +19,7 @@ export default function ReturnsPage() {
       <h2>If it arrives damaged or incorrect</h2>
       <p>
         Message us on{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>{" "}
+        WhatsApp (link in the footer){" "}
         as soon as you open the parcel, with a photo of the bracelet and the packaging. We&apos;ll arrange a repair or
         replacement.
       </p>

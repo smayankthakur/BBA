@@ -20,9 +20,7 @@ export default function PrivacyPage() {
       <p>
         This website is run by {BUSINESS.legalName || BUSINESS.brand} (&ldquo;we&rdquo;, &ldquo;us&rdquo;), founded by{" "}
         {BUSINESS.founder}. For anything about your data, message us on{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>
+        WhatsApp (link in the footer)
         .
       </p>
 
@@ -37,11 +35,10 @@ export default function PrivacyPage() {
       <h3>When you take the 60-second reading</h3>
       <p>
         Your answers (including the wearer&apos;s name and date of birth) are processed inside your browser to work out
-        the mulank and bhagyank. They are not sent to us or stored unless you choose to continue to the order form or
-        WhatsApp.
+        the mulank and bhagyank. They are not sent to us or stored unless you continue to checkout and place an order.
       </p>
       <h3>When you order</h3>
-      <p>Orders are placed through our website checkout (and, in some cases, our Google order form or WhatsApp). We collect:</p>
+      <p>Orders are placed through our website checkout. We collect:</p>
       <ul>
         <li>name, mobile number and email address;</li>
         <li>date of birth and gender of the person who will wear the bracelet;</li>
@@ -63,7 +60,8 @@ export default function PrivacyPage() {
       <ul>
         <li>Razorpay, which processes payments. Your card, UPI and bank details go directly to Razorpay; we never see or store them;</li>
         <li>our order database provider, which stores order details securely for us;</li>
-        <li>Google (order form and spreadsheet) and Meta (WhatsApp), which handle messages and order details for us;</li>
+        <li>our email provider, which sends order details to our own team (never to anyone else);</li>
+        <li>Meta (WhatsApp), if you message us or we message you about your order;</li>
         <li>courier partners, who need your name, phone number and address to deliver;</li>
         <li>Vercel, which hosts this website;</li>
         <li>authorities, only where the law requires it.</li>
@@ -93,9 +91,7 @@ export default function PrivacyPage() {
         Under India&apos;s Digital Personal Data Protection Act, 2023 you can ask us to show you the data we hold about
         you, correct it, delete it, or withdraw consent you&apos;ve given. You can also nominate someone to act for you.
         Message us on{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>{" "}
+        WhatsApp (link in the footer){" "}
         and we&apos;ll respond as quickly as we can.
       </p>
 
@@ -103,9 +99,7 @@ export default function PrivacyPage() {
       <p>
         {BUSINESS.grievanceOfficer.name}, {BUSINESS.grievanceOfficer.designation}
         {BUSINESS.email ? `, ${BUSINESS.email}` : ""}. Contact via{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>
+        WhatsApp (link in the footer)
         .
       </p>
 

@@ -67,6 +67,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Local photos carry a ?v=<hash> so replaced files are never served from an old cache.
+  images: { localPatterns: [{ pathname: "/**" }] },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

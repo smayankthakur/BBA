@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { INTENTIONS, PRICE, type Intention } from "@/data/home";
 import { productPhotos } from "@/lib/server/photos";
+import RefNote from "./RefNote";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
   backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
@@ -30,7 +31,10 @@ function PhotoStack({ it }: { it: Intention }) {
       {order.map(({ cls, i }) => (
         <span key={cls} className={`pc ${cls}`} style={{ backgroundImage: it.cards[i] }}>
           {photos.length ? (
-            <Image src={photos[[1, 2, 0][i]] ?? photos[0]} alt="" fill sizes="150px" className="ph-img" />
+            <>
+              <Image src={photos[[1, 2, 0][i]] ?? photos[0]} alt="" fill sizes="150px" className="ph-img" />
+              <RefNote className="is-small" />
+            </>
           ) : (
             <span className="ring" style={ringStyle(it.rings[i])} />
           )}

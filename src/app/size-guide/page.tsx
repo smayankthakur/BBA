@@ -67,9 +67,7 @@ export default function SizeGuidePage() {
         </div>
         <p className="small-note">
           Not sure? Choose &ldquo;Not sure&rdquo; in the reading, or send us your measurement on{" "}
-          <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-            WhatsApp
-          </a>{" "}
+          WhatsApp (link in the footer){" "}
           and we&apos;ll advise. If it doesn&apos;t fit, see our <Link href="/returns">returns policy</Link>.
         </p>
       </section>

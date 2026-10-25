@@ -1,12 +1,10 @@
-import { LINKS } from "@/data/home";
+import Link from "next/link";
 
 export default function AnnouncementBar() {
   return (
     <aside className="announce" aria-label="Announcement">
       Every bracelet is read for your date of birth before it&apos;s strung.{" "}
-      <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-        Ask Ammit
-      </a>
+      <Link href="/consultation">Ask Ammit</Link>
     </aside>
   );
 }

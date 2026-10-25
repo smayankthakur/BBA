@@ -64,8 +64,7 @@ export default function CarePage() {
       </section>
       <OrderCta
         title="Need a restring?"
-        text="Send us a photo of the beads on WhatsApp and we'll tell you how to send them back."
-        primary={{ label: "Message us on WhatsApp", href: LINKS.whatsapp, external: true }}
+        text="Send us a photo of the beads (contact details are at the bottom of this page) and we'll tell you how to send them back."
         secondary={{ label: "Order a new bracelet", href: "/find-your-bracelet" }}
       />
     </PageShell>

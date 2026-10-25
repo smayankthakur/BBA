@@ -219,9 +219,9 @@ export default function SiteHeader() {
           <Link className="btn btn-gold" href="/find-your-bracelet" onClick={() => close(false)}>
             Order a bracelet
           </Link>
-          <a className="btn btn-ghost-gold" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-            Ask Ammit on WhatsApp
-          </a>
+          <Link className="btn btn-ghost-gold" href="/consultation" onClick={() => close(false)}>
+            Ask Ammit
+          </Link>
           <div className="menu-social">
             <a href={LINKS.instagram} target="_blank" rel="noopener noreferrer">
               Instagram

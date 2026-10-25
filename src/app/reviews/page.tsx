@@ -3,7 +3,6 @@ import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import Testimonials from "@/components/Testimonials";
 import OrderCta from "@/components/OrderCta";
-import { LINKS } from "@/data/home";
 
 export const metadata: Metadata = {
   title: "Customer reviews",
@@ -23,8 +22,8 @@ export default function ReviewsPage() {
       <Testimonials />
       <OrderCta
         title="Wearing one of our bracelets?"
-        text="We'd love to hear how it's going. Send Ammit a message on WhatsApp."
-        primary={{ label: "Message Ammit", href: LINKS.whatsapp, external: true }}
+        text="We'd love to hear how it's going. Contact details are at the bottom of this page."
+        primary={{ label: "Order a bracelet", href: "/find-your-bracelet" }}
         secondary={{ label: "Order a bracelet", href: "/find-your-bracelet" }}
       />
     </PageShell>

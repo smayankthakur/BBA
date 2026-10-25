@@ -35,6 +35,7 @@ create table if not exists orders (
   razorpay_payment_id text,
   payment_method text,
   paid_at timestamptz,
+  staff_notified_at timestamptz,
   created_at timestamptz not null default now()
 );
 create index if not exists orders_status_created_idx on orders (status, created_at desc);

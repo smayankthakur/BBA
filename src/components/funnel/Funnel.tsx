@@ -6,14 +6,13 @@ import Medallion from "../Medallion";
 import Sphere from "../Sphere";
 import ProductVisual from "../ProductVisual";
 import { BRACELETS, MULANK, braceletBySlug } from "@/data/pages";
-import { LINKS, PRICE, PRICE_INR, SHIPPING, TESTIMONIALS } from "@/data/home";
+import { PRICE, PRICE_INR, SHIPPING, TESTIMONIALS } from "@/data/home";
 import TrustBar from "../TrustBar";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
 import { deliveryWindow } from "@/lib/delivery";
 import { ageFrom, bhagyank, isValidDate, mulank } from "@/lib/numerology";
-import { prefilledOrderUrl, WRIST_OPTIONS, type Gender } from "@/lib/orderForm";
+import { WRIST_OPTIONS, type Gender } from "@/lib/orderForm";
 import { track } from "@/lib/analytics";
-import ReadingCard from "../ReadingCard";
 
 /* ------------------------------------------------------------------ */
 /* Steps                                                               */
@@ -49,8 +48,6 @@ type Answers = {
 
 const EMPTY: Answers = { intentions: [], firstName: "", lastName: "", guardian: false };
 
-/** Native checkout is on when a Razorpay key is configured; otherwise the Google order form is used. */
-const CHECKOUT_ENABLED = !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
 type Contact = {
   deliveryName: string;
@@ -151,7 +148,7 @@ function Glyph({ children }: { children: React.ReactNode }) {
 /* Funnel                                                              */
 /* ------------------------------------------------------------------ */
 
-export default function Funnel() {
+export default function Funnel({ photos = {} }: { photos?: Record<string, string[]> }) {
   const [i, setI] = useState(0);
   const [a, setA] = useState<Answers>(EMPTY);
   const [co, setCo] = useState<Contact>(EMPTY_CONTACT);
@@ -253,19 +250,6 @@ export default function Funnel() {
   const answeredQs = QUESTIONS.filter((q) => STEPS.indexOf(q) < i).length;
   const progress = STEPS.indexOf(step) >= STEPS.indexOf("result") ? 1 : Math.max(0.04, answeredQs / QUESTIONS.length);
 
-  const orderUrl =
-    dobValid && a.gender
-      ? prefilledOrderUrl({
-          firstName: a.firstName,
-          lastName: a.lastName,
-          day: a.day!,
-          month: a.month!,
-          year: a.year!,
-          gender: a.gender,
-          wrist: a.wrist && a.wrist !== "unsure" ? a.wrist : undefined,
-          purposeSlug: primary,
-        })
-      : undefined;
 
   /* ------------------------------------------------------------------ */
 
@@ -663,7 +647,7 @@ export default function Funnel() {
                 {rec.title}
               </h1>
               <div className="fn-result-visual">
-                <ProductVisual cards={rec.cards} rings={rec.rings} label={`Illustration of the ${rec.title} bracelet`} />
+                <ProductVisual cards={rec.cards} rings={rec.rings} label={`Illustration of the ${rec.title} bracelet`} photos={photos[rec.slug] ?? []} />
               </div>
               <ul className="fn-chips">
                 <li>
@@ -691,47 +675,22 @@ export default function Funnel() {
               </p>
               <TrustBar compact />
               <div className="fn-actions is-stack">
-                {CHECKOUT_ENABLED && (
-                  <button
-                    type="button"
-                    className="btn btn-lapis"
-                    onClick={() => {
-                      setCo((c) => ({ ...c, deliveryName: c.deliveryName || (gift ? "" : `${a.firstName} ${a.lastName}`.trim()) }));
-                      goTo(STEPS.indexOf("checkout"));
-                    }}
-                  >
-                    Continue to checkout
-                  </button>
-                )}
-                {!CHECKOUT_ENABLED && orderUrl && (
-                  <a
-                    className="btn btn-lapis"
-                    href={orderUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("begin_checkout", { bracelet: rec.slug }, "InitiateCheckout")}
-                  >
-                    Confirm my order
-                  </a>
-                )}
-                <button type="button" className="btn btn-line" onClick={() => window.print()}>
-                  Save my reading (PDF)
+                <button
+                  type="button"
+                  className="btn btn-lapis"
+                  onClick={() => {
+                    setCo((c) => ({ ...c, deliveryName: c.deliveryName || (gift ? "" : `${a.firstName} ${a.lastName}`.trim()) }));
+                    goTo(STEPS.indexOf("checkout"));
+                  }}
+                >
+                  Confirm my order
                 </button>
-                <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-                  Ask Ammit on WhatsApp first
-                </a>
               </div>
               <ol className="num-list fn-next">
-                {CHECKOUT_ENABLED ? (
-                  <li>Add a delivery address and pay securely: UPI, cards or net banking.</li>
-                ) : (
-                  <li>The order form opens with these answers filled in. Add a mobile number and delivery address.</li>
-                )}
+                <li>Add a delivery address and pay securely: UPI, cards or net banking.</li>
                 <li>Ammit reads the full numbers and confirms the crystals with you on WhatsApp.</li>
                 <li>The bracelet is strung by hand and delivered free in {SHIPPING.minDays}–{SHIPPING.maxDays} days.</li>
               </ol>
-              {!CHECKOUT_ENABLED && gift && <p className="small-note">The form says &ldquo;your&rdquo; details: keep the wearer&apos;s name and birth date, and add your own mobile number and address.</p>}
-              {!CHECKOUT_ENABLED && recSlug === "3-in-1" && <p className="small-note">The form takes one purpose, so we&apos;ve filled in your first choice. Mention &ldquo;3 in 1&rdquo; when the team messages you.</p>}
               <p className="small-note">
                 By ordering you agree to our{" "}
                 <a href="/terms" target="_blank" rel="noopener noreferrer">
@@ -853,7 +812,7 @@ export default function Funnel() {
                       } else {
                         setPayState({
                           status: "error",
-                          message: vd.error ?? `We couldn't confirm the payment. If money was taken, message us on WhatsApp with reference ${data.ref}.`,
+                          message: vd.error ?? `We couldn't confirm the payment. If money was taken, contact us (details at the bottom of the page) with reference ${data.ref}.`,
                         });
                       }
                     },
@@ -1023,33 +982,15 @@ export default function Funnel() {
                 <li>Free delivery, estimated {deliveryWindow()}.</li>
               </ol>
               <div className="fn-actions is-stack">
-                <button type="button" className="btn btn-lapis" onClick={() => window.print()}>
-                  Save my reading (PDF)
-                </button>
-                <a className="btn btn-line" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-                  Message us on WhatsApp
-                </a>
+                <Link className="btn btn-lapis" href="/">
+                  Back to the home page
+                </Link>
               </div>
-              <p className="small-note">Questions about your order? Mention {orderRef} when you message us.</p>
+              <p className="small-note">Questions about your order? Mention {orderRef} when you contact us.</p>
             </div>
           )}
         </div>
       </main>
-      {rec && mInfo && dobValid && (
-        <div className="print-area print-only">
-                <ReadingCard
-                  d={{
-                    kind: "suggested",
-                    name: `${a.firstName.trim()} ${a.lastName.trim()}`.trim(),
-                    dob: `${a.day} ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][(a.month ?? 1) - 1]} ${a.year}`,
-                    mulank: m!,
-                    bhagyank: bh!,
-                    bracelet: rec.title,
-                    crystals: rec.crystals,
-                  }}
-                />
-        </div>
-      )}
     </div>
   );
 }

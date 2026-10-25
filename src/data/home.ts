@@ -168,6 +168,9 @@ export const INTENTIONS: Intention[] = [
 export const HERO_BEADS = ["#050E8F", "#DCE0EE", "#7A3FC0"] as const;
 
 /** Ring colours in the "3 in 1" band: love, protection, prosperity */
+/** Shown on every product and gift photo. */
+export const REF_NOTE = "This is a reference image, your bracelet will be customized according to you.";
+
 export const THREE_IN_ONE_RINGS = ["#F2A7A0", "#16161E", "#E7B32A"] as const;
 
 export const MULANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;

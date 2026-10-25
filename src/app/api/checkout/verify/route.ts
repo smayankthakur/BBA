@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { VerifySchema } from "@/lib/checkoutSchema";
 import { fetchPayment, razorpayConfigured, verifyPaymentSignature } from "@/lib/server/razorpay";
 import { markPaid } from "@/lib/server/orders";
+import { notifyStaffOfPaidOrder } from "@/lib/server/staffNotify";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
 import { PRICE_INR } from "@/data/home";
 
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  if (!razorpayConfigured()) return NextResponse.json({ error: "Payments are not set up yet." }, { status: 503 });
+  if (!razorpayConfigured()) return NextResponse.json({ error: "Online payment is being switched on. Please try again in a little while." }, { status: 503 });
   if (rateLimited(`verify:${clientIp(req)}`, 20, 10 * 60_000)) {
     return NextResponse.json({ error: "Too many attempts." }, { status: 429 });
   }
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
     }
     await markPaid(razorpay_order_id, razorpay_payment_id, p.method).catch((e) =>
       console.error("[checkout] db update failed", e instanceof Error ? e.message : e),
+    );
+    await notifyStaffOfPaidOrder(razorpay_order_id).catch((e) =>
+      console.error("[checkout] staff email failed", e instanceof Error ? e.message : e),
     );
     return NextResponse.json({ ok: true });
   } catch (e) {

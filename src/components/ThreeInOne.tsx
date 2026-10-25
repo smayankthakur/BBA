@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
 import { productPhotos } from "@/lib/server/photos";
+import RefNote from "./RefNote";
 
 const STONES = [
   { name: "Rose quartz", for: "Love", color: THREE_IN_ONE_RINGS[0] },
@@ -26,6 +27,7 @@ export default function ThreeInOne() {
                 sizes="(max-width: 760px) 80vw, 380px"
                 className="three-photo"
               />
+              <RefNote />
             </div>
             <figcaption>
               <ul className="three-stones">

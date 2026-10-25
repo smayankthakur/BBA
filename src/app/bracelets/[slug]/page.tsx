@@ -116,9 +116,7 @@ export default async function BraceletPage({ params }: Params) {
             </Link>
           </div>
           <p className="product-hint">
-            {process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
-              ? "A 60-second reading works out your numbers, then takes you to secure checkout."
-              : "A 60-second reading works out your numbers, then opens the order form with your answers filled in."}{" "}
+            A 60-second reading works out your numbers, then takes you to secure checkout.{" "}
             <Link href="/size-guide">Size guide</Link>
           </p>
         </div>

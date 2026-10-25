@@ -53,6 +53,7 @@ export function ensureSchema() {
       created_at timestamptz not null default now()
     )`;
     await sql`create index if not exists orders_status_created_idx on orders (status, created_at desc)`;
+    await sql`alter table orders add column if not exists staff_notified_at timestamptz`;
   })().catch((e) => {
     schemaReady = null; // retry next time
     throw e;
@@ -117,6 +118,34 @@ export async function markPaid(razorpayOrderId: string, paymentId: string, metho
   await db()`update orders
     set status = 'paid', razorpay_payment_id = ${paymentId}, payment_method = ${method ?? null}, paid_at = now()
     where razorpay_order_id = ${razorpayOrderId} and status <> 'paid'`;
+}
+
+export type StoredOrder = Omit<OrderRecord, "wearer_dob" | "terms_accepted_at"> & {
+  dob_text: string; // YYYY-MM-DD
+  terms_accepted_at: string | Date;
+  razorpay_payment_id: string | null;
+  payment_method: string | null;
+  paid_at: string | Date | null;
+  created_at: string | Date;
+};
+
+/**
+ * Claims a paid order for the staff email, once. Returns the order if this
+ * caller should send it, or null if it was already sent (or isn't paid).
+ */
+export async function claimStaffNotification(razorpayOrderId: string): Promise<StoredOrder | null> {
+  if (!dbConfigured()) return null;
+  await ensureSchema();
+  const rows = (await db()`update orders set staff_notified_at = now()
+    where razorpay_order_id = ${razorpayOrderId} and status = 'paid' and staff_notified_at is null
+    returning *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text`) as StoredOrder[];
+  return rows[0] ?? null;
+}
+
+/** Lets a later attempt (e.g. the webhook) resend if the email failed. */
+export async function releaseStaffNotification(razorpayOrderId: string) {
+  if (!dbConfigured()) return;
+  await db()`update orders set staff_notified_at = null where razorpay_order_id = ${razorpayOrderId}`;
 }
 
 export async function markFailed(razorpayOrderId: string) {

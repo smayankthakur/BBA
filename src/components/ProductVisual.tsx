@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
+import RefNote from "./RefNote";
 
 type Triplet = [string, string, string];
 
@@ -33,7 +34,10 @@ export default function ProductVisual({
       {slots.map((s) => (
         <span key={s.cls} className={`pv-card ${s.cls}`} style={{ backgroundImage: cards[s.i] }}>
           {s.photo ? (
-            <Image src={s.photo} alt="" fill sizes="260px" className="pv-photo" />
+            <>
+              <Image src={s.photo} alt="" fill sizes="260px" className="pv-photo" />
+              <RefNote />
+            </>
           ) : (
             <span className="pv-ring" style={ring(rings[s.i])} />
           )}

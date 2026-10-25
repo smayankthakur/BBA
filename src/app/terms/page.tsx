@@ -65,9 +65,7 @@ export default function TermsPage() {
       <h2>Questions and complaints</h2>
       <p>
         Message us on{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>
+        WhatsApp (link in the footer)
         . Our grievance officer is {BUSINESS.grievanceOfficer.name}, {BUSINESS.grievanceOfficer.designation}. These terms
         are governed by the laws of India.
       </p>

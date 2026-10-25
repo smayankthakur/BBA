@@ -25,9 +25,7 @@ export default function ShippingPage() {
       <h2>Where we deliver</h2>
       <p>
         We deliver across India. For delivery outside India, message us on{" "}
-        <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          WhatsApp
-        </a>{" "}
+        WhatsApp (link in the footer){" "}
         before ordering.
       </p>
 

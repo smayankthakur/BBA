@@ -22,6 +22,7 @@ Requires Node 20+.
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | for checkout | Same key ID as above; switches the funnel from the Google Form to the on-site checkout and opens the Razorpay hosts in the CSP. |
 | `RAZORPAY_WEBHOOK_SECRET` | for checkout | Secret set on the Razorpay webhook (URL `/api/razorpay/webhook`, events `order.paid`, `payment.captured`, `payment.failed`). |
 | `DATABASE_URL` | order database | Set automatically when Neon is added in Vercel → Storage. The `orders` table is created on first use (schema also in `db/schema.sql`). Check with `GET /api/health/db` → `{"db":"ok"}`. Without it, every order is still recorded in Razorpay (all details are in the order notes). |
+| `RESEND_API_KEY`, `STAFF_ORDER_EMAILS`, `ORDER_EMAIL_FROM` | staff order email | When an order is paid, a **staff-only PDF** with every detail from the order form is emailed to `STAFF_ORDER_EMAILS` (comma-separated). Sent once per order; customers never see it. `ORDER_EMAIL_FROM` needs a domain verified in Resend (until then Resend's test sender only delivers to the Resend account's own email). |
 | `NEXT_PUBLIC_GA_ID` | optional | Google Analytics 4 ID (G-…). Loads only after the visitor accepts cookies. |
 | `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Funnel fires Lead and InitiateCheckout. |
 | `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
@@ -59,6 +60,7 @@ All pages are static, have their own title/description/canonical, breadcrumbs (w
 ## Checkout (Razorpay)
 
 - Funnel result → **Delivery and payment** step (contact, address, consent, optional WhatsApp marketing opt-in) → Razorpay Checkout → **Order confirmed** with reference `BBA-XXXXXXXX`.
+- After payment is confirmed (verify or webhook), the staff PDF email is sent once (`src/lib/server/staffNotify.ts`, `orderPdf.ts`).
 - `POST /api/checkout/create`: validates with zod, sets the price **on the server** (`PRICE_INR`), rate-limited, 8 KB body cap, creates the Razorpay order with the customer's details in its notes, saves a pending row in Postgres (Neon) when `DATABASE_URL` is set. All SQL is parameterised; updates are idempotent.
 - `POST /api/checkout/verify`: checks the Checkout signature (HMAC) and re-fetches the payment from Razorpay to confirm order, amount and status before marking paid.
 - `POST /api/razorpay/webhook`: verifies `X-Razorpay-Signature` on the raw body; idempotent updates so Razorpay retries are safe.

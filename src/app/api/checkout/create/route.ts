@@ -15,7 +15,7 @@ const MAX_BODY = 8 * 1024;
 
 export async function POST(req: Request) {
   if (!razorpayConfigured()) {
-    return NextResponse.json({ error: "Payments are not set up yet." }, { status: 503 });
+    return NextResponse.json({ error: "Online payment is being switched on. Please try again in a little while." }, { status: 503 });
   }
   if (rateLimited(`create:${clientIp(req)}`, 10, 10 * 60_000)) {
     return NextResponse.json({ error: "Too many attempts. Please wait a few minutes." }, { status: 429 });

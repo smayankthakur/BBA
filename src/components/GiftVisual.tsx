@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import Image from "next/image";
 import { GIFTS } from "@/data/home";
+import RefNote from "./RefNote";
+import { versioned } from "@/lib/server/photos";
 
 type Gift = (typeof GIFTS)[number];
 
@@ -9,7 +11,7 @@ type Gift = (typeof GIFTS)[number];
 function giftPhoto(slug: string): string | null {
   for (const ext of ["jpg", "jpeg", "webp", "png"]) {
     const rel = `/products/gifts/${slug}.${ext}`;
-    if (fs.existsSync(path.join(process.cwd(), "public", rel))) return rel;
+    if (fs.existsSync(path.join(process.cwd(), "public", rel))) return versioned(rel);
   }
   return null;
 }
@@ -30,6 +32,7 @@ export default function GiftVisual({
     return (
       <div className={`${className} has-photo`}>
         <Image src={photo} alt={gift.photoAlt} fill sizes={sizes} className="gift-photo" priority={priority} />
+        <RefNote />
       </div>
     );
   }

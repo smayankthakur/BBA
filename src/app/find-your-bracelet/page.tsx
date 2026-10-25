@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Funnel from "@/components/funnel/Funnel";
+import { BRACELETS } from "@/data/pages";
+import { productPhotos } from "@/lib/server/photos";
 
 export const metadata: Metadata = {
   title: "Find your bracelet: 60-second crystal reading",
@@ -9,5 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default function FindYourBraceletPage() {
-  return <Funnel />;
+  const photos = Object.fromEntries(BRACELETS.map((b) => [b.slug, productPhotos(b.slug)]));
+  return <Funnel photos={photos} />;
 }

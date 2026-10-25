@@ -49,9 +49,9 @@ export default async function MulankPage({ params }: Params) {
             title={`Mulank ${m.number}`}
             lede={<p>{m.summary}</p>}
           >
-            <a className="btn btn-lapis" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+            <Link className="btn btn-lapis" href="/consultation">
               Ask Ammit about my crystals
-            </a>
+            </Link>
             <Link className="btn btn-line" href="/find-your-bracelet">
               Find my bracelet
             </Link>
