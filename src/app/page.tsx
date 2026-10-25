@@ -26,7 +26,7 @@ export default function HomePage() {
         <IntentionEdit />
         <ThreeInOne />
         <MulankPicker />
-        <NoteFromAmmit />
+        <NoteFromAmmit compact />
         <Gifts />
         <Testimonials />
         <CareSection />

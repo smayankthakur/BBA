@@ -4,6 +4,7 @@ import Image from "next/image";
 import { INTENTIONS, PRICE, type Intention } from "@/data/home";
 import { productPhotos } from "@/lib/server/photos";
 import RefNote from "./RefNote";
+import EditCycler from "./EditCycler";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
   backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
@@ -50,7 +51,10 @@ export default function IntentionEdit() {
     <section id="edit" className="section-wide edit">
       <div className="edit-head">
         <h2 className="h2">The intention edit</h2>
-        <p>Six bracelets, six purposes, each {PRICE}. Hover to see each one, then choose.</p>
+        <p>
+          Six bracelets, six purposes, each {PRICE}. <span className="hint-hover">Hover to see each one, then choose.</span>
+          <span className="hint-touch">Tap one to choose.</span>
+        </p>
       </div>
       <div className="edit-list">
         {INTENTIONS.map((it) => (
@@ -64,6 +68,7 @@ export default function IntentionEdit() {
           </Link>
         ))}
       </div>
+      <EditCycler targetId="edit" />
     </section>
   );
 }

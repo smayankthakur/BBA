@@ -24,7 +24,7 @@ export default function CarePage() {
         lede={<p>A little care keeps your crystals clear and your bracelet strong. Here&apos;s how.</p>}
       />
       <section className="section-wide grid-section" aria-label="Care steps">
-        <div className="info-grid">
+        <div className="info-grid" tabIndex={0} role="region" aria-label="Care basics">
           {CARE.map((c) => (
             <div key={c.term} className="info-card">
               <h2 className="h3">{c.term}</h2>

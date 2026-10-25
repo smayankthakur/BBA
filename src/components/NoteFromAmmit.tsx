@@ -1,14 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import Image from "next/image";
+import Link from "next/link";
 import { AMMIT, LINKS } from "@/data/home";
 
 // Resolved at build time: the portrait appears as soon as the file is added.
 const hasPhoto = fs.existsSync(path.join(process.cwd(), "public", AMMIT.photo));
 
-export default function NoteFromAmmit() {
+export default function NoteFromAmmit({ compact = false }: { compact?: boolean }) {
   return (
-    <section id="note" className="note">
+    <section id="note" className={`note${compact ? " is-compact" : ""}`}>
       <div className="note-card">
         <figure className="note-photo">
           <div className="note-arch">
@@ -39,11 +40,16 @@ export default function NoteFromAmmit() {
             But a stone that helps one person can do nothing for another, because your numbers are not
             theirs. That is why I started Bracelet By Ammit.
           </p>
-          <p className="note-body">
+          <p className="note-body note-more">
             Before I choose a single crystal, I read your date of birth myself: your mulank, your
             bhagyank and how your numbers sit together. Only then do I pick the stones for what you are
             asking of life, and string them by hand.
           </p>
+          {compact && (
+            <Link className="note-readmore" href="/about-ammit">
+              Read Ammit&apos;s story →
+            </Link>
+          )}
           <p className="note-quote">
             &ldquo;Har bracelet style ke liye nahi hota. Right crystal, right direction.&rdquo;
           </p>

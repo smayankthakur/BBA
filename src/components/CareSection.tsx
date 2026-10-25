@@ -25,7 +25,7 @@ export default function CareSection() {
             </Link>
           </div>
         </div>
-        <dl className="care-list">
+        <dl className="care-list" tabIndex={0} aria-label="Bracelet care">
           {CARE.map((c) => (
             <div key={c.term} className="care-item">
               <dt>{c.term}</dt>

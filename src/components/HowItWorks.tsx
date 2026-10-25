@@ -7,7 +7,7 @@ export default function HowItWorks({ title = "How your bracelet is made" }: { ti
         <h2 id="how-title" className="h2">
           {title}
         </h2>
-        <ol className="how-steps">
+        <ol className="how-steps" tabIndex={0} aria-label="Steps">
           {HOW_IT_WORKS.map((s, i) => (
             <li key={s.title}>
               <span className="how-num" aria-hidden="true">

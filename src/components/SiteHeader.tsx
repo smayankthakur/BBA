@@ -41,6 +41,20 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
+  // Brand mark: "Bracelet By Ammit" folds into "BBA", like the intro loader.
+  // On the home page it waits for the loader to finish.
+  const [folded, setFolded] = useState(false);
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setFolded(true);
+      return;
+    }
+    const delay = document.querySelector(".withload") ? 3900 : 700;
+    const t = window.setTimeout(() => setFolded(true), delay);
+    return () => window.clearTimeout(t);
+  }, []);
+
   // Compact the bar once the page has scrolled past the announcement strip.
   useEffect(() => {
     let raf = 0;
@@ -134,7 +148,14 @@ export default function SiteHeader() {
 
           <Link href="/" aria-label="Bracelet By Ammit home" className="brand">
             <Medallion width={38} height={42} priority />
-            <span className="brand-name">Bracelet By Ammit</span>
+            <span className={`brand-anim${folded ? " is-folded" : ""}`} aria-hidden="true">
+              <span className="ini">B</span>
+              <span className="fade">racelet </span>
+              <span className="ini">B</span>
+              <span className="fade">y </span>
+              <span className="ini">A</span>
+              <span className="fade">mmit</span>
+            </span>
           </Link>
 
           <div className="header-nav right desktop-only">

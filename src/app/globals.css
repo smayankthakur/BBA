@@ -335,6 +335,65 @@ a:hover {
   font-size: 27px;
   color: var(--lapis);
 }
+/* Header logo: "Bracelet By Ammit" folds into "BBA" (same motion as the intro loader) */
+.brand-anim {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 27px;
+  line-height: 1;
+  color: var(--lapis);
+  white-space: nowrap;
+}
+.brand-anim .fade {
+  display: inline-block;
+  overflow: hidden;
+  white-space: pre;
+  max-width: 7em;
+  transition: max-width 0.8s cubic-bezier(0.6, 0, 0.3, 1), opacity 0.5s ease;
+}
+.brand-anim .ini {
+  display: inline-block;
+  transition: font-size 0.8s cubic-bezier(0.6, 0, 0.3, 1), letter-spacing 0.8s ease;
+}
+.brand-anim::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -7px;
+  height: 1px;
+  background-image: linear-gradient(90deg, rgba(184, 145, 61, 0), var(--gold-deep) 30%, var(--gold-deep) 70%, rgba(184, 145, 61, 0));
+  opacity: 0;
+  transition: opacity 0.6s ease 0.5s;
+}
+.brand-anim.is-folded .fade {
+  max-width: 0;
+  opacity: 0;
+}
+.brand-anim.is-folded .ini {
+  font-size: 1.22em;
+  letter-spacing: 0.05em;
+}
+.brand-anim.is-folded::after {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .brand:hover .brand-anim.is-folded .fade {
+    max-width: 7em;
+    opacity: 1;
+  }
+  .brand:hover .brand-anim.is-folded .ini {
+    font-size: 1em;
+    letter-spacing: 0;
+  }
+  .brand:hover .brand-anim::after {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+}
 
 /* ---------- Sticky header ---------- */
 .header-bar {
@@ -4086,5 +4145,684 @@ a:hover {
   .row .go {
     opacity: 1;
     translate: 0 0;
+  }
+}
+
+
+/* =====================================================================
+   Phones: compact layout. Each home-page section fits one screen, grids
+   become swipeable rows, and hover effects play on their own.
+   ===================================================================== */
+.hint-touch {
+  display: none;
+}
+@media (max-width: 760px) {
+  :root {
+    --h2: clamp(30px, 8.4vw, 38px);
+  }
+  .hint-hover {
+    display: none;
+  }
+  .hint-touch {
+    display: inline;
+  }
+  .btn {
+    min-height: 46px;
+    padding: 0 22px;
+    font-size: 15px;
+  }
+  .btn-row {
+    gap: 12px;
+  }
+
+  /* Announcement + header */
+  .announce {
+    font-size: 12.5px;
+    padding: 7px 16px;
+    line-height: 1.4;
+  }
+  .header {
+    padding: 10px 16px;
+  }
+  .brand .medallion {
+    width: 40px;
+    height: 40px;
+  }
+  .brand .medallion img {
+    width: 29px;
+    height: 32px;
+  }
+  .brand-anim {
+    font-size: 22px;
+  }
+  .brand-anim.is-folded .ini {
+    letter-spacing: 0.03em;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 22px 16px 36px;
+    gap: 6px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+  .hero-copy {
+    flex: none;
+    gap: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 11vw, 46px);
+    line-height: 0.98;
+  }
+  .hero-lede {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .hero .btn-row {
+    flex-wrap: nowrap;
+  }
+  .hero .btn-row .btn {
+    flex: 1 1 0;
+    padding: 0 12px;
+  }
+  .hero-art {
+    flex: none;
+  }
+  .bracelet,
+  .bracelet[class] {
+    scale: 0.56;
+    margin: -110px -110px -104px;
+  }
+
+  /* Intention edit: fan "stage" above a compact list; rows take turns (EditCycler) */
+  .edit {
+    padding: 36px 16px 40px;
+  }
+  .edit-head {
+    gap: 6px;
+    padding-bottom: 6px;
+  }
+  .edit-head p {
+    font-size: 14px;
+  }
+  .edit-list {
+    position: relative;
+    padding-top: 262px;
+    box-shadow: none;
+  }
+  .edit-list .row:first-child {
+    box-shadow: inset 0 1px 0 var(--lapis), inset 0 -1px 0 var(--hairline);
+  }
+  .row {
+    position: static;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 9px 10px;
+  }
+  .row .sphere {
+    width: 30px;
+    height: 30px;
+  }
+  .row-title {
+    flex: 1 1 auto;
+    font-size: 21px;
+  }
+  .row .muted,
+  .row .go {
+    display: none;
+  }
+  .row .price {
+    flex: none;
+    font-size: 14px;
+  }
+  .row.is-active {
+    background-color: var(--lapis);
+    color: var(--cream) !important;
+  }
+  .row.is-active .price {
+    color: var(--gold-text) !important;
+  }
+  .row.is-active .sphere {
+    scale: 1.12;
+  }
+  .stack,
+  .stack[class] {
+    display: block;
+    left: 50%;
+    top: 30px;
+    margin: 0 0 0 -75px;
+  }
+  .stack .tag {
+    display: none;
+  }
+  .row.is-active .stack {
+    opacity: 1;
+    scale: 1;
+  }
+  .row.is-active .c1 {
+    transform: translate(-80px, 14px) rotate(-12deg);
+  }
+  .row.is-active .c2 {
+    transform: translateY(-10px);
+  }
+  .row.is-active .c3 {
+    transform: translate(80px, 14px) rotate(12deg);
+  }
+  .row:not(.is-active):hover {
+    background-color: transparent;
+    color: var(--lapis) !important;
+  }
+
+  /* 3 in 1 */
+  .three {
+    padding: 36px 16px 40px;
+  }
+  .three-inner,
+  .care-inner {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+  .three-inner > *,
+  .care-inner > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .three-inner {
+    gap: 22px;
+  }
+  .three-visual {
+    flex: none;
+    width: 100%;
+    gap: 14px;
+  }
+  .three-frame {
+    width: min(200px, 54vw);
+  }
+  .three-stones {
+    gap: 6px 16px;
+  }
+  .three-stone-name {
+    font-size: 15px;
+  }
+  .three-stone-for {
+    font-size: 10px;
+  }
+  .three-copy {
+    flex: none;
+    gap: 12px;
+    text-align: center;
+    align-items: center;
+  }
+  .three-copy p {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .three-copy .three-price {
+    font-size: 28px;
+  }
+  .three-actions {
+    justify-content: center;
+  }
+
+  /* Mulank picker */
+  .number {
+    padding: 40px 16px;
+  }
+  .number-inner {
+    gap: 18px;
+  }
+  .number-inner p {
+    font-size: 15px;
+  }
+  .numbers {
+    gap: 12px;
+  }
+  .numb {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  /* Note from Ammit */
+  .note {
+    padding: 36px 16px;
+  }
+  .note-card,
+  .note-card[class] {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 18px 18px;
+    padding: 24px 20px;
+    align-items: center;
+  }
+  .note-photo,
+  .note-photo[class] {
+    width: 112px;
+    gap: 10px;
+    justify-self: start;
+  }
+  .note-arch {
+    box-shadow: 0 0 0 1px var(--gold-deep), 0 0 0 5px var(--white), 0 0 0 6px rgba(184, 145, 61, 0.45);
+  }
+  .note-name {
+    font-size: 16px;
+  }
+  .note-role {
+    font-size: 10.5px;
+  }
+  .note-text {
+    display: contents;
+  }
+  .note-card h2 {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 30px;
+  }
+  .note-photo {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .note-text > :not(h2) {
+    grid-column: 1 / -1;
+  }
+  .note-body {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .note-quote {
+    font-size: 21px;
+  }
+  .note-foot {
+    padding-top: 0;
+    gap: 12px;
+  }
+  .signature {
+    font-size: 26px;
+  }
+  .note.is-compact .note-more {
+    display: none;
+  }
+  .note-readmore {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  /* Swipeable rows (gifts, care, cards on inner pages) */
+  .gifts-grid,
+  .care-list,
+  .b-grid,
+  .info-grid,
+  .how-steps,
+  .combo-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(74vw, 300px);
+    gap: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 16px;
+    margin: 0 -16px;
+    padding: 6px 16px 14px;
+    scrollbar-width: none;
+  }
+  .gifts-grid::-webkit-scrollbar,
+  .care-list::-webkit-scrollbar,
+  .b-grid::-webkit-scrollbar,
+  .info-grid::-webkit-scrollbar,
+  .how-steps::-webkit-scrollbar,
+  .combo-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .care-list:focus-visible,
+  .how-steps:focus-visible,
+  .info-grid:focus-visible {
+    outline: 3px solid var(--amethyst);
+    outline-offset: 2px;
+  }
+  .gifts-grid > *,
+  .care-list > *,
+  .b-grid > *,
+  .info-grid > *,
+  .how-steps > *,
+  .combo-grid > * {
+    scroll-snap-align: start;
+  }
+
+  /* Gifts */
+  .gifts {
+    padding: 40px 16px;
+  }
+  .gifts-head {
+    padding-bottom: 18px;
+    gap: 8px;
+  }
+  .gifts-head p {
+    font-size: 14px;
+  }
+  .gifts-grid {
+    grid-auto-columns: min(64vw, 250px);
+    gap: 18px;
+  }
+  .gift {
+    gap: 10px;
+  }
+  .gifts .arch,
+  .gifts-page .arch {
+    max-width: none;
+    box-shadow: 0 0 0 1px var(--gold-deep), 0 0 0 6px var(--mist), 0 0 0 7px rgba(184, 145, 61, 0.4);
+  }
+  .gift-title {
+    font-size: 22px;
+    line-height: 1.15;
+  }
+  .gift-blurb {
+    margin-top: -4px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  /* Reviews */
+  .reviews {
+    padding: 40px 16px;
+  }
+  .reviews-head {
+    padding-bottom: 18px;
+    gap: 8px;
+  }
+  .reviews-head p {
+    font-size: 14px;
+  }
+  .reviews-list {
+    grid-auto-columns: min(78vw, 320px);
+    gap: 16px;
+    margin: 0 -16px;
+    padding: 8px 16px 14px;
+    scroll-padding: 0 16px;
+  }
+  .review figure {
+    padding: 40px 20px 22px;
+    gap: 12px;
+  }
+  .review-mark {
+    height: 30px;
+    font-size: 80px;
+  }
+  .review blockquote p {
+    font-size: 18px;
+    line-height: 1.45;
+  }
+  .reviews-more {
+    padding-top: 16px;
+  }
+
+  /* Care */
+  .care {
+    padding: 40px 16px;
+  }
+  .care-inner {
+    gap: 20px;
+  }
+  .care-copy {
+    flex: none;
+    gap: 12px;
+  }
+  .care-copy p {
+    font-size: 15px;
+  }
+  .care-copy .btn-row {
+    flex-wrap: nowrap;
+  }
+  .care-copy .btn-row .btn {
+    flex: 1 1 0;
+    padding: 0 8px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .care-list {
+    flex: none;
+    grid-auto-columns: min(74vw, 290px);
+  }
+  .care-item,
+  .care-item:last-child {
+    padding: 18px 18px 20px;
+    border-radius: 8px;
+    background-color: var(--mist);
+    box-shadow: inset 0 3px 0 var(--gold-deep);
+  }
+  .care-item dt {
+    font-size: 22px;
+  }
+  .care-item dd {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  /* Footer */
+  .ft-inner,
+  .ft-inner[class] {
+    padding: 26px 16px 16px;
+    gap: 18px;
+  }
+  .ft-cta,
+  .ft-cta[class] {
+    padding: 26px 16px 16px;
+    gap: 12px;
+  }
+  .ft-cta .ft-crest {
+    width: 40px;
+    height: 40px;
+  }
+  .ft-kicker,
+  .ft-cta-text,
+  .ft-rosette {
+    display: none;
+  }
+  .ft-cta h2 {
+    font-size: 22px;
+  }
+  .ft-cta-actions {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .ft-cta-actions .btn {
+    flex: 1 1 0;
+    min-height: 44px;
+    padding: 0 8px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .ft-grid,
+  .ft-grid[class] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 14px;
+  }
+  .ft-brand {
+    grid-column: 1 / -1;
+    gap: 8px;
+  }
+  .ft-brand img {
+    display: none;
+  }
+  .ft-tagline {
+    font-size: 17px;
+  }
+  .ft-promise {
+    display: none;
+  }
+  .ft-brand {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ft-social {
+    gap: 6px;
+  }
+  .ft-social a {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+  .ft-col:last-child {
+    grid-column: auto;
+  }
+  .ft-col:last-child ul,
+  .ft-col ul {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ft-col h3 {
+    font-size: 10.5px;
+    margin-bottom: 8px;
+  }
+  .ft-col a {
+    font-size: 12.5px;
+    line-height: 1.3;
+    padding: 2px 0;
+    display: inline-block;
+  }
+  .ft-biz,
+  .ft-biz[class] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 14px;
+  }
+  .ft-biz div {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .ft-rule {
+    display: none;
+  }
+  .ft-biz,
+  .ft-biz[class] {
+    margin-top: 0;
+    gap: 2px;
+  }
+  .ft-biz dt {
+    font-size: 9.5px;
+  }
+  .ft-biz dd {
+    font-size: 12px;
+  }
+  .ft-disclaimer,
+  .ft-disclaimer[class] {
+    margin-top: 0;
+    font-size: 10.5px;
+    line-height: 1.45;
+  }
+  .ft-policies {
+    margin-top: 0;
+    justify-content: flex-start;
+    gap: 6px 16px;
+    font-size: 12.5px;
+  }
+  .ft-bar-inner,
+  .ft-bar-inner[class] {
+    padding: 12px 16px;
+    gap: 2px;
+    font-size: 12px;
+  }
+
+  /* Inner pages */
+  .page-hero {
+    padding: 20px 16px 26px;
+    gap: 12px;
+  }
+  .page-hero h1 {
+    font-size: clamp(34px, 10vw, 44px);
+  }
+  .page-lede p {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .section-narrow {
+    padding: 0 16px 48px;
+  }
+  .grid-section {
+    padding: 0 16px 48px;
+  }
+  .grid-title {
+    padding-bottom: 16px;
+  }
+  .product {
+    padding: 8px 16px 40px;
+    gap: 8px;
+  }
+  .product .pv {
+    scale: 0.52;
+    margin: -78px 60px -70px;
+  }
+  /* .pv is scaled down on phones, so its notice text is set larger to stay readable */
+  .pv .ref-note {
+    font-size: 17px;
+    padding: 40px 16px 16px;
+  }
+  .product .pv .ref-note {
+    font-size: 21px;
+    padding: 48px 18px 18px;
+  }
+  .gift-hero-arch,
+  .gift-hero-arch[class] {
+    max-width: 210px;
+    box-shadow: 0 0 0 1px var(--gold-deep), 0 0 0 6px var(--mist), 0 0 0 7px rgba(184, 145, 61, 0.4);
+  }
+  .product-info .page-hero {
+    padding: 8px 0 14px;
+  }
+  .product-hint {
+    font-size: 13px;
+  }
+  .product-price {
+    margin-bottom: 14px;
+  }
+  .how {
+    padding: 40px 16px;
+    margin-bottom: 48px;
+  }
+  .how-inner {
+    gap: 18px;
+  }
+  .how-steps > li {
+    padding: 18px;
+    border-radius: 8px;
+    background-color: var(--mist);
+  }
+  .order-cta {
+    padding: 44px 16px 52px;
+  }
+  .order-cta-inner p {
+    font-size: 15px;
+  }
+  .m-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .m-card {
+    padding: 14px 6px;
+    gap: 4px;
+  }
+  .m-num {
+    width: 46px;
+    height: 46px;
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .m-planet {
+    font-size: 14px;
+  }
+  .m-days {
+    font-size: 10.5px;
+  }
+  .b-card {
+    padding: 22px 18px 18px;
+  }
+  .info-card {
+    padding: 22px 18px;
   }
 }
