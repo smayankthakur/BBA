@@ -39,11 +39,37 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-const SOCIAL: FooterLink[] = [
-  { label: "Instagram", href: LINKS.instagram, external: true },
-  { label: "YouTube", href: LINKS.youtube, external: true },
-  { label: "WhatsApp", href: LINKS.whatsapp, external: true },
+const SOCIAL: (FooterLink & { icon: "ig" | "yt" | "wa" })[] = [
+  { label: "Instagram", href: LINKS.instagram, external: true, icon: "ig" },
+  { label: "YouTube", href: LINKS.youtube, external: true, icon: "yt" },
+  { label: "WhatsApp", href: LINKS.whatsapp, external: true, icon: "wa" },
 ];
+
+/** Simple line icons for the social links (shown as round buttons on phones). */
+function SocialIcon({ kind }: { kind: "ig" | "yt" | "wa" }) {
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, "aria-hidden": true } as const;
+  if (kind === "ig")
+    return (
+      <svg {...common}>
+        <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.2" cy="6.8" r="0.9" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  if (kind === "yt")
+    return (
+      <svg {...common}>
+        <rect x="2.5" y="5.5" width="19" height="13" rx="4" />
+        <path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  return (
+    <svg {...common}>
+      <path d="M4.5 19.5l1.2-3.6A7.8 7.8 0 1 1 8.6 18.6z" strokeLinejoin="round" />
+      <path d="M9.3 8.6c.2-.5.6-.6.9-.6h.4c.2 0 .4.1.5.4l.6 1.4c.1.2 0 .4-.1.6l-.5.6c.4.9 1.2 1.7 2.1 2.1l.6-.5c.2-.1.4-.2.6-.1l1.4.6c.3.1.4.3.4.5v.4c0 .3-.1.7-.6.9-1.6.7-6.5-2.8-6.3-6.3z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 function FLink({ l, className }: { l: FooterLink; className?: string }) {
   return l.external ? (
@@ -107,7 +133,7 @@ export default function SiteFooter() {
             <Link className="btn btn-gold-dark" href="/find-your-bracelet">
               Order my bracelet
             </Link>
-            <a className="btn btn-ghost-gold" href={LINKS.whatsapp} {...EXT}>
+            <a className="btn btn-ghost-gold ft-cta-wa" href={LINKS.whatsapp} {...EXT}>
               Ask on WhatsApp
             </a>
           </div>
@@ -125,7 +151,10 @@ export default function SiteFooter() {
             <ul className="ft-social" aria-label="Bracelet By Ammit elsewhere">
               {SOCIAL.map((s) => (
                 <li key={s.label}>
-                  <FLink l={s} />
+                  <a href={s.href} {...EXT} aria-label={s.label}>
+                    <SocialIcon kind={s.icon} />
+                    <span className="ft-social-label">{s.label}</span>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -142,6 +171,27 @@ export default function SiteFooter() {
                 ))}
               </ul>
             </nav>
+          ))}
+        </div>
+
+        {/* Phones: the three link groups fold into an accordion */}
+        <div className="ft-acc">
+          {COLUMNS.map((col) => (
+            <details key={col.title} className="ft-acc-item">
+              <summary>
+                <span>{col.title}</span>
+                <i aria-hidden="true" />
+              </summary>
+              <nav aria-label={`Footer: ${col.title}`}>
+                <ul>
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      <FLink l={l} />
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </details>
           ))}
         </div>
 
