@@ -1,4 +1,5 @@
 import { INTENTIONS, LINKS, TESTIMONIALS } from "@/data/home";
+import RowAutoScroll from "./RowAutoScroll";
 
 const bySlug = Object.fromEntries(INTENTIONS.map((i) => [i.slug, i]));
 
@@ -13,6 +14,7 @@ export default function Testimonials() {
             In their own words
           </h2>
           <p>From people wearing a bracelet Ammit chose for them.</p>
+          {hasReviews && <RowAutoScroll targetId="reviews-list" label="reviews" />}
         </div>
 
         {!hasReviews && (
@@ -31,7 +33,7 @@ export default function Testimonials() {
         )}
 
         {hasReviews && (
-        <ul className="reviews-list" tabIndex={0} aria-label="Customer reviews">
+        <ul id="reviews-list" className="reviews-list" tabIndex={0} aria-label="Customer reviews">
           {TESTIMONIALS.map((t, idx) => {
             const it = t.intention ? bySlug[t.intention] : undefined;
             return (

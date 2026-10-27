@@ -1382,13 +1382,54 @@ a:hover {
   color: var(--on-lapis-muted);
   max-width: 40ch;
 }
+/* One row that scrolls sideways (auto-advances, see RowAutoScroll) */
 .reviews-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 0 -24px;
+  padding: 10px 24px 24px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 72px) / 3);
   gap: 36px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 24px;
+  scrollbar-width: none;
+  /* soft fade where cards slide in and out */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+}
+.reviews-list::-webkit-scrollbar {
+  display: none;
+}
+.reviews-list > .review {
+  scroll-snap-align: start;
+}
+.row-arrows {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+.row-arrows button {
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(227, 198, 124, 0.6);
+  color: var(--gold);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+.row-arrows button:hover {
+  background-color: var(--gold);
+  color: var(--night);
+}
+.row-arrows button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
 }
 .review figure {
   margin: 0;
@@ -4166,7 +4207,8 @@ a:hover {
   :root {
     --h2: clamp(30px, 8.4vw, 38px);
   }
-  .hint-hover {
+  .hint-hover,
+  .row-arrows {
     display: none;
   }
   .hint-touch {
