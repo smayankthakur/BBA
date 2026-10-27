@@ -51,6 +51,9 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
         ["Order number", o.ref],
         ["Status", "PAID"],
         ["Amount", `Rs. ${(o.amount_paise / 100).toLocaleString("en-IN")} (free shipping)`],
+        ...(o.coupon_code
+          ? ([["Coupon", `${o.coupon_code}: Rs. ${((o.discount_paise ?? 0) / 100).toLocaleString("en-IN")} off Rs. ${((o.amount_paise + (o.discount_paise ?? 0)) / 100).toLocaleString("en-IN")}`]] as [string, string][])
+          : []),
         ["Paid on", istDateTime(o.paid_at)],
         ["Payment method", o.payment_method ? (METHOD[o.payment_method] ?? cap(o.payment_method)) : "-"],
         ["Razorpay payment ID", o.razorpay_payment_id ?? "-"],

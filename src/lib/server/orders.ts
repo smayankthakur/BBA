@@ -38,6 +38,8 @@ export type OrderRecord = {
   terms_accepted_at: string;
   utm: Record<string, string>;
   razorpay_order_id: string;
+  coupon_code?: string | null;
+  discount_paise?: number;
 };
 
 export async function insertOrder(o: OrderRecord) {
@@ -48,13 +50,14 @@ export async function insertOrder(o: OrderRecord) {
       wearer_first_name, wearer_last_name, wearer_dob, wearer_gender, mulank, bhagyank, wrist,
       intentions, focus, is_gift, gift_note, delivery_name, mobile, email,
       address_line1, address_line2, landmark, city, state, pincode,
-      marketing_opt_in, terms_accepted_at, utm, razorpay_order_id
+      marketing_opt_in, terms_accepted_at, utm, razorpay_order_id, coupon_code, discount_paise
     ) values (
       ${o.ref}, ${o.status}, ${o.bracelet_slug}, ${o.bracelet_title}, ${o.amount_paise},
       ${o.wearer_first_name}, ${o.wearer_last_name}, ${o.wearer_dob}, ${o.wearer_gender}, ${o.mulank}, ${o.bhagyank}, ${o.wrist},
       ${o.intentions}, ${o.focus}, ${o.is_gift}, ${o.gift_note}, ${o.delivery_name}, ${o.mobile}, ${o.email},
       ${o.address_line1}, ${o.address_line2}, ${o.landmark}, ${o.city}, ${o.state}, ${o.pincode},
-      ${o.marketing_opt_in}, ${o.terms_accepted_at}, ${JSON.stringify(o.utm)}::jsonb, ${o.razorpay_order_id}
+      ${o.marketing_opt_in}, ${o.terms_accepted_at}, ${JSON.stringify(o.utm)}::jsonb, ${o.razorpay_order_id},
+      ${o.coupon_code ?? null}, ${o.discount_paise ?? 0}
     ) on conflict (razorpay_order_id) do nothing`;
 }
 

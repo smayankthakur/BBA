@@ -9,6 +9,8 @@ const OK: Record<string, string> = {
   reset: "Back to the original text.",
   revoked: "Invite cancelled.",
   updated: "Updated.",
+  on: "Coupon switched on.",
+  off: "Coupon switched off. Customers can't use it until you switch it back on.",
 };
 const ERR: Record<string, string> = {
   title: "Please give it a title.",
@@ -29,6 +31,11 @@ const ERR: Record<string, string> = {
   mismatch: "The two new passwords don't match.",
   confirm: "Tick the box to confirm.",
   status: "Choose a valid status.",
+  code: "Coupon codes are 3–24 letters or numbers (dashes and underscores allowed), no spaces.",
+  codeTaken: "Another coupon already uses that code.",
+  value: "Enter a discount: 1–90% or ₹1 and up.",
+  dates: "The end date must be on or after the start date.",
+  limits: "Limits must be whole numbers of 1 or more (or leave them empty).",
 };
 
 /** Green/red message at the top of an admin screen, from ?msg= or ?err=. */

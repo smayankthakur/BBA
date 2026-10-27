@@ -25,6 +25,7 @@ import { ensureSchema } from "@/lib/server/schema";
 import {
   NEW_VISUAL,
   adminGetProduct,
+  getBracelets,
   createProduct,
   deleteProductForever,
   setProductStatus,
@@ -34,6 +35,8 @@ import {
 import { resetContent, saveContent } from "@/lib/server/content";
 import { FULFILMENT, updateOrderAdmin, type Fulfilment } from "@/lib/server/orders";
 import { deleteMedia } from "@/lib/server/media";
+import { codeTaken, deleteCoupon, getCoupon, saveCoupon, setCouponActive } from "@/lib/server/coupons";
+import { COUPON_RE, normCode } from "@/lib/coupon-types";
 import { pageDef } from "@/lib/content/fields";
 import type { PageId } from "@/lib/content/defaults";
 import { SLUG_RE, type Product, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
@@ -375,4 +378,83 @@ export async function signOutEverywhereAction() {
   await sql`delete from admin_sessions where user_id = ${me.id}`;
   await endSession();
   redirect("/admin/login?msg=out");
+}
+
+/* ------------------------------------------------------------------ */
+/* Coupons                                                              */
+/* ------------------------------------------------------------------ */
+
+const optInt = (fd: FormData, k: string): number | null | "bad" => {
+  const v = str(fd, k, 10);
+  if (!v) return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 && n <= 10_000_000 ? n : "bad";
+};
+/** Dates are picked in India time: a coupon starts at 00:00 and ends at 23:59:59 IST. */
+const istDate = (fd: FormData, k: string, end: boolean) => {
+  const v = str(fd, k, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T${end ? "23:59:59" : "00:00:00"}+05:30`).toISOString() : null;
+};
+
+export async function saveCouponAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40) || null;
+  const back: (err: string) => never = (err) => go(id ? `/admin/coupons/${id}` : "/admin/coupons/new", { err });
+  if (id && !(await getCoupon(id))) go("/admin/coupons", { err: "missing" });
+
+  const code = normCode(str(fd, "code", 40));
+  if (!COUPON_RE.test(code)) back("code");
+  if (await codeTaken(code, id ?? undefined)) back("codeTaken");
+  const kind = str(fd, "kind", 10) === "flat" ? "flat" : "percent";
+  const value = Math.round(Number(str(fd, "value", 10)));
+  if (!Number.isFinite(value) || value < 1 || (kind === "percent" ? value > 90 : value > 1_000_000)) back("value");
+  const maxDiscount = optInt(fd, "maxDiscountInr");
+  const usageLimit = optInt(fd, "usageLimit");
+  const perCustomer = optInt(fd, "perCustomerLimit");
+  if (maxDiscount === "bad" || usageLimit === "bad" || perCustomer === "bad") back("limits");
+  const minOrder = Math.max(0, Math.min(1_000_000, Math.round(Number(str(fd, "minOrderInr", 10)) || 0)));
+  const startsAt = istDate(fd, "startsAt", false);
+  const endsAt = istDate(fd, "endsAt", true);
+  if (startsAt && endsAt && endsAt < startsAt) back("dates");
+  const valid = new Set((await getBracelets()).map((b) => b.slug));
+  const products = fd
+    .getAll("products")
+    .map(String)
+    .filter((s) => valid.has(s))
+    .slice(0, 50);
+
+  const savedId = await saveCoupon(
+    id,
+    {
+      code,
+      description: str(fd, "description", 200),
+      kind,
+      value,
+      maxDiscountInr: kind === "percent" ? (maxDiscount as number | null) : null,
+      minOrderInr: minOrder,
+      startsAt,
+      endsAt,
+      usageLimit: usageLimit as number | null,
+      perCustomerLimit: perCustomer as number | null,
+      products,
+      active: fd.get("active") === "on",
+    },
+    user.id,
+  );
+  if (!savedId) back("codeTaken");
+  await logAction(user.id, id ? "coupon.update" : "coupon.create", code);
+  go(`/admin/coupons/${savedId}`, { msg: id ? "saved" : "created" });
+}
+
+export async function couponAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40);
+  const op = str(fd, "op", 10);
+  const c = await getCoupon(id);
+  if (!c) go("/admin/coupons", { err: "missing" });
+  if (op === "on" || op === "off") await setCouponActive(id, op === "on");
+  else if (op === "delete") await deleteCoupon(id);
+  else go("/admin/coupons", { err: "missing" });
+  await logAction(user.id, `coupon.${op}`, c!.code);
+  go("/admin/coupons", { msg: op === "delete" ? "deleted" : op });
 }

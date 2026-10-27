@@ -22,6 +22,8 @@ export async function GET(req: Request) {
     ["Payment", (o) => o.status],
     ["Progress", (o) => o.fulfilment_status],
     ["Amount (Rs)", (o) => o.amount_paise / 100],
+    ["Coupon", (o) => o.coupon_code],
+    ["Discount (Rs)", (o) => (o.discount_paise ?? 0) / 100],
     ["Bracelet", (o) => o.bracelet_title],
     ["Intentions", (o) => (o.intentions ?? []).join("; ")],
     ["Focus", (o) => o.focus],

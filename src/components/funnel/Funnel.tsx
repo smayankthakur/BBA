@@ -171,6 +171,12 @@ export default function Funnel({ data }: { data: FunnelData }) {
   const [showErrors, setShowErrors] = useState(false);
   const [payState, setPayState] = useState<{ status: "idle" | "working" | "error"; message?: string }>({ status: "idle" });
   const [orderRef, setOrderRef] = useState("");
+  // Coupon: the server decides the discount; this only shows it.
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discountInr: number; totalInr: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState<{ busy?: boolean; error?: string } | null>(null);
+  const couponAuto = useRef(false);
   const utmRef = useRef<Record<string, string>>({});
   const headingRef = useRef<HTMLHeadingElement>(null);
   const step = STEPS[i];
@@ -192,6 +198,12 @@ export default function Funnel({ data }: { data: FunnelData }) {
     q.forEach((v, k) => {
       if (k.startsWith("utm_") && Object.keys(utmRef.current).length < 8) utmRef.current[k] = v.slice(0, 100);
     });
+    // Shared offer links can carry ?coupon=CODE; it is applied at checkout.
+    const cq = (q.get("coupon") ?? "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24);
+    if (cq) {
+      setCouponInput(cq);
+      setCouponOpen(true);
+    }
     const wanted = q.get("intention");
     const preset =
       wanted === "3-in-1"
@@ -246,6 +258,47 @@ export default function Funnel({ data }: { data: FunnelData }) {
     return primary;
   }, [a.intentions, primary]);
   const rec = recSlug ? braceletBySlug(recSlug) : undefined;
+  const total = rec ? (coupon ? coupon.totalInr : rec.priceInr) : 0;
+
+  const applyCoupon = useCallback(
+    async (raw: string) => {
+      if (!rec) return;
+      const code = raw.trim().toUpperCase();
+      if (!code) {
+        setCouponMsg({ error: "Enter a coupon code." });
+        return;
+      }
+      setCouponMsg({ busy: true });
+      const res = await fetch("/api/checkout/coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, bracelet: rec.slug, mobile: /^[6-9]\d{9}$/.test(co.mobile.trim()) ? co.mobile.trim() : "" }),
+      }).catch(() => null);
+      const data = res ? await res.json().catch(() => ({})) : {};
+      if (res?.ok && data.ok) {
+        setCoupon({ code: data.code, discountInr: data.discountInr, totalInr: data.totalInr });
+        setCouponMsg(null);
+        track("apply_coupon", { coupon: data.code, bracelet: rec.slug });
+      } else {
+        setCoupon(null);
+        setCouponMsg({ error: data.error ?? "Couldn't check the coupon. Please try again." });
+      }
+    },
+    [rec, co.mobile],
+  );
+
+  // A different bracelet means the coupon has to be checked again.
+  useEffect(() => {
+    setCoupon(null);
+    couponAuto.current = false;
+  }, [rec?.slug]);
+  // Apply a code from an offer link once the customer reaches checkout.
+  useEffect(() => {
+    if (step === "checkout" && couponInput && !coupon && !couponAuto.current) {
+      couponAuto.current = true;
+      applyCoupon(couponInput);
+    }
+  }, [step, couponInput, coupon, applyCoupon]);
   const primaryDetail = primary ? braceletBySlug(primary) : undefined;
   const wristChoices =
     a.gender === "female" ? WRIST_OPTIONS.female : a.gender === "male" ? WRIST_OPTIONS.male : [...WRIST_OPTIONS.female, ...WRIST_OPTIONS.male];
@@ -745,7 +798,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   return;
                 }
                 setPayState({ status: "working" });
-                track("begin_checkout", { bracelet: rec.slug, value: rec.priceInr, currency: "INR" }, "InitiateCheckout");
+                track("begin_checkout", { bracelet: rec.slug, value: total, currency: "INR", ...(coupon ? { coupon: coupon.code } : {}) }, "InitiateCheckout");
                 try {
                   const res = await fetch("/api/checkout/create", {
                     method: "POST",
@@ -777,10 +830,15 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       consent: co.consent,
                       marketing: co.marketing,
                       utm: utmRef.current,
+                      ...(coupon ? { coupon: coupon.code } : {}),
                     }),
                   });
                   const data = await res.json().catch(() => ({}));
                   if (!res.ok) {
+                    if (data.field === "coupon") {
+                      setCoupon(null);
+                      setCouponMsg({ error: data.error });
+                    }
                     setPayState({ status: "error", message: data.error ?? "Something went wrong. Please try again." });
                     return;
                   }
@@ -813,7 +871,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       if (v && v.ok) {
                         setOrderRef(data.ref);
                         setPayState({ status: "idle" });
-                        track("purchase", { transaction_id: data.ref, value: rec.priceInr, currency: "INR" }, "Purchase");
+                        track("purchase", { transaction_id: data.ref, value: data.amount / 100, currency: "INR", ...(coupon ? { coupon: coupon.code } : {}) }, "Purchase");
                         goTo(STEPS.indexOf("confirmed"));
                       } else {
                         setPayState({
@@ -847,14 +905,72 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   </span>
                   <span>{formatINR(rec.priceInr)}</span>
                 </div>
+                {coupon && (
+                  <div className="fn-summary-row is-discount">
+                    <span>
+                      Coupon <b className="fn-coupon-code">{coupon.code}</b>{" "}
+                      <button
+                        type="button"
+                        className="fn-link"
+                        onClick={() => {
+                          setCoupon(null);
+                          setCouponMsg(null);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </span>
+                    <span>−{formatINR(coupon.discountInr)}</span>
+                  </div>
+                )}
                 <div className="fn-summary-row">
                   <span>Shipping</span>
                   <span>Free</span>
                 </div>
                 <div className="fn-summary-row is-total">
                   <span>Total</span>
-                  <span>{formatINR(rec.priceInr)}</span>
+                  <span>{formatINR(total)}</span>
                 </div>
+                {!coupon &&
+                  (couponOpen ? (
+                    <div className="fn-coupon">
+                      <label className="sr-only" htmlFor="fn-coupon-input">
+                        Coupon code
+                      </label>
+                      <input
+                        id="fn-coupon-input"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase().replace(/\s+/g, "").slice(0, 24));
+                          setCouponMsg(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            applyCoupon(couponInput);
+                          }
+                        }}
+                        placeholder="Coupon code"
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        aria-invalid={!!couponMsg?.error}
+                        aria-describedby={couponMsg?.error ? "fn-coupon-err" : undefined}
+                      />
+                      <button type="button" className="btn btn-line" onClick={() => applyCoupon(couponInput)} disabled={!!couponMsg?.busy}>
+                        {couponMsg?.busy ? "Checking…" : "Apply"}
+                      </button>
+                      {couponMsg?.error && (
+                        <em className="fn-err" id="fn-coupon-err" role="alert">
+                          {couponMsg.error}
+                        </em>
+                      )}
+                    </div>
+                  ) : (
+                    <button type="button" className="fn-link fn-coupon-open" onClick={() => setCouponOpen(true)}>
+                      Have a coupon code?
+                    </button>
+                  ))}
                 <p className="fn-summary-eta">Estimated delivery: {win()}</p>
               </div>
 
@@ -962,7 +1078,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               )}
               <div className="fn-actions is-stack">
                 <button type="submit" className="btn btn-lapis" disabled={payState.status === "working"}>
-                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${formatINR(rec.priceInr)} securely`}
+                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${formatINR(total)} securely`}
                 </button>
               </div>
               <TrustBar compact text={trust} />

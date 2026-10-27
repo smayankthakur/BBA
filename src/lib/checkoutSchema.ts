@@ -43,6 +43,7 @@ export const CheckoutSchema = z.object({
   consent: z.literal(true),
   marketing: z.boolean(),
   utm: z.record(z.string().max(100)).optional(),
+  coupon: z.string().trim().max(40).optional(),
 });
 
 export type CheckoutInput = z.input<typeof CheckoutSchema>;

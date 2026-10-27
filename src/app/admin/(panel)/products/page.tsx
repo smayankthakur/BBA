@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Notice from "@/components/admin/Notice";
+import ConfirmButton from "@/components/admin/ConfirmButton";
 import { adminCounts, adminListProducts } from "@/lib/server/catalog";
 import { productStatusAction } from "@/app/admin/actions";
 import { formatINR } from "@/lib/format";
@@ -131,9 +132,9 @@ export default async function ProductsPage({
                         <form action={productStatusAction}>
                           <input type="hidden" name="id" value={p.id} />
                           <input type="hidden" name="to" value="delete" />
-                          <button className="ad-link-btn is-danger">
+                          <ConfirmButton className="ad-link-btn is-danger" message={`Delete ${p.title} permanently? This can't be undone.`}>
                             Delete permanently
-                          </button>
+                          </ConfirmButton>
                         </form>
                       </>
                     ) : (

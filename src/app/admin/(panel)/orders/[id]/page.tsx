@@ -90,7 +90,15 @@ export default async function OrderPage({
             <div className="ad-box-body">
               <dl className="ad-dl">
                 <Row k="Bracelet" v={o.bracelet_title} />
-                <Row k="Amount" v={formatINR(o.amount_paise / 100)} />
+                {o.coupon_code ? (
+                  <>
+                    <Row k="Price" v={formatINR((o.amount_paise + (o.discount_paise ?? 0)) / 100)} />
+                    <Row k="Coupon" v={`${o.coupon_code} (−${formatINR((o.discount_paise ?? 0) / 100)})`} />
+                    <Row k="Amount paid" v={formatINR(o.amount_paise / 100)} />
+                  </>
+                ) : (
+                  <Row k="Amount" v={formatINR(o.amount_paise / 100)} />
+                )}
                 <Row k="Gift" v={o.is_gift ? "Yes" : "No"} />
                 {o.is_gift && <Row k="Gift message" v={o.gift_note} />}
                 <Row k="Paid at" v={fmt(o.paid_at)} />

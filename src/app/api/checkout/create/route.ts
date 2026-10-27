@@ -5,6 +5,7 @@ import { createOrder, razorpayConfigured, razorpayKeyId } from "@/lib/server/raz
 import { insertOrder } from "@/lib/server/orders";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
 import { getProduct } from "@/lib/server/catalog";
+import { checkCoupon } from "@/lib/server/coupons";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 
 export const runtime = "nodejs";
@@ -39,8 +40,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please check your details." }, { status: 400 });
   }
 
-  // Price is decided here (from the product in the database), never by the browser.
-  const amountPaise = product.priceInr * 100;
+  // Price is decided here (from the product and coupon in the database), never by the browser.
+  let couponCode: string | null = null;
+  let discountInr = 0;
+  if (d.coupon) {
+    const c = await checkCoupon(d.coupon, product, d.contact.mobile).catch(() => ({ ok: false as const, error: "Couldn't check the coupon. Please try again." }));
+    if (!c.ok) return NextResponse.json({ error: c.error, field: "coupon" }, { status: 400 });
+    couponCode = c.code;
+    discountInr = c.discountInr;
+  }
+  const amountPaise = (product.priceInr - discountInr) * 100;
   const ref = `BBA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
   const dob = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const m = mulank(day);
@@ -54,7 +63,8 @@ export async function POST(req: Request) {
   const cut = (s: string) => s.slice(0, 250);
   const notes: Record<string, string> = {
     ref,
-    bracelet: product.title,
+    // (Razorpay allows 15 notes, so the coupon rides along with the bracelet.)
+    bracelet: cut(couponCode ? `${product.title} · coupon ${couponCode} -Rs ${discountInr} (list Rs ${product.priceInr})` : product.title),
     wearer: cut(`${d.wearer.firstName} ${d.wearer.lastName ?? ""}`.trim()),
     dob,
     gender: d.wearer.gender,
@@ -102,6 +112,8 @@ export async function POST(req: Request) {
       terms_accepted_at: new Date().toISOString(),
       utm: d.utm ?? {},
       razorpay_order_id: order.id,
+      coupon_code: couponCode,
+      discount_paise: discountInr * 100,
     }).catch((e) => console.error("[checkout] db insert failed", e instanceof Error ? e.message : e));
 
     return NextResponse.json({ orderId: order.id, keyId: razorpayKeyId(), amount: amountPaise, currency: "INR", ref });

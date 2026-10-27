@@ -4082,6 +4082,57 @@ a:hover {
   font-size: 17px;
   color: var(--lapis);
 }
+.fn-summary-row.is-discount {
+  color: var(--price);
+  font-weight: 600;
+  align-items: center;
+}
+.fn-summary-row.is-discount .fn-link {
+  padding: 4px 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.fn-coupon-code {
+  display: inline !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  letter-spacing: 0.04em;
+}
+.fn-coupon-open {
+  align-self: flex-start;
+  padding: 2px 0;
+  font-size: 14px;
+}
+.fn-coupon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fn-coupon input {
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--lilac-line);
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--white);
+  color: var(--ink);
+}
+.fn-coupon input:focus-visible {
+  outline: 2px solid var(--lapis);
+  outline-offset: 1px;
+}
+.fn-coupon .btn {
+  min-height: 44px;
+  padding-inline: 18px;
+}
+.fn-coupon .fn-err {
+  flex-basis: 100%;
+}
 .fn-summary-eta {
   margin: 2px 0 0;
   font-size: 13px;

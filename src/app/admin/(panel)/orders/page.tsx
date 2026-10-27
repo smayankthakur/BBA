@@ -158,7 +158,10 @@ export default async function OrdersPage({
                     {PROGRESS[o.fulfilment_status] ?? o.fulfilment_status}
                   </span>
                 </td>
-                <td>{formatINR(o.amount_paise / 100)}</td>
+                <td>
+                  {formatINR(o.amount_paise / 100)}
+                  {o.coupon_code && <div className="ad-muted">{o.coupon_code}</div>}
+                </td>
               </tr>
             ))}
           </tbody>
