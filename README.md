@@ -118,7 +118,7 @@ public/brand/        emblem.png, wordmark.png
 
 - **Ammit's portrait**: in place at `public/ammit/ammit-kukreja.jpg`. Confirm Ammit approves it as his portrait.
 - **Reviews**: three real customer messages from the Instagram "Reviews" highlight are on the site (`TESTIMONIALS` in `src/data/home.ts`), each linked to its source. Ask the client to confirm he's happy to reuse them; reviews claiming health results were deliberately left out.
-- **Product photos**: TEMPORARY Unsplash stock photos are in `public/products/` (see `CREDITS.txt`). They show similar bracelets, not Ammit's own, and also feed the Product structured data. Replace all 21, plus the 3 gift photos in `public/products/gifts/`, with his real photos before launch (same file names).
+- **Product photos**: Ammit's own photos are in `public/products/` (see `CREDITS.txt`). Better married life, 3 in 1 and the gifts borrow the closest photos until he sends dedicated ones.
 - **Approve the copy**: Ammit's note, care instructions, gift blurbs and footer disclaimer were drafted for his review.
 - **Shipping & payments (placeholder decisions by Mayank, 24 Oct)**: free shipping, prepaid only, 5–7 days, refunds started within 7 working days. Confirm with Ammit.
 - **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.

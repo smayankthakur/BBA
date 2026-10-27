@@ -12,7 +12,7 @@ const STONES = [
 
 export default function ThreeInOne() {
   const photos = productPhotos("3-in-1");
-  const photo = photos[1] ?? photos[0];
+  const photo = photos[0];
 
   return (
     <section id="three-in-one" className="three">
@@ -22,7 +22,7 @@ export default function ThreeInOne() {
             <div className="three-frame">
               <Image
                 src={photo}
-                alt="3 in 1 crystal bracelet with rose quartz, dark protective stones and warm golden beads"
+                alt="A Bracelet By Ammit multi-crystal bracelet with black, green, purple and golden beads"
                 fill
                 sizes="(max-width: 760px) 80vw, 380px"
                 className="three-photo"
