@@ -1,16 +1,40 @@
 import type { Metadata } from "next";
-import Funnel from "@/components/funnel/Funnel";
-import { BRACELETS } from "@/data/pages";
-import { productPhotos } from "@/lib/server/photos";
+import Funnel, { type FunnelData } from "@/components/funnel/Funnel";
+import { getBracelets } from "@/lib/server/catalog";
+import { getContent, getSite } from "@/lib/server/content";
 
-export const metadata: Metadata = {
-  title: "Find your bracelet: 60-second crystal reading",
-  description:
-    "Answer 7 quick questions to find your mulank, bhagyank and the crystal bracelet that suits your numbers. Every bracelet ₹1,199, strung by hand.",
-  alternates: { canonical: "/find-your-bracelet" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getContent("funnel");
+  return { title: c.seoTitle || c.introTitle, description: c.seoDescription, alternates: { canonical: "/find-your-bracelet" } };
+}
 
-export default function FindYourBraceletPage() {
-  const photos = Object.fromEntries(BRACELETS.map((b) => [b.slug, productPhotos(b.slug)]));
-  return <Funnel photos={photos} />;
+export default async function FindYourBraceletPage() {
+  const [bracelets, copy, mulank, reviews, shared, { s }] = await Promise.all([
+    getBracelets(),
+    getContent("funnel"),
+    getContent("mulank"),
+    getContent("reviews"),
+    getContent("shared"),
+    getSite(),
+  ]);
+  const review = reviews.items.find((r) => r.quote.trim()) ?? null;
+  const data: FunnelData = {
+    products: bracelets.map((b) => ({
+      slug: b.slug,
+      title: b.title,
+      blurb: b.blurb,
+      crystals: b.crystals,
+      priceInr: b.priceInr,
+      photos: b.photos,
+      inList: b.inList,
+      visual: b.visual,
+      listA: b.listA,
+    })),
+    mulank: mulank.numbers.map((m) => ({ number: m.number, planet: m.planet, planetHindi: m.planetHindi, traits: m.traits })),
+    review: review ? { quote: review.quote, name: review.name, sourceLabel: review.sourceLabel, sourceUrl: review.sourceUrl } : null,
+    copy,
+    trust: { shipping: shared.trustShipping, payment: shared.trustPayment, minDays: s.shippingMinDays, maxDays: s.shippingMaxDays },
+    refNote: s.refNote,
+  };
+  return <Funnel data={data} />;
 }

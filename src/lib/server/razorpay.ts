@@ -39,6 +39,16 @@ export function fetchPayment(paymentId: string) {
   return call<RzpPayment>(`/v1/payments/${encodeURIComponent(paymentId)}`);
 }
 
+/** Amount (paise) on a Razorpay order, as Razorpay recorded it when we created it. */
+export async function fetchOrderAmount(orderId: string): Promise<number | null> {
+  try {
+    const o = await call<RzpOrder>(`/v1/orders/${encodeURIComponent(orderId)}`);
+    return typeof o.amount === "number" ? o.amount : null;
+  } catch {
+    return null;
+  }
+}
+
 function safeEqualHex(a: string, b: string) {
   const ab = Buffer.from(a, "utf8");
   const bb = Buffer.from(b, "utf8");

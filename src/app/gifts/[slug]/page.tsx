@@ -4,95 +4,101 @@ import { notFound } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
-import { GIFTS, PRICE } from "@/data/home";
-import { GIFT_DETAILS } from "@/data/pages";
-import TrustBar from "@/components/TrustBar";
 import GiftVisual from "@/components/GiftVisual";
+import SiteTrustBar from "@/components/SiteTrustBar";
+import { getGifts, getProduct } from "@/lib/server/catalog";
+import { formatINR, getContent, getSite } from "@/lib/server/content";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return GIFTS.map((g) => ({ slug: g.slug }));
+export async function generateStaticParams() {
+  return (await getGifts()).map((g) => ({ slug: g.slug }));
 }
 
-const get = (slug: string) => GIFTS.find((g) => g.slug === slug);
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const g = get((await params).slug);
+  const g = await getProduct("gift", (await params).slug);
   if (!g) return {};
   return {
-    title: `${g.title}: crystal bracelet gift`,
-    description: `${g.blurb} ${PRICE} per bracelet, read for the wearer's date of birth.`,
+    title: g.seoTitle || `${g.title}: crystal bracelet gift`,
+    description: g.seoDescription || `${g.blurb} ${formatINR(g.priceInr)} per bracelet, read for the wearer's date of birth.`,
     alternates: { canonical: `/gifts/${g.slug}` },
   };
 }
 
 export default async function GiftPage({ params }: Params) {
-  const g = get((await params).slug);
+  const slug = (await params).slug;
+  const [g, all, c, { s }] = await Promise.all([getProduct("gift", slug), getGifts(), getContent("gifts"), getSite()]);
   if (!g) notFound();
-  const d = GIFT_DETAILS[g.slug];
-  const others = GIFTS.filter((o) => o.slug !== g.slug);
+  const others = all.filter((o) => o.slug !== g.slug);
 
   return (
     <PageShell>
       <div className="product">
         <div className="product-visual">
-          <GiftVisual gift={g} className="arch gift-hero-arch" sizes="(max-width: 760px) 80vw, 380px" priority />
+          <GiftVisual gift={g} refNote={s.refNote} className="arch gift-hero-arch" sizes="(max-width: 760px) 80vw, 380px" priority />
         </div>
         <div className="product-info">
           <PageHero
             crumbs={[{ label: "Gifts", href: "/gifts" }, { label: g.title }]}
-            eyebrow="Gift"
+            eyebrow={c.detailEyebrow}
             title={g.title}
-            lede={d.intro.map((p) => (
-              <p key={p.slice(0, 20)}>{p}</p>
+            lede={(g.intro.length ? g.intro : [g.blurb]).map((p, i) => (
+              <p key={i}>{p}</p>
             ))}
           />
           <p className="product-price">
-            {PRICE} <span>per bracelet · read for the wearer</span>
+            {formatINR(g.priceInr)} <span>{c.priceNote}</span>
           </p>
-          <TrustBar />
+          <SiteTrustBar />
           <div className="btn-row">
             <Link className="btn btn-lapis" href="/find-your-bracelet?for=gift">
-              Order this gift
+              {c.orderButton}
             </Link>
           </div>
         </div>
       </div>
 
-      <section className="section-narrow split-lists">
-        <div>
-          <h2 className="h3">What to send us</h2>
-          <ul className="tick-list">
-            {d.send.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h2 className="h3">Gift ideas</h2>
-          <ul className="tick-list">
-            {d.ideas.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {(g.listA.length > 0 || g.listB.length > 0) && (
+        <section className="section-narrow split-lists">
+          {g.listA.length > 0 && (
+            <div>
+              <h2 className="h3">{c.sendTitle}</h2>
+              <ul className="tick-list">
+                {g.listA.map((x, i) => (
+                  <li key={i}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {g.listB.length > 0 && (
+            <div>
+              <h2 className="h3">{c.ideasTitle}</h2>
+              <ul className="tick-list">
+                {g.listB.map((x, i) => (
+                  <li key={i}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
-      <nav className="section-narrow pager" aria-label="Other gifts">
-        {others.map((o) => (
-          <Link key={o.slug} href={`/gifts/${o.slug}`}>
-            {o.title} →
-          </Link>
-        ))}
-      </nav>
+      {others.length > 0 && (
+        <nav className="section-narrow pager" aria-label={c.othersLabel}>
+          {others.map((o) => (
+            <Link key={o.slug} href={`/gifts/${o.slug}`}>
+              {o.title} →
+            </Link>
+          ))}
+        </nav>
+      )}
 
       <OrderCta
-        title="Have their date of birth ready?"
-        text="Answer a few questions about the wearer and we'll suggest the bracelet that suits their numbers."
-        primary={{ label: "Order this gift", href: "/find-your-bracelet?for=gift" }}
+        title={c.ctaTitle}
+        text={c.ctaText}
+        primary={{ label: c.orderButton, href: "/find-your-bracelet?for=gift" }}
         secondary={{ label: "All gifts", href: "/gifts" }}
       />
     </PageShell>

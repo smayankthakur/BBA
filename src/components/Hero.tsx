@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HERO_BEADS } from "@/data/home";
+import { getContent } from "@/lib/server/content";
 
 const RADIUS = 190; // px from centre to bead
 const STEP = 15; // degrees between bead and spacer
 
-export default function Hero() {
+export default async function Hero() {
+  const c = await getContent("home");
   // 24 positions: gem at every 30°, gold spacer in between.
   const beads = Array.from({ length: 360 / STEP }, (_, i) => {
     const angle = i * STEP;
@@ -16,15 +18,12 @@ export default function Hero() {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <h1>A bracelet for what you&apos;re asking of life.</h1>
-        <p className="hero-lede">
-          Choose the intention. Numerologist Ammit Kukreja chooses the crystals for your birth date,
-          then strings them by hand.
-        </p>
+        <h1>{c.heroTitle}</h1>
+        <p className="hero-lede">{c.heroLede}</p>
         <div className="btn-row">
-          <a className="btn btn-lapis" href="#edit">Shop by intention</a>
+          <a className="btn btn-lapis" href="#edit">{c.heroPrimary}</a>
           <Link className="btn btn-line" href="/find-your-bracelet">
-            Find my bracelet
+            {c.heroSecondary}
           </Link>
         </div>
       </div>

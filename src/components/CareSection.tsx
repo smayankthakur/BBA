@@ -1,33 +1,31 @@
 import Link from "next/link";
-import { CARE, LINKS } from "@/data/home";
+import { getContent, getSite } from "@/lib/server/content";
 
-export default function CareSection() {
+export default async function CareSection() {
+  const [c, care, { s }] = await Promise.all([getContent("home"), getContent("care"), getSite()]);
   return (
     <section id="care" className="care">
       <div className="care-inner">
         <div className="care-copy">
-          <h2 className="h2">What if my bracelet breaks?</h2>
-          <p>
-            It&apos;s the question people ask us most. Ammit&apos;s answer on YouTube has been watched
-            more than 14,000 times.
-          </p>
+          <h2 className="h2">{c.careTitle}</h2>
+          <p>{c.careText}</p>
           <div className="btn-row">
             <a
               className="btn btn-lapis on-white"
-              href={LINKS.youtubeShorts}
+              href={s.youtubeShorts}
               target="_blank"
               rel="noopener noreferrer"
             >
-              Watch Ammit&apos;s answer
+              {c.careWatch}
             </a>
             <Link className="btn btn-line" href="/bracelet-care">
-              Full care guide
+              {c.careGuide}
             </Link>
           </div>
         </div>
         <dl className="care-list" tabIndex={0} aria-label="Bracelet care">
-          {CARE.map((c) => (
-            <div key={c.term} className="care-item">
+          {care.items.map((c, i) => (
+            <div key={i} className="care-item">
               <dt>{c.term}</dt>
               <dd>{c.detail}</dd>
             </div>

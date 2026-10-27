@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Medallion from "./Medallion";
-import { LINKS } from "@/data/home";
 
 const SHOP_LINKS = [
   { href: "/bracelets", label: "Intentions" },
@@ -33,7 +32,7 @@ function BagIcon() {
   );
 }
 
-export default function SiteHeader() {
+export default function SiteHeader({ instagram, youtube }: { instagram: string; youtube: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -244,10 +243,10 @@ export default function SiteHeader() {
             Ask Ammit
           </Link>
           <div className="menu-social">
-            <a href={LINKS.instagram} target="_blank" rel="noopener noreferrer">
+            <a href={instagram} target="_blank" rel="noopener noreferrer">
               Instagram
             </a>
-            <a href={LINKS.youtube} target="_blank" rel="noopener noreferrer">
+            <a href={youtube} target="_blank" rel="noopener noreferrer">
               YouTube
             </a>
           </div>

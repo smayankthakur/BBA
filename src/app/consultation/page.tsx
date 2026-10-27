@@ -2,57 +2,51 @@ import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
-import { CONSULTATION } from "@/data/pages";
-import { LINKS } from "@/data/home";
+import { getContent, getSite } from "@/lib/server/content";
 
-export const metadata: Metadata = {
-  title: "Numerology consultation with Ammit",
-  description:
-    "Book a one-to-one numerology consultation with Ammit Kukreja: your mulank, bhagyank, missing numbers and the crystals that suit you.",
-  alternates: { canonical: "/consultation" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getContent("consultation");
+  return { title: c.seoTitle || c.title, description: c.seoDescription, alternates: { canonical: "/consultation" } };
+}
 
-export default function ConsultationPage() {
+export default async function ConsultationPage() {
+  const [c, { s }] = await Promise.all([getContent("consultation"), getSite()]);
   return (
     <PageShell>
-      <PageHero
-        crumbs={[{ label: "Consultation" }]}
-        eyebrow="One to one"
-        title="A numerology consultation with Ammit"
-        lede={<p>Not sure which bracelet, or have a bigger question? Ammit reads your full date of birth and talks you through what your numbers say.</p>}
-      >
-        <a className="btn btn-lapis" href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-          Book on WhatsApp
-        </a>
+      <PageHero crumbs={[{ label: "Consultation" }]} eyebrow={c.eyebrow} title={c.title} lede={<p>{c.lede}</p>}>
+        {s.whatsapp && (
+          <a className="btn btn-lapis" href={s.whatsapp} target="_blank" rel="noopener noreferrer">
+            {c.button}
+          </a>
+        )}
       </PageHero>
       <section className="section-narrow split-lists">
         <div>
-          <h2 className="h3">What we cover</h2>
+          <h2 className="h3">{c.coversTitle}</h2>
           <ul className="tick-list">
-            {CONSULTATION.covers.map((c) => (
-              <li key={c}>{c}</li>
+            {c.covers.map((x, i) => (
+              <li key={i}>{x}</li>
             ))}
           </ul>
         </div>
         <div>
-          <h2 className="h3">How to book</h2>
+          <h2 className="h3">{c.stepsTitle}</h2>
           <ol className="num-list">
-            {CONSULTATION.steps.map((s) => (
-              <li key={s}>{s}</li>
+            {c.steps.map((x, i) => (
+              <li key={i}>{x}</li>
             ))}
           </ol>
         </div>
       </section>
-      <section className="section-narrow prose-section">
-        <p className="callout">
-          Numerology is guidance, not a guarantee. For medical, legal or financial decisions, please also speak to a
-          qualified professional.
-        </p>
-      </section>
+      {c.callout && (
+        <section className="section-narrow prose-section">
+          <p className="callout">{c.callout}</p>
+        </section>
+      )}
       <OrderCta
-        title="Have your date of birth ready"
-        text="Message Ammit on WhatsApp to book a time."
-        primary={{ label: "Book on WhatsApp", href: LINKS.whatsapp, external: true }}
+        title={c.ctaTitle}
+        text={c.ctaText}
+        primary={s.whatsapp ? { label: c.button, href: s.whatsapp, external: true } : undefined}
         secondary={{ label: "Or order a bracelet", href: "/find-your-bracelet" }}
       />
     </PageShell>

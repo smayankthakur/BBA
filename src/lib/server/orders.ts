@@ -1,65 +1,12 @@
 import "server-only";
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { dbConfigured, sql } from "./db";
+import { ensureSchema } from "./schema";
 
 // Order store on Postgres (Neon via the Vercel integration, which sets
 // DATABASE_URL). All queries are parameterised. Without DATABASE_URL the
 // Razorpay order itself (with its notes) is the record, so checkout still works.
 
-const URL_ = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
-export const dbConfigured = () => !!URL_;
-
-let sqlFn: NeonQueryFunction<false, false> | null = null;
-const db = () => (sqlFn ??= neon(URL_));
-
-let schemaReady: Promise<void> | null = null;
-/** Creates the table on first use (idempotent), once per server instance. */
-export function ensureSchema() {
-  schemaReady ??= (async () => {
-    const sql = db();
-    await sql`create table if not exists orders (
-      id uuid primary key default gen_random_uuid(),
-      ref text not null unique,
-      status text not null default 'pending' check (status in ('pending', 'paid', 'failed')),
-      bracelet_slug text not null,
-      bracelet_title text not null,
-      amount_paise integer not null check (amount_paise > 0),
-      wearer_first_name text not null,
-      wearer_last_name text not null default '',
-      wearer_dob date not null,
-      wearer_gender text not null,
-      mulank smallint not null,
-      bhagyank smallint not null,
-      wrist text not null,
-      intentions text[] not null default '{}',
-      focus text,
-      is_gift boolean not null default false,
-      gift_note text,
-      delivery_name text not null,
-      mobile text not null,
-      email text,
-      address_line1 text not null,
-      address_line2 text,
-      landmark text,
-      city text not null,
-      state text not null,
-      pincode text not null,
-      marketing_opt_in boolean not null default false,
-      terms_accepted_at timestamptz not null,
-      utm jsonb not null default '{}'::jsonb,
-      razorpay_order_id text not null unique,
-      razorpay_payment_id text,
-      payment_method text,
-      paid_at timestamptz,
-      created_at timestamptz not null default now()
-    )`;
-    await sql`create index if not exists orders_status_created_idx on orders (status, created_at desc)`;
-    await sql`alter table orders add column if not exists staff_notified_at timestamptz`;
-  })().catch((e) => {
-    schemaReady = null; // retry next time
-    throw e;
-  });
-  return schemaReady;
-}
+export { dbConfigured };
 
 export type OrderRecord = {
   ref: string;
@@ -96,7 +43,7 @@ export type OrderRecord = {
 export async function insertOrder(o: OrderRecord) {
   if (!dbConfigured()) return;
   await ensureSchema();
-  await db()`insert into orders (
+  await sql`insert into orders (
       ref, status, bracelet_slug, bracelet_title, amount_paise,
       wearer_first_name, wearer_last_name, wearer_dob, wearer_gender, mulank, bhagyank, wrist,
       intentions, focus, is_gift, gift_note, delivery_name, mobile, email,
@@ -115,7 +62,7 @@ export async function insertOrder(o: OrderRecord) {
 export async function markPaid(razorpayOrderId: string, paymentId: string, method?: string) {
   if (!dbConfigured()) return;
   await ensureSchema();
-  await db()`update orders
+  await sql`update orders
     set status = 'paid', razorpay_payment_id = ${paymentId}, payment_method = ${method ?? null}, paid_at = now()
     where razorpay_order_id = ${razorpayOrderId} and status <> 'paid'`;
 }
@@ -136,7 +83,7 @@ export type StoredOrder = Omit<OrderRecord, "wearer_dob" | "terms_accepted_at"> 
 export async function claimStaffNotification(razorpayOrderId: string): Promise<StoredOrder | null> {
   if (!dbConfigured()) return null;
   await ensureSchema();
-  const rows = (await db()`update orders set staff_notified_at = now()
+  const rows = (await sql`update orders set staff_notified_at = now()
     where razorpay_order_id = ${razorpayOrderId} and status = 'paid' and staff_notified_at is null
     returning *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text`) as StoredOrder[];
   return rows[0] ?? null;
@@ -145,17 +92,86 @@ export async function claimStaffNotification(razorpayOrderId: string): Promise<S
 /** Lets a later attempt (e.g. the webhook) resend if the email failed. */
 export async function releaseStaffNotification(razorpayOrderId: string) {
   if (!dbConfigured()) return;
-  await db()`update orders set staff_notified_at = null where razorpay_order_id = ${razorpayOrderId}`;
+  await sql`update orders set staff_notified_at = null where razorpay_order_id = ${razorpayOrderId}`;
 }
 
 export async function markFailed(razorpayOrderId: string) {
   if (!dbConfigured()) return;
   await ensureSchema();
-  await db()`update orders set status = 'failed' where razorpay_order_id = ${razorpayOrderId} and status = 'pending'`;
+  await sql`update orders set status = 'failed' where razorpay_order_id = ${razorpayOrderId} and status = 'pending'`;
 }
 
 /** For the health check: confirms the connection and the table exist. */
 export async function dbHealth() {
   await ensureSchema();
-  await db()`select 1 from orders limit 1`;
+  await sql`select 1 from orders limit 1`;
+}
+
+/** Amount (paise) recorded for a Razorpay order, or null if unknown. */
+export async function orderAmount(razorpayOrderId: string): Promise<number | null> {
+  if (!dbConfigured()) return null;
+  await ensureSchema();
+  const rows = await sql<{ amount_paise: number }>`select amount_paise from orders where razorpay_order_id = ${razorpayOrderId}`;
+  return rows[0]?.amount_paise ?? null;
+}
+
+/* ---------------- Admin ---------------- */
+
+export type AdminOrder = StoredOrder & {
+  id: string;
+  status: "pending" | "paid" | "failed";
+  fulfilment_status: string;
+  courier: string | null;
+  tracking_number: string | null;
+  admin_notes: string | null;
+  updated_at: string | Date | null;
+};
+
+export const FULFILMENT = ["new", "reading", "making", "shipped", "delivered", "cancelled"] as const;
+export type Fulfilment = (typeof FULFILMENT)[number];
+
+export async function listOrders(opts: { status?: string; fulfilment?: string; q?: string; limit?: number; offset?: number }) {
+  await ensureSchema();
+  const q = (opts.q ?? "").trim();
+  const like = `%${q.replace(/[%_\\]/g, (m) => "\\" + m)}%`;
+  const rows = await sql<AdminOrder & { total: number }>`
+    select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text, count(*) over() :: int as total
+    from orders
+    where (${opts.status ?? ""} = '' or status = ${opts.status ?? ""})
+      and (${opts.fulfilment ?? ""} = '' or fulfilment_status = ${opts.fulfilment ?? ""})
+      and (${q} = '' or ref ilike ${like} or wearer_first_name ilike ${like} or wearer_last_name ilike ${like}
+           or delivery_name ilike ${like} or mobile ilike ${like} or coalesce(email, '') ilike ${like} or pincode ilike ${like})
+    order by created_at desc
+    limit ${opts.limit ?? 50} offset ${opts.offset ?? 0}`;
+  return { rows, total: rows[0]?.total ?? 0 };
+}
+
+export async function getOrder(id: string) {
+  await ensureSchema();
+  const rows = await sql<AdminOrder>`select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text from orders where id = ${id}`;
+  return rows[0] ?? null;
+}
+
+export async function updateOrderAdmin(
+  id: string,
+  f: { fulfilment_status: Fulfilment; courier: string | null; tracking_number: string | null; admin_notes: string | null },
+) {
+  await ensureSchema();
+  await sql`update orders set fulfilment_status = ${f.fulfilment_status}, courier = ${f.courier},
+    tracking_number = ${f.tracking_number}, admin_notes = ${f.admin_notes}, updated_at = now() where id = ${id}`;
+}
+
+export async function orderStats() {
+  await ensureSchema();
+  const rows = await sql<{
+    paid: number; pending: number; failed: number; revenue: number; today: number; to_ship: number;
+  }>`select
+      count(*) filter (where status = 'paid') :: int as paid,
+      count(*) filter (where status = 'pending') :: int as pending,
+      count(*) filter (where status = 'failed') :: int as failed,
+      coalesce(sum(amount_paise) filter (where status = 'paid'), 0) :: int as revenue,
+      count(*) filter (where status = 'paid' and paid_at >= date_trunc('day', now() at time zone 'Asia/Kolkata') at time zone 'Asia/Kolkata') :: int as today,
+      count(*) filter (where status = 'paid' and fulfilment_status in ('new', 'reading', 'making')) :: int as to_ship
+    from orders`;
+  return rows[0];
 }

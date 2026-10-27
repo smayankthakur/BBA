@@ -1,15 +1,16 @@
-import { HOW_IT_WORKS } from "@/data/pages";
+import { getContent } from "@/lib/server/content";
 
-export default function HowItWorks({ title = "How your bracelet is made" }: { title?: string }) {
+export default async function HowItWorks({ title }: { title?: string }) {
+  const c = await getContent("shared");
   return (
     <section className="how" aria-labelledby="how-title">
       <div className="how-inner">
         <h2 id="how-title" className="h2">
-          {title}
+          {title || c.howTitle}
         </h2>
         <ol className="how-steps" tabIndex={0} aria-label="Steps">
-          {HOW_IT_WORKS.map((s, i) => (
-            <li key={s.title}>
+          {c.howSteps.map((s, i) => (
+            <li key={`${i}-${s.title}`}>
               <span className="how-num" aria-hidden="true">
                 {i + 1}
               </span>

@@ -1,0 +1,53 @@
+const OK: Record<string, string> = {
+  saved: "Saved. The website updates on its next visit.",
+  created: "Created. The website updates on its next visit.",
+  trash: "Moved to the trash.",
+  published: "Restored and published.",
+  draft: "Moved to drafts.",
+  delete: "Deleted permanently.",
+  deleted: "Deleted.",
+  reset: "Back to the original text.",
+  revoked: "Invite cancelled.",
+  updated: "Updated.",
+};
+const ERR: Record<string, string> = {
+  title: "Please give it a title.",
+  slug: "The web address can only use lowercase letters, numbers and dashes.",
+  slugTaken: "Another product already uses that web address.",
+  price: "Enter a price between ₹1 and ₹10,00,000.",
+  data: "Something went wrong reading the form. Please try again.",
+  missing: "That item no longer exists.",
+  notTrash: "Move it to the trash first.",
+  inUse:
+    "That image is still used on the site. Remove it from the product or page first.",
+  email: "Please enter a valid email address.",
+  taken: "Someone with that email already has an account.",
+  self: "You can't change your own account here. Use My account.",
+  owner: "The owner account can't be changed here.",
+  current: "Your current password is not correct.",
+  weak: "Use a password of at least 10 characters with letters and numbers.",
+  mismatch: "The two new passwords don't match.",
+  confirm: "Tick the box to confirm.",
+  status: "Choose a valid status.",
+};
+
+/** Green/red message at the top of an admin screen, from ?msg= or ?err=. */
+export default function Notice({
+  sp,
+}: {
+  sp: Record<string, string | undefined>;
+}) {
+  if (sp.err && ERR[sp.err])
+    return (
+      <div className="ad-notice is-err" role="alert">
+        <p>{ERR[sp.err]}</p>
+      </div>
+    );
+  if (sp.msg && OK[sp.msg])
+    return (
+      <div className="ad-notice" role="status">
+        <p>{OK[sp.msg]}</p>
+      </div>
+    );
+  return null;
+}

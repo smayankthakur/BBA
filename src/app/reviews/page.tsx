@@ -3,29 +3,20 @@ import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import Testimonials from "@/components/Testimonials";
 import OrderCta from "@/components/OrderCta";
+import { getContent } from "@/lib/server/content";
 
-export const metadata: Metadata = {
-  title: "Customer reviews",
-  description: "What customers say about the crystal bracelets Ammit Kukreja chose for them.",
-  alternates: { canonical: "/reviews" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getContent("reviews");
+  return { title: c.seoTitle || c.title, description: c.seoDescription, alternates: { canonical: "/reviews" } };
+}
 
-export default function ReviewsPage() {
+export default async function ReviewsPage() {
+  const c = await getContent("reviews");
   return (
     <PageShell>
-      <PageHero
-        crumbs={[{ label: "Reviews" }]}
-        eyebrow="Customer reviews"
-        title="What customers say"
-        lede={<p>Messages customers have sent Ammit about their bracelets, shared with their words unchanged except for spelling.</p>}
-      />
+      <PageHero crumbs={[{ label: "Reviews" }]} eyebrow={c.eyebrow} title={c.title} lede={<p>{c.lede}</p>} />
       <Testimonials />
-      <OrderCta
-        title="Wearing one of our bracelets?"
-        text="We'd love to hear how it's going. Contact details are at the bottom of this page."
-        primary={{ label: "Order a bracelet", href: "/find-your-bracelet" }}
-        secondary={{ label: "Order a bracelet", href: "/find-your-bracelet" }}
-      />
+      <OrderCta title={c.ctaTitle} text={c.ctaText} />
     </PageShell>
   );
 }

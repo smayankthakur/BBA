@@ -4,23 +4,26 @@ import { notFound } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
-import { MULANK, birthDaysFor } from "@/data/pages";
-import { LINKS } from "@/data/home";
 import VideoEmbed from "@/components/VideoEmbed";
-import { MULANK_VIDEOS } from "@/data/videos";
+import { birthDaysFor } from "@/data/pages";
+import { getContent, getSite } from "@/lib/server/content";
+import { fill } from "@/lib/content/render";
 
 type Params = { params: Promise<{ number: string }> };
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return MULANK.map((m) => ({ number: String(m.number) }));
+  return [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({ number: String(n) }));
 }
 
-const get = (n: string) => MULANK.find((m) => String(m.number) === n);
+async function get(n: string) {
+  const c = await getContent("mulank");
+  return { c, m: c.numbers.find((x) => String(x.number) === n) };
+}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const m = get((await params).number);
+  const { m } = await get((await params).number);
   if (!m) return {};
   return {
     title: `Mulank ${m.number}: ruled by ${m.planet}`,
@@ -30,11 +33,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function MulankPage({ params }: Params) {
-  const m = get((await params).number);
+  const [{ c, m }, { s }] = await Promise.all([get((await params).number), getSite()]);
   if (!m) notFound();
   const days = birthDaysFor(m.number);
   const prev = m.number === 1 ? 9 : m.number - 1;
   const next = m.number === 9 ? 1 : m.number + 1;
+  const v = { n: m.number, planet: m.planet, planetHindi: m.planetHindi };
 
   return (
     <PageShell>
@@ -45,15 +49,15 @@ export default async function MulankPage({ params }: Params) {
         <div>
           <PageHero
             crumbs={[{ label: "Mulank", href: "/mulank" }, { label: `Mulank ${m.number}` }]}
-            eyebrow={`Ruled by ${m.planet} (${m.planetHindi})`}
+            eyebrow={fill(c.detailEyebrow, v)}
             title={`Mulank ${m.number}`}
             lede={<p>{m.summary}</p>}
           >
             <Link className="btn btn-lapis" href="/consultation">
-              Ask Ammit about my crystals
+              {c.detailAsk}
             </Link>
             <Link className="btn btn-line" href="/find-your-bracelet">
-              Find my bracelet
+              {c.detailFind}
             </Link>
           </PageHero>
         </div>
@@ -61,46 +65,42 @@ export default async function MulankPage({ params }: Params) {
 
       <section className="section-narrow split-lists">
         <div>
-          <h2 className="h3">You&apos;re a {m.number} if you were born on</h2>
+          <h2 className="h3">{fill(c.daysTitle, v)}</h2>
           <ul className="day-list" aria-label={`Days that make mulank ${m.number}`}>
             {days.map((d) => (
               <li key={d}>{d}</li>
             ))}
           </ul>
-          <p className="small-note">of any month.</p>
+          <p className="small-note">{c.daysNote}</p>
         </div>
         <div>
-          <h2 className="h3">Qualities traditionally linked with {m.number}</h2>
+          <h2 className="h3">{fill(c.traitsTitle, v)}</h2>
           <ul className="tick-list">
-            {m.traits.map((t) => (
-              <li key={t}>{t}</li>
+            {m.traits.map((t, i) => (
+              <li key={i}>{t}</li>
             ))}
           </ul>
         </div>
       </section>
 
       <section className="section-narrow prose-section">
-        <h2 className="h2">Which crystals suit a {m.number}?</h2>
-        <p>
-          It depends on more than your mulank. Ammit also reads your bhagyank and how your numbers work together, so two
-          people with mulank {m.number} can need different stones. Send him your full date of birth and he&apos;ll tell
-          you which crystals suit you, and which to avoid.
-        </p>
+        <h2 className="h2">{fill(c.crystalsTitle, v)}</h2>
+        <p>{fill(c.crystalsText, v)}</p>
         <p>
           Ammit explains each number in short videos on{" "}
-          <a href={LINKS.youtube} target="_blank" rel="noopener noreferrer">
+          <a href={s.youtube} target="_blank" rel="noopener noreferrer">
             his YouTube channel
           </a>
           .
         </p>
       </section>
 
-      {MULANK_VIDEOS[m.number] && (
+      {m.videoId && (
         <section className="section-narrow video-section" aria-labelledby="mvideo-title">
           <h2 id="mvideo-title" className="h3">
-            Ammit on mulank {m.number}
+            {fill(c.videoTitle, v)}
           </h2>
-          <VideoEmbed video={MULANK_VIDEOS[m.number]} />
+          <VideoEmbed video={{ id: m.videoId, title: `Mulank ${m.number}` }} />
         </section>
       )}
 

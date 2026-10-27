@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { VerifySchema } from "@/lib/checkoutSchema";
 import { fetchPayment, razorpayConfigured, verifyPaymentSignature } from "@/lib/server/razorpay";
-import { markPaid } from "@/lib/server/orders";
+import { markPaid, orderAmount } from "@/lib/server/orders";
 import { notifyStaffOfPaidOrder } from "@/lib/server/staffNotify";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
-import { PRICE_INR } from "@/data/home";
+import { fetchOrderAmount } from "@/lib/server/razorpay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +34,9 @@ export async function POST(req: Request) {
   try {
     const p = await fetchPayment(razorpay_payment_id);
     const okStatus = p.status === "captured" || p.status === "authorized";
-    if (p.order_id !== razorpay_order_id || p.amount !== PRICE_INR * 100 || p.currency !== "INR" || !okStatus) {
+    // The amount must match what our server set when it created this order.
+    const expected = (await orderAmount(razorpay_order_id).catch(() => null)) ?? (await fetchOrderAmount(razorpay_order_id));
+    if (p.order_id !== razorpay_order_id || !expected || p.amount !== expected || p.currency !== "INR" || !okStatus) {
       return NextResponse.json({ error: "Payment could not be verified." }, { status: 400 });
     }
     await markPaid(razorpay_order_id, razorpay_payment_id, p.method).catch((e) =>

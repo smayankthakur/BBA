@@ -1,26 +1,17 @@
-import fs from "node:fs";
-import path from "node:path";
 import Image from "next/image";
 import Link from "next/link";
-import { AMMIT, LINKS } from "@/data/home";
+import { getContent, getSite } from "@/lib/server/content";
 
-// Resolved at build time: the portrait appears as soon as the file is added.
-const hasPhoto = fs.existsSync(path.join(process.cwd(), "public", AMMIT.photo));
-
-export default function NoteFromAmmit({ compact = false }: { compact?: boolean }) {
+export default async function NoteFromAmmit({ compact = false }: { compact?: boolean }) {
+  const [c, { s }] = await Promise.all([getContent("home"), getSite()]);
+  const photo = s.ammitPhoto;
   return (
     <section id="note" className={`note${compact ? " is-compact" : ""}`}>
       <div className="note-card">
         <figure className="note-photo">
           <div className="note-arch">
-            {hasPhoto ? (
-              <Image
-                src={AMMIT.photo}
-                alt={AMMIT.photoAlt}
-                fill
-                sizes="(max-width: 760px) 70vw, 280px"
-                className="note-img"
-              />
+            {photo ? (
+              <Image src={photo} alt={s.ammitPhotoAlt} fill sizes="(max-width: 760px) 70vw, 280px" className="note-img" />
             ) : (
               <div className="note-photo-fallback" role="img" aria-label="Bracelet By Ammit medallion">
                 <Image src="/brand/emblem.png" alt="" width={150} height={166} />
@@ -28,37 +19,27 @@ export default function NoteFromAmmit({ compact = false }: { compact?: boolean }
             )}
           </div>
           <figcaption>
-            <span className="note-name">{AMMIT.name}</span>
-            <span className="note-role">{AMMIT.role}</span>
+            <span className="note-name">{s.ammitName}</span>
+            <span className="note-role">{s.ammitRole}</span>
           </figcaption>
         </figure>
 
         <div className="note-text">
-          <h2>A note from Ammit</h2>
-          <p className="note-body">
-            Namaste. A crystal bracelet is often chosen for its colour, or because a friend wears one.
-            But a stone that helps one person can do nothing for another, because your numbers are not
-            theirs. That is why I started Bracelet By Ammit.
-          </p>
-          <p className="note-body note-more">
-            Before I choose a single crystal, I read your date of birth myself: your mulank, your
-            bhagyank and how your numbers sit together. Only then do I pick the stones for what you are
-            asking of life, and string them by hand.
-          </p>
+          <h2>{c.noteTitle}</h2>
+          <p className="note-body">{c.noteBody1}</p>
+          {c.noteBody2 && <p className="note-body note-more">{c.noteBody2}</p>}
           {compact && (
             <Link className="note-readmore" href="/about-ammit">
-              Read Ammit&apos;s story →
+              {c.noteReadMore}
             </Link>
           )}
-          <p className="note-quote">
-            &ldquo;Har bracelet style ke liye nahi hota. Right crystal, right direction.&rdquo;
-          </p>
+          {c.noteQuote && <p className="note-quote">&ldquo;{c.noteQuote}&rdquo;</p>}
           <div className="note-foot">
-            <span className="signature" aria-label={`Signed, ${AMMIT.name}`}>
-              {AMMIT.name}
+            <span className="signature" aria-label={`Signed, ${s.ammitName}`}>
+              {s.ammitName}
             </span>
-            <a className="btn btn-line" href={LINKS.youtube} target="_blank" rel="noopener noreferrer">
-              Watch Ammit on YouTube
+            <a className="btn btn-line" href={s.youtube} target="_blank" rel="noopener noreferrer">
+              {c.noteButton}
             </a>
           </div>
         </div>

@@ -1,18 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PRICE, THREE_IN_ONE_RINGS } from "@/data/home";
-import { productPhotos } from "@/lib/server/photos";
 import RefNote from "./RefNote";
+import { getCombo } from "@/lib/server/catalog";
+import { formatINR, getContent, getSite } from "@/lib/server/content";
 
-const STONES = [
-  { name: "Rose quartz", for: "Love", color: THREE_IN_ONE_RINGS[0] },
-  { name: "Black tourmaline", for: "Protection", color: THREE_IN_ONE_RINGS[1] },
-  { name: "Citrine", for: "Prosperity", color: THREE_IN_ONE_RINGS[2] },
-] as const;
-
-export default function ThreeInOne() {
-  const photos = productPhotos("3-in-1");
-  const photo = photos[0];
+export default async function ThreeInOne() {
+  const [combo, c, { s }] = await Promise.all([getCombo(), getContent("home"), getSite()]);
+  if (!combo) return null;
+  const photo = combo.photos[0];
+  const stones = c.threeStones;
 
   return (
     <section id="three-in-one" className="three">
@@ -20,47 +16,40 @@ export default function ThreeInOne() {
         {photo ? (
           <figure className="three-visual">
             <div className="three-frame">
-              <Image
-                src={photo}
-                alt="A Bracelet By Ammit multi-crystal bracelet with black, green, purple and golden beads"
-                fill
-                sizes="(max-width: 760px) 80vw, 380px"
-                className="three-photo"
-              />
-              <RefNote />
+              <Image src={photo} alt={combo.photoAlt || `${combo.title} crystal bracelet`} fill sizes="(max-width: 760px) 80vw, 380px" className="three-photo" />
+              <RefNote text={s.refNote} />
             </div>
-            <figcaption>
-              <ul className="three-stones">
-                {STONES.map((s) => (
-                  <li key={s.name}>
-                    <span className="three-dot" style={{ backgroundColor: s.color }} aria-hidden="true" />
-                    <span className="three-stone-name">{s.name}</span>
-                    <span className="three-stone-for">{s.for}</span>
-                  </li>
-                ))}
-              </ul>
-            </figcaption>
+            {stones.length > 0 && (
+              <figcaption>
+                <ul className="three-stones">
+                  {stones.map((st, i) => (
+                    <li key={i}>
+                      <span className="three-dot" style={{ backgroundColor: st.color }} aria-hidden="true" />
+                      <span className="three-stone-name">{st.name}</span>
+                      <span className="three-stone-for">{st.for}</span>
+                    </li>
+                  ))}
+                </ul>
+              </figcaption>
+            )}
           </figure>
         ) : (
           <div aria-hidden="true" className="three-rings">
-            {THREE_IN_ONE_RINGS.map((c) => (
-              <span key={c} style={{ boxShadow: `inset 0 0 0 12px ${c},0 0 0 1px rgba(212,175,90,.6)` }} />
+            {stones.slice(0, 3).map((st, i) => (
+              <span key={i} style={{ boxShadow: `inset 0 0 0 12px ${st.color},0 0 0 1px rgba(212,175,90,.6)` }} />
             ))}
           </div>
         )}
         <div className="three-copy">
-          <h2 className="h2">Three intentions, one bracelet</h2>
-          <p>
-            The 3 in 1 combines love, protection and prosperity on a single strand, balanced for your
-            numbers so the crystals work together.
-          </p>
-          <p className="three-price">{PRICE}</p>
+          <h2 className="h2">{c.threeTitle}</h2>
+          <p>{c.threeText}</p>
+          <p className="three-price">{formatINR(combo.priceInr)}</p>
           <div className="three-actions">
-            <Link className="btn btn-gold" href="/find-your-bracelet?intention=3-in-1">
-              Build my 3 in 1
+            <Link className="btn btn-gold" href={`/find-your-bracelet?intention=${combo.slug}`}>
+              {c.threeButton}
             </Link>
-            <Link className="three-more" href="/bracelets/3-in-1">
-              See the 3 in 1 →
+            <Link className="three-more" href={`/bracelets/${combo.slug}`}>
+              {c.threeLink}
             </Link>
           </div>
         </div>

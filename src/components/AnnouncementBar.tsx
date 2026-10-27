@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { getSite } from "@/lib/server/content";
 
-export default function AnnouncementBar() {
+export default async function AnnouncementBar() {
+  const { s } = await getSite();
+  if (!s.announcement) return null;
   return (
     <aside className="announce" aria-label="Announcement">
-      Every bracelet is read for your date of birth before it&apos;s strung.{" "}
-      <Link href="/consultation">Ask Ammit</Link>
+      {s.announcement}
+      {s.announcementLink && (
+        <>
+          {" "}
+          <Link href="/consultation">{s.announcementLink}</Link>
+        </>
+      )}
     </aside>
   );
 }

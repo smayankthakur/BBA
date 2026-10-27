@@ -9,59 +9,39 @@ import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
 import JsonLd from "@/components/JsonLd";
 import VideoEmbed from "@/components/VideoEmbed";
-import { BRACELET_VIDEOS } from "@/data/videos";
-import TrustBar from "@/components/TrustBar";
-import { productPhotos } from "@/lib/server/photos";
-import { BRACELETS, braceletBySlug } from "@/data/pages";
-import { PRICE, SHIPPING } from "@/data/home";
+import SiteTrustBar from "@/components/SiteTrustBar";
+import { getBracelets, getProduct } from "@/lib/server/catalog";
+import { formatINR, getContent, getSite } from "@/lib/server/content";
+import { fill } from "@/lib/content/render";
 import { SITE_URL } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const dynamicParams = false;
+// New products added in the admin panel get a page on first visit.
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return BRACELETS.map((b) => ({ slug: b.slug }));
+export async function generateStaticParams() {
+  return (await getBracelets()).map((b) => ({ slug: b.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const b = braceletBySlug((await params).slug);
+  const b = await getProduct("bracelet", (await params).slug);
   if (!b) return {};
   return {
-    title: `${b.title} bracelet`,
-    description: `${b.blurb} ${PRICE}, crystals chosen for your date of birth by numerologist Ammit Kukreja.`,
+    title: b.seoTitle || `${b.title} bracelet`,
+    description: b.seoDescription || `${b.blurb} ${formatINR(b.priceInr)}, crystals chosen for your date of birth by numerologist Ammit Kukreja.`,
     alternates: { canonical: `/bracelets/${b.slug}` },
   };
 }
 
 export default async function BraceletPage({ params }: Params) {
-  const b = braceletBySlug((await params).slug);
+  const slug = (await params).slug;
+  const [b, all, c, { s }] = await Promise.all([getProduct("bracelet", slug), getBracelets(), getContent("product"), getSite()]);
   if (!b) notFound();
-  const others = BRACELETS.filter((o) => o.slug !== b.slug);
-  const faqs = [
-    {
-      q: `How is the ${b.title} bracelet made for me?`,
-      a: "Ammit reads the wearer's name and date of birth (mulank and bhagyank), chooses the crystals that suit those numbers for this intention, and the bracelet is strung by hand.",
-    },
-    {
-      q: "Which size should I choose?",
-      a: "Measure around the wrist bone with a thread and a ruler. Women's sizes are 14, 15 and 16 cm; men's are 16, 17 and 18 cm. If you're between sizes, choose the larger one. The size guide shows how to measure.",
-    },
-    {
-      q: "What if my bracelet breaks?",
-      a: "Collect every bead and message us on WhatsApp with a photo. We'll tell you how to send them back so Ammit can restring the same crystals.",
-    },
-    {
-      q: "How do I look after it?",
-      a: "Cleanse it once a week with dry rock salt or incense smoke, recharge it under the full moon, and keep it away from water, perfume and soap.",
-    },
-    {
-      q: "Can a crystal bracelet replace medical or professional advice?",
-      a: "No. Crystal and numerology guidance is traditional belief. Please keep following your doctor's or adviser's guidance.",
-    },
-  ];
-  const amount = PRICE.replace(/[^\d]/g, "");
-  const photos = productPhotos(b.slug);
+  const others = all.filter((o) => o.slug !== b.slug);
+  const faqs = c.faqs.filter((f) => f.q.trim()).map((f) => ({ q: fill(f.q, { title: b.title }), a: fill(f.a, { title: b.title }) }));
+  const photos = b.photos;
+  const abs = (p: string) => (p.startsWith("http") ? p : `${SITE_URL}${p}`);
 
   return (
     <PageShell>
@@ -71,12 +51,12 @@ export default async function BraceletPage({ params }: Params) {
           "@type": "Product",
           name: `${b.title} crystal bracelet`,
           description: b.blurb,
-          brand: { "@type": "Brand", name: "Bracelet By Ammit" },
+          brand: { "@type": "Brand", name: s.brand },
           url: `${SITE_URL}/bracelets/${b.slug}`,
-          ...(photos.length ? { image: photos.map((p) => `${SITE_URL}${p}`) } : {}),
+          ...(photos.length ? { image: photos.map(abs) } : {}),
           offers: {
             "@type": "Offer",
-            price: amount,
+            price: String(b.priceInr),
             priceCurrency: "INR",
             url: `${SITE_URL}/bracelets/${b.slug}`,
             shippingDetails: {
@@ -86,7 +66,12 @@ export default async function BraceletPage({ params }: Params) {
               deliveryTime: {
                 "@type": "ShippingDeliveryTime",
                 handlingTime: { "@type": "QuantitativeValue", minValue: 2, maxValue: 3, unitCode: "DAY" },
-                transitTime: { "@type": "QuantitativeValue", minValue: SHIPPING.minDays - 2, maxValue: SHIPPING.maxDays - 3, unitCode: "DAY" },
+                transitTime: {
+                  "@type": "QuantitativeValue",
+                  minValue: Math.max(1, s.shippingMinDays - 2),
+                  maxValue: Math.max(1, s.shippingMaxDays - 3),
+                  unitCode: "DAY",
+                },
               },
             },
           },
@@ -94,110 +79,118 @@ export default async function BraceletPage({ params }: Params) {
       />
       <div className="product">
         <div className="product-visual">
-          <ProductVisual cards={b.cards} rings={b.rings} label={`Illustration of the ${b.title} bracelet`} photos={photos} />
+          <ProductVisual cards={b.visual.cards} rings={b.visual.rings} label={`Illustration of the ${b.title} bracelet`} photos={photos} refNote={s.refNote} />
         </div>
         <div className="product-info">
           <PageHero
             crumbs={[{ label: "Bracelets", href: "/bracelets" }, { label: b.title }]}
-            eyebrow={b.slug === "3-in-1" ? "Three intentions" : "Intention bracelet"}
+            eyebrow={b.inList ? c.eyebrow : c.comboEyebrow}
             title={b.title}
             lede={<p>{b.blurb}</p>}
           />
           <p className="product-price">
-            {PRICE} <span>read for your date of birth · strung by hand</span>
+            {formatINR(b.priceInr)} <span>{c.priceNote}</span>
           </p>
-          <TrustBar />
+          <SiteTrustBar />
           <div className="btn-row">
             <Link className="btn btn-lapis" href={`/find-your-bracelet?intention=${b.slug}`}>
-              Order this bracelet
+              {c.orderButton}
             </Link>
             <Link className="btn btn-line" href="/consultation">
-              Ask Ammit first
+              {c.askButton}
             </Link>
           </div>
           <p className="product-hint">
-            A 60-second reading works out your numbers, then takes you to secure checkout.{" "}
-            <Link href="/size-guide">Size guide</Link>
+            {c.hint} <Link href="/size-guide">Size guide</Link>
           </p>
         </div>
       </div>
 
-      <section className="section-narrow prose-section" aria-labelledby="about-title">
-        <h2 id="about-title" className="h2">
-          About this bracelet
-        </h2>
-        {b.intro.map((p) => (
-          <p key={p.slice(0, 24)}>{p}</p>
-        ))}
-        {b.note && <p className="callout">{b.note}</p>}
-      </section>
-
-      {BRACELET_VIDEOS[b.slug] && (
-        <section className="section-narrow video-section" aria-labelledby="video-title">
-          <h2 id="video-title" className="h3">
-            Ammit explains this bracelet
+      {(b.intro.length > 0 || b.note) && (
+        <section className="section-narrow prose-section" aria-labelledby="about-title">
+          <h2 id="about-title" className="h2">
+            {c.aboutTitle}
           </h2>
-          <VideoEmbed video={BRACELET_VIDEOS[b.slug]} />
+          {b.intro.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+          {b.note && <p className="callout">{b.note}</p>}
         </section>
       )}
 
-      <section className="section-narrow split-lists">
-        <div>
-          <h2 className="h3">This bracelet is for you if…</h2>
-          <ul className="tick-list">
-            {b.forWhom.map((f) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h2 className="h3">Crystals often used</h2>
-          <ul className="chip-list">
-            {b.crystals.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
-          <p className="small-note">
-            These stones are traditionally linked with this intention. Ammit chooses your final stones after reading your
-            numbers, so yours may differ.
-          </p>
-        </div>
-      </section>
+      {b.videoId && (
+        <section className="section-narrow video-section" aria-labelledby="video-title">
+          <h2 id="video-title" className="h3">
+            {c.videoTitle}
+          </h2>
+          <VideoEmbed video={{ id: b.videoId, title: b.videoTitle || b.title }} />
+        </section>
+      )}
+
+      {(b.listA.length > 0 || b.crystals.length > 0) && (
+        <section className="section-narrow split-lists">
+          {b.listA.length > 0 && (
+            <div>
+              <h2 className="h3">{c.forWhomTitle}</h2>
+              <ul className="tick-list">
+                {b.listA.map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {b.crystals.length > 0 && (
+            <div>
+              <h2 className="h3">{c.crystalsTitle}</h2>
+              <ul className="chip-list">
+                {b.crystals.map((x, i) => (
+                  <li key={i}>{x}</li>
+                ))}
+              </ul>
+              <p className="small-note">{c.crystalsNote}</p>
+            </div>
+          )}
+        </section>
+      )}
 
       <HowItWorks />
 
-      <section className="section-narrow faq" aria-labelledby="faq-title">
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-          }}
-        />
-        <h2 id="faq-title" className="h2">
-          Questions
-        </h2>
-        {faqs.map((f) => (
-          <details key={f.q}>
-            <summary>{f.q}</summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
-      </section>
-
-      <section className="section-wide grid-section" aria-labelledby="others-title">
-        <h2 id="others-title" className="h2 grid-title">
-          Other intentions
-        </h2>
-        <div className="b-grid">
-          {others.map((o) => (
-            <BraceletCard key={o.slug} b={o} />
+      {faqs.length > 0 && (
+        <section className="section-narrow faq" aria-labelledby="faq-title">
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+            }}
+          />
+          <h2 id="faq-title" className="h2">
+            {c.faqTitle}
+          </h2>
+          {faqs.map((f, i) => (
+            <details key={i}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
           ))}
-        </div>
-      </section>
+        </section>
+      )}
+
+      {others.length > 0 && (
+        <section className="section-wide grid-section" aria-labelledby="others-title">
+          <h2 id="others-title" className="h2 grid-title">
+            {c.othersTitle}
+          </h2>
+          <div className="b-grid">
+            {others.map((o) => (
+              <BraceletCard key={o.slug} b={o} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <OrderCta
-        primary={{ label: "Order this bracelet", href: `/find-your-bracelet?intention=${b.slug}` }}
+        primary={{ label: c.orderButton, href: `/find-your-bracelet?intention=${b.slug}` }}
         secondary={{ label: "Read customer reviews", href: "/reviews" }}
       />
     </PageShell>

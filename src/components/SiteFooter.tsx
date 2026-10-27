@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import Medallion from "./Medallion";
 import CookieSettingsLink from "./CookieSettingsLink";
-import { BUSINESS, CREDIT, FOOTER_DISCLAIMER, LINKS, PRICE } from "@/data/home";
+import { CREDIT } from "@/data/home";
+import { formatINR, getContent, getSite } from "@/lib/server/content";
 
 const EXT = { target: "_blank", rel: "noopener noreferrer" } as const;
 
@@ -39,11 +40,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-const SOCIAL: (FooterLink & { icon: "ig" | "yt" | "wa" })[] = [
-  { label: "Instagram", href: LINKS.instagram, external: true, icon: "ig" },
-  { label: "YouTube", href: LINKS.youtube, external: true, icon: "yt" },
-  { label: "WhatsApp", href: LINKS.whatsapp, external: true, icon: "wa" },
-];
+
 
 /** Simple line icons for the social links (shown as round buttons on phones). */
 function SocialIcon({ kind }: { kind: "ig" | "yt" | "wa" }) {
@@ -111,8 +108,27 @@ function Rule() {
   );
 }
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
   const year = new Date().getFullYear();
+  const [{ s: site }, c] = await Promise.all([getSite(), getContent("shared")]);
+  const LINKS = { instagram: site.instagram, youtube: site.youtube, whatsapp: site.whatsapp };
+  const BUSINESS = {
+    brand: site.brand,
+    legalName: site.legalName,
+    founder: site.founder,
+    address: site.address,
+    email: site.email,
+    phone: site.phone,
+    gstin: site.gstin,
+    grievanceOfficer: { name: site.grievanceName, designation: site.grievanceDesignation },
+  };
+  const PRICE = formatINR(site.defaultPrice);
+  const SOCIAL: (FooterLink & { icon: "ig" | "yt" | "wa" })[] = [
+  { label: "Instagram", href: LINKS.instagram, external: true, icon: "ig" },
+  { label: "YouTube", href: LINKS.youtube, external: true, icon: "yt" },
+  { label: "WhatsApp", href: LINKS.whatsapp, external: true, icon: "wa" },
+];
+
 
   return (
     <footer className="ft">
@@ -125,16 +141,16 @@ export default function SiteFooter() {
           <Medallion width={34} height={38} className="ft-crest" />
           <Rosette />
           <div className="ft-cta-copy">
-            <p className="ft-kicker">Read for your date of birth</p>
-            <h2 id="ft-cta-title">Ask Ammit which crystal is yours</h2>
-            <p className="ft-cta-text">A 60-second reading works out your numbers and the bracelet that suits them.</p>
+            <p className="ft-kicker">{c.footerKicker}</p>
+            <h2 id="ft-cta-title">{c.footerTitle}</h2>
+            <p className="ft-cta-text">{c.footerText}</p>
           </div>
           <div className="ft-cta-actions">
             <Link className="btn btn-gold-dark" href="/find-your-bracelet">
-              Order my bracelet
+              {c.footerOrder}
             </Link>
             <a className="btn btn-ghost-gold ft-cta-wa" href={LINKS.whatsapp} {...EXT}>
-              Ask on WhatsApp
+              {c.footerWhatsapp}
             </a>
           </div>
         </section>
@@ -143,7 +159,7 @@ export default function SiteFooter() {
         <div className="ft-grid">
           <div className="ft-brand">
             <Image src="/brand/wordmark.png" alt="Bracelet By Ammit" width={120} height={56} />
-            <p className="ft-tagline">Wear the right crystals, not just any.</p>
+            <p className="ft-tagline">{c.footerTagline}</p>
             <p className="ft-promise">
               {PRICE} <span aria-hidden="true">·</span> read for your birth date <span aria-hidden="true">·</span> strung by
               hand
@@ -246,7 +262,7 @@ export default function SiteFooter() {
             </div>
           )}
         </dl>
-        <p className="ft-disclaimer">{FOOTER_DISCLAIMER}</p>
+        <p className="ft-disclaimer">{site.disclaimer}</p>
         <nav className="ft-policies" aria-label="Policies">
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
@@ -258,7 +274,7 @@ export default function SiteFooter() {
 
       <div className="ft-bar">
         <div className="ft-bar-inner">
-          <p>© {year} Bracelet By Ammit. All rights reserved.</p>
+          <p>© {year} {site.brand}. All rights reserved.</p>
           <p className="ft-credit">
             Designed by{" "}
             <a href={CREDIT.href} {...EXT}>

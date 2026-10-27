@@ -1,9 +1,12 @@
-import { INTENTIONS, LINKS, TESTIMONIALS } from "@/data/home";
 import RowAutoScroll from "./RowAutoScroll";
+import { getBracelets } from "@/lib/server/catalog";
+import { getContent, getSite } from "@/lib/server/content";
 
-const bySlug = Object.fromEntries(INTENTIONS.map((i) => [i.slug, i]));
-
-export default function Testimonials() {
+export default async function Testimonials() {
+  const [home, r, { s }, bracelets] = await Promise.all([getContent("home"), getContent("reviews"), getSite(), getBracelets()]);
+  const bySlug = Object.fromEntries(bracelets.map((b) => [b.slug, b]));
+  const TESTIMONIALS = r.items.filter((t) => t.quote.trim());
+  const LINKS = { instagramReviews: s.instagramReviews };
   const hasReviews = TESTIMONIALS.length > 0;
 
   return (
@@ -11,9 +14,9 @@ export default function Testimonials() {
       <div className="reviews-inner">
         <div className="reviews-head">
           <h2 id="reviews-title" className="h2">
-            In their own words
+            {home.reviewsTitle}
           </h2>
-          <p>From people wearing a bracelet Ammit chose for them.</p>
+          <p>{home.reviewsLede}</p>
           {hasReviews && <RowAutoScroll targetId="reviews-list" label="reviews" />}
         </div>
 
@@ -47,23 +50,22 @@ export default function Testimonials() {
                   </blockquote>
                   <figcaption>
                     <span className="review-name">{t.name}</span>
-                    {t.place && <span className="review-place">{t.place}</span>}
-                    {it && (
+                                        {it && (
                       <span className="review-tag">
                         <span
                           className="review-dot"
                           aria-hidden="true"
                           style={{
-                            backgroundColor: it.sphere,
+                            backgroundColor: it.visual.sphere,
                             backgroundImage: `radial-gradient(circle at 30% 30%,rgba(255,255,255,.9) 0 10%,rgba(255,255,255,0) 40%)`,
                           }}
                         />
                         Wears: {it.title}
                       </span>
                     )}
-                    {t.source && (
-                      <a className="review-source" href={t.source.href} target="_blank" rel="noopener noreferrer">
-                        {t.source.label}
+                    {t.sourceUrl && (
+                      <a className="review-source" href={t.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        {t.sourceLabel || "Source"}
                       </a>
                     )}
                   </figcaption>
@@ -77,7 +79,7 @@ export default function Testimonials() {
         {hasReviews && (
           <div className="reviews-more">
             <a className="btn btn-gold" href={LINKS.instagramReviews} target="_blank" rel="noopener noreferrer">
-              Read more reviews on Instagram
+              {home.reviewsMore}
             </a>
           </div>
         )}

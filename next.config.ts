@@ -30,6 +30,8 @@ const imgSrc = [
   "'self'",
   "data:",
   "blob:",
+  // Photos uploaded in the admin panel (Vercel Blob)
+  "https://*.public.blob.vercel-storage.com",
   GA && "https://*.google-analytics.com https://www.googletagmanager.com",
   META && "https://www.facebook.com",
   RZP && "https://cdn.razorpay.com",
@@ -68,7 +70,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Local photos carry a ?v=<hash> so replaced files are never served from an old cache.
-  images: { localPatterns: [{ pathname: "/**" }] },
+  images: {
+    localPatterns: [{ pathname: "/**" }],
+    // Photos uploaded in the admin panel live in Vercel Blob.
+    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

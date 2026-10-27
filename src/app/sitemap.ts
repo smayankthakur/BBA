@@ -1,16 +1,16 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
-import { BRACELETS, MULANK } from "@/data/pages";
-import { GIFTS } from "@/data/home";
+import { getBracelets, getGifts } from "@/lib/server/catalog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [BRACELETS, GIFTS] = await Promise.all([getBracelets(), getGifts()]);
   const paths = [
     "/",
     "/find-your-bracelet",
     "/bracelets",
     ...BRACELETS.map((b) => `/bracelets/${b.slug}`),
     "/mulank",
-    ...MULANK.map((m) => `/mulank/${m.number}`),
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `/mulank/${n}`),
     "/gifts",
     ...GIFTS.map((g) => `/gifts/${g.slug}`),
     "/numerology",

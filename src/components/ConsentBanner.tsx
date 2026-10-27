@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ANALYTICS_ENABLED, loadAnalytics, readConsent, saveConsent, type Consent } from "@/lib/analytics";
 
 export const OPEN_CONSENT_EVENT = "bba:open-consent";
@@ -12,16 +13,17 @@ export const OPEN_CONSENT_EVENT = "bba:open-consent";
  */
 export default function ConsentBanner() {
   const [open, setOpen] = useState(false);
+  const isAdmin = usePathname()?.startsWith("/admin") ?? false;
 
   useEffect(() => {
-    if (!ANALYTICS_ENABLED) return;
+    if (!ANALYTICS_ENABLED || isAdmin) return;
     const c = readConsent();
     if (c === "accepted") loadAnalytics();
     if (!c) setOpen(true);
     const reopen = () => setOpen(true);
     window.addEventListener(OPEN_CONSENT_EVENT, reopen);
     return () => window.removeEventListener(OPEN_CONSENT_EVENT, reopen);
-  }, []);
+  }, [isAdmin]);
 
   if (!ANALYTICS_ENABLED || !open) return null;
 

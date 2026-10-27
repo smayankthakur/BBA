@@ -23,9 +23,22 @@ Requires Node 20+.
 | `RAZORPAY_WEBHOOK_SECRET` | for checkout | Secret set on the Razorpay webhook (URL `/api/razorpay/webhook`, events `order.paid`, `payment.captured`, `payment.failed`). |
 | `DATABASE_URL` | order database | Set automatically when Neon is added in Vercel → Storage. The `orders` table is created on first use (schema also in `db/schema.sql`). Check with `GET /api/health/db` → `{"db":"ok"}`. Without it, every order is still recorded in Razorpay (all details are in the order notes). |
 | `RESEND_API_KEY`, `STAFF_ORDER_EMAILS`, `ORDER_EMAIL_FROM` | staff order email | When an order is paid, a **staff-only PDF** with every detail from the order form is emailed to `STAFF_ORDER_EMAILS` (comma-separated). Sent once per order; customers never see it. `ORDER_EMAIL_FROM` needs a domain verified in Resend (until then Resend's test sender only delivers to the Resend account's own email). |
+| `BLOB_READ_WRITE_TOKEN` | admin photo uploads | Set automatically by the Vercel Blob store `bba-media` (connected). Photos uploaded in the admin panel are stored there. For local testing without Blob, `MEDIA_LOCAL=1` writes to `public/uploads` (works with `npm run dev`). |
 | `NEXT_PUBLIC_GA_ID` | optional | Google Analytics 4 ID (G-…). Loads only after the visitor accepts cookies. |
 | `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Funnel fires Lead and InitiateCheckout. |
 | `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
+
+## Admin panel (`/admin`)
+
+A WordPress-style back office. It needs `DATABASE_URL` (Neon); every table is created on first use.
+
+- **First sign-up becomes the owner.** Open `/admin/register` once the site is live and create the owner account. After that, registration is closed: the owner invites people from **Users** (a one-time link, valid 7 days).
+- **Roles:** owner (everything, including users) · admin (everything except users) · editor (products, pages, media, orders; not site settings or CSV export).
+- **Bracelets / Gifts:** add, edit, draft, trash, restore, delete permanently. Title, web address (slug), price (this is what checkout charges), descriptions, lists, crystals, photos (upload or pick from the library, reorder, main photo first), video, Google title/description, fallback colours. New products get a page on first visit.
+- **Pages:** every piece of text on the site, the reviews, FAQs, mulank 1–9, policies (simple Markdown), plus **Settings** (business details, delivery days, links, staff order email, SEO). "Go back to the original text" resets a page.
+- **Orders:** every paid or started order with all reading-form details, filters and search, progress (new → reading → being made → shipped → delivered), courier and tracking, private notes, staff PDF and CSV export.
+- **Media:** upload (phone photos are shrunk in the browser, then converted to WebP ≤2000px), copy link, delete (refused while a product or page uses the image).
+- Security: scrypt passwords, httpOnly session cookie (7 days), sign-in lockout after 8 failures in 15 minutes, same-origin checks on uploads, every change logged in `admin_log`. Changes go live on the next page visit.
 
 ## Security and SEO built in
 

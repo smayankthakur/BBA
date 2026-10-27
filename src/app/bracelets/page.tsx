@@ -5,46 +5,42 @@ import PageHero from "@/components/PageHero";
 import BraceletCard from "@/components/BraceletCard";
 import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
-import { BRACELETS } from "@/data/pages";
-import { PRICE } from "@/data/home";
-import TrustBar from "@/components/TrustBar";
+import SiteTrustBar from "@/components/SiteTrustBar";
+import { getBracelets, lowestPrice } from "@/lib/server/catalog";
+import { formatINR, getContent, getSite } from "@/lib/server/content";
+import { fill } from "@/lib/content/render";
 
-export const metadata: Metadata = {
-  title: "Shop by intention",
-  description: `Seven crystal bracelets for seven intentions, each ${PRICE}. Ammit Kukreja reads your date of birth before choosing the crystals.`,
-  alternates: { canonical: "/bracelets" },
-};
+async function vars() {
+  const [{ vars }, low] = await Promise.all([getSite(), lowestPrice()]);
+  return { ...vars, price: formatINR(low) };
+}
 
-export default function BraceletsPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const [c, v] = await Promise.all([getContent("bracelets"), vars()]);
+  return { title: c.seoTitle || c.title, description: fill(c.seoDescription, v), alternates: { canonical: "/bracelets" } };
+}
+
+export default async function BraceletsPage() {
+  const [c, v, bracelets] = await Promise.all([getContent("bracelets"), vars(), getBracelets()]);
   return (
     <PageShell>
-      <PageHero
-        crumbs={[{ label: "Bracelets" }]}
-        eyebrow="Shop by intention"
-        title="A bracelet for what you're asking of life"
-        lede={
-          <p>
-            Choose the intention. Ammit reads your date of birth and chooses the crystals for your numbers, then strings
-            them by hand. Every bracelet is {PRICE}.
-          </p>
-        }
-      >
+      <PageHero crumbs={[{ label: "Bracelets" }]} eyebrow={c.eyebrow} title={c.title} lede={<p>{fill(c.lede, v)}</p>}>
         <Link className="btn btn-lapis" href="/find-your-bracelet">
-          Not sure? Take the 60-second reading
+          {c.button}
         </Link>
       </PageHero>
       <div className="section-wide trust-wrap">
-        <TrustBar />
+        <SiteTrustBar />
       </div>
       <section className="section-wide grid-section" aria-label="Bracelets">
         <div className="b-grid">
-          {BRACELETS.map((b) => (
+          {bracelets.map((b) => (
             <BraceletCard key={b.slug} b={b} />
           ))}
         </div>
       </section>
       <HowItWorks />
-      <OrderCta title="Not sure which one?" text="Take the 60-second reading: we'll work out your numbers and suggest the bracelet that suits them." secondary={{ label: "Book a consultation", href: "/consultation" }} />
+      <OrderCta title={c.ctaTitle} text={c.ctaText} secondary={{ label: "Book a consultation", href: "/consultation" }} />
     </PageShell>
   );
 }

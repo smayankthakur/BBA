@@ -4,8 +4,7 @@ import { CheckoutSchema } from "@/lib/checkoutSchema";
 import { createOrder, razorpayConfigured, razorpayKeyId } from "@/lib/server/razorpay";
 import { insertOrder } from "@/lib/server/orders";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
-import { braceletBySlug } from "@/data/pages";
-import { PRICE_INR } from "@/data/home";
+import { getProduct } from "@/lib/server/catalog";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 
 export const runtime = "nodejs";
@@ -34,14 +33,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please check your details.", fields: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const d = parsed.data;
-  const product = braceletBySlug(d.bracelet);
+  const product = await getProduct("bracelet", d.bracelet);
   const { day, month, year } = d.wearer;
   if (!product || !isValidDate(day, month, year)) {
     return NextResponse.json({ error: "Please check your details." }, { status: 400 });
   }
 
-  // Price is decided here, never by the browser.
-  const amountPaise = PRICE_INR * 100;
+  // Price is decided here (from the product in the database), never by the browser.
+  const amountPaise = product.priceInr * 100;
   const ref = `BBA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
   const dob = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const m = mulank(day);

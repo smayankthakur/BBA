@@ -10,9 +10,19 @@ import Gifts from "@/components/Gifts";
 import Testimonials from "@/components/Testimonials";
 import CareSection from "@/components/CareSection";
 import SiteFooter from "@/components/SiteFooter";
-import { SHOW_LOADER } from "@/data/home";
+import type { Metadata } from "next";
+import { getContent, getSite } from "@/lib/server/content";
 
-export default function HomePage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getContent("home");
+  return c.seoTitle || c.seoDescription
+    ? { title: { absolute: c.seoTitle || undefined } as Metadata["title"], description: c.seoDescription || undefined }
+    : {};
+}
+
+export default async function HomePage() {
+  const { s } = await getSite();
+  const SHOW_LOADER = s.showLoader;
   return (
     <div className={`page${SHOW_LOADER ? " withload" : ""}`}>
       {SHOW_LOADER && <Loader />}
@@ -20,7 +30,7 @@ export default function HomePage() {
         Skip to content
       </a>
       <AnnouncementBar />
-      <SiteHeader />
+      <SiteHeader instagram={s.instagram} youtube={s.youtube} />
       <main id="main">
         <Hero />
         <IntentionEdit />

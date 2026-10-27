@@ -1,49 +1,37 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import OrderCta from "@/components/OrderCta";
 import MeasureIllustration from "@/components/MeasureIllustration";
-import { LINKS } from "@/data/home";
+import { getContent, getSite } from "@/lib/server/content";
+import { fill, Markdown } from "@/lib/content/render";
 
-export const metadata: Metadata = {
-  title: "Bracelet size guide",
-  description: "How to measure your wrist for a Bracelet By Ammit crystal bracelet, with the sizes we make for women and men.",
-  alternates: { canonical: "/size-guide" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getContent("sizeGuide");
+  return { title: c.seoTitle || c.title, description: c.seoDescription, alternates: { canonical: "/size-guide" } };
+}
 
-const SIZES = [
-  { label: "Slim", women: "14 cm", men: "16 cm" },
-  { label: "Medium", women: "15 cm", men: "17 cm" },
-  { label: "Healthy", women: "16 cm", men: "18 cm" },
-];
-
-export default function SizeGuidePage() {
+export default async function SizeGuidePage() {
+  const [c, { vars }] = await Promise.all([getContent("sizeGuide"), getSite()]);
   return (
     <PageShell>
-      <PageHero
-        crumbs={[{ label: "Size guide" }]}
-        eyebrow="Fit"
-        title="Find your bracelet size"
-        lede={<p>A crystal bracelet should sit comfortably on the wrist bone: snug enough not to slide over your hand, loose enough to turn.</p>}
-      />
+      <PageHero crumbs={[{ label: "Size guide" }]} eyebrow={c.eyebrow} title={c.title} lede={<p>{c.lede}</p>} />
 
       <section className="section-narrow size-measure" aria-labelledby="measure-h">
         <h2 id="measure-h" className="h3">
-          How to measure
+          {c.measureTitle}
         </h2>
         <MeasureIllustration />
         <ol className="num-list">
-          <li>Wrap a thread or a strip of paper around your wrist, just above the wrist bone.</li>
-          <li>Mark where the end meets the thread. Don&apos;t pull it tight.</li>
-          <li>Lay it flat on a ruler and read the length in centimetres.</li>
-          <li>Pick the size closest to your measurement. If you&apos;re between two sizes, choose the larger one.</li>
+          {c.measureSteps.map((x, i) => (
+            <li key={i}>{x}</li>
+          ))}
         </ol>
       </section>
 
       <section className="section-narrow" aria-labelledby="sizes-h">
         <h2 id="sizes-h" className="h3 size-h">
-          Our sizes
+          {c.sizesTitle}
         </h2>
         <div className="size-table-wrap">
           <table className="size-table">
@@ -55,8 +43,8 @@ export default function SizeGuidePage() {
               </tr>
             </thead>
             <tbody>
-              {SIZES.map((s) => (
-                <tr key={s.label}>
+              {c.sizes.map((s, i) => (
+                <tr key={i}>
                   <th scope="row">{s.label}</th>
                   <td>{s.women}</td>
                   <td>{s.men}</td>
@@ -65,14 +53,12 @@ export default function SizeGuidePage() {
             </tbody>
           </table>
         </div>
-        <p className="small-note">
-          Not sure? Choose &ldquo;Not sure&rdquo; in the reading, or send us your measurement on{" "}
-          WhatsApp (link in the footer){" "}
-          and we&apos;ll advise. If it doesn&apos;t fit, see our <Link href="/returns">returns policy</Link>.
-        </p>
+        <div className="small-note">
+          <Markdown text={fill(c.note, vars)} />
+        </div>
       </section>
 
-      <OrderCta title="Got your size?" />
+      <OrderCta title={c.ctaTitle} />
     </PageShell>
   );
 }

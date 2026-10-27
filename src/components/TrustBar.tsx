@@ -1,7 +1,9 @@
 import DeliveryEstimate from "./DeliveryEstimate";
 
 /** Free shipping · prepaid · dated delivery, shown next to every price. */
-export default function TrustBar({ compact = false, onDark = false }: { compact?: boolean; onDark?: boolean }) {
+export type TrustText = { shipping: string; payment: string; minDays: number; maxDays: number };
+
+export default function TrustBar({ compact = false, onDark = false, text }: { compact?: boolean; onDark?: boolean; text: TrustText }) {
   return (
     <ul className={`trust-bar${compact ? " is-compact" : ""}${onDark ? " on-dark" : ""}`} aria-label="Shipping and payment">
       <li>
@@ -12,7 +14,7 @@ export default function TrustBar({ compact = false, onDark = false }: { compact?
             <circle cx="17.5" cy="17.5" r="1.6" />
           </svg>
         </span>
-        <span>Free shipping across India</span>
+        <span>{text.shipping}</span>
       </li>
       <li>
         <span className="tb-icon" aria-hidden="true">
@@ -21,7 +23,7 @@ export default function TrustBar({ compact = false, onDark = false }: { compact?
             <path d="M8 10V7a4 4 0 0 1 8 0v3" />
           </svg>
         </span>
-        <span>Secure prepaid: UPI, cards, net banking</span>
+        <span>{text.payment}</span>
       </li>
       <li>
         <span className="tb-icon" aria-hidden="true">
@@ -31,7 +33,7 @@ export default function TrustBar({ compact = false, onDark = false }: { compact?
           </svg>
         </span>
         <span>
-          Delivered in <DeliveryEstimate />
+          Delivered in <DeliveryEstimate minDays={text.minDays} maxDays={text.maxDays} />
         </span>
       </li>
     </ul>

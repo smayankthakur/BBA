@@ -17,11 +17,13 @@ export default function ProductVisual({
   rings,
   label,
   photos = [],
+  refNote = "",
 }: {
   cards: [string, string, string];
   rings: [Triplet, Triplet, Triplet];
   label: string;
   photos?: string[];
+  refNote?: string;
 }) {
   // Card order on screen: left (c1), right (c3), front (c2). Photo 1 goes in front.
   const slots = [
@@ -36,7 +38,7 @@ export default function ProductVisual({
           {s.photo ? (
             <>
               <Image src={s.photo} alt="" fill sizes="260px" className="pv-photo" />
-              <RefNote />
+              <RefNote text={refNote} />
             </>
           ) : (
             <span className="pv-ring" style={ring(rings[s.i])} />

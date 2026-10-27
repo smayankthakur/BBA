@@ -4,7 +4,7 @@ import "./globals.css";
 import { SITE_LIVE, SITE_URL } from "@/lib/site";
 import ConsentBanner from "@/components/ConsentBanner";
 import JsonLd from "@/components/JsonLd";
-import { BUSINESS, LINKS } from "@/data/home";
+import { getSite } from "@/lib/server/content";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -21,33 +21,35 @@ const nunito = Nunito_Sans({
   display: "swap",
 });
 
-const TITLE = "Bracelet By Ammit — Crystal bracelets chosen for your birth date";
-const DESCRIPTION =
-  "Choose the intention. Numerologist Ammit Kukreja chooses the crystals for your birth date, then strings them by hand.";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: { default: TITLE, template: "%s | Bracelet By Ammit" },
-  description: DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    siteName: "Bracelet By Ammit",
-    title: TITLE,
+export async function generateMetadata(): Promise<Metadata> {
+  const { s } = await getSite();
+  const TITLE = s.seoTitle;
+  const DESCRIPTION = s.seoDescription;
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: TITLE, template: `%s | ${s.brand}` },
     description: DESCRIPTION,
-    url: "/",
-    locale: "en_IN",
-  },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
-  // Not indexable until NEXT_PUBLIC_SITE_LIVE=true (see src/lib/site.ts)
-  robots: SITE_LIVE ? { index: true, follow: true } : { index: false, follow: false },
-};
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      siteName: s.brand,
+      title: TITLE,
+      description: DESCRIPTION,
+      url: "/",
+      locale: "en_IN",
+    },
+    twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+    // Not indexable until NEXT_PUBLIC_SITE_LIVE=true (see src/lib/site.ts)
+    robots: SITE_LIVE ? { index: true, follow: true } : { index: false, follow: false },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#050E8F",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { s } = await getSite();
   return (
     <html lang="en" className={`${cormorant.variable} ${nunito.variable}`}>
       <body>
@@ -55,20 +57,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           data={{
             "@context": "https://schema.org",
             "@type": "Organization",
-            name: "Bracelet By Ammit",
+            name: s.brand,
             url: SITE_URL,
             logo: `${SITE_URL}/brand/emblem.png`,
-            founder: { "@type": "Person", name: "Ammit Kukreja", jobTitle: "Numerologist" },
-            telephone: BUSINESS.phone,
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "GuruAtman, Gauripada, Kalyan West",
-              addressLocality: "Thane",
-              addressRegion: "Maharashtra",
-              postalCode: "421301",
-              addressCountry: "IN",
-            },
-            sameAs: [LINKS.instagram, LINKS.youtube],
+            founder: { "@type": "Person", name: s.ammitName, jobTitle: "Numerologist" },
+            telephone: s.phone || undefined,
+            address: s.address ? { "@type": "PostalAddress", streetAddress: s.address, addressCountry: "IN" } : undefined,
+            sameAs: [s.instagram, s.youtube].filter(Boolean),
           }}
         />
         {children}

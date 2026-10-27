@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { MULANKS } from "@/data/home";
+import { getContent } from "@/lib/server/content";
 
-export default function MulankPicker() {
+export default async function MulankPicker() {
+  const c = await getContent("home");
   return (
     <section id="number" className="number">
       <div className="number-inner">
-        <h2 className="h2">Or start with your number</h2>
-        <p>
-          Add the digits of the day you were born until one is left. Born on the 25th? 2 + 5 makes you
-          a 7. Tap your number to see what it means.
-        </p>
+        <h2 className="h2">{c.numberTitle}</h2>
+        <p>{c.numberText}</p>
         <div role="group" aria-label="Choose your mulank" className="numbers">
           {MULANKS.map((n) => (
             <Link key={n} className="numb" href={`/mulank/${n}`} aria-label={`Mulank ${n}`}>

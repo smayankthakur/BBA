@@ -1,7 +1,7 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { StoredOrder } from "./orders";
-import { braceletBySlug } from "@/data/pages";
+
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -37,7 +37,7 @@ export function ageOn(ymd: string, at = new Date()) {
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const intentionName = (slug: string) => braceletBySlug(slug)?.title ?? slug;
+const intentionName = (slug: string) => slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 const METHOD: Record<string, string> = { upi: "UPI", card: "Card", netbanking: "Net banking", wallet: "Wallet", emi: "EMI" };
 
 /** All the details staff need for one order, as label/value rows grouped in sections. */

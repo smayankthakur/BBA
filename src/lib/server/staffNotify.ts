@@ -1,5 +1,6 @@
 import "server-only";
 import { buildOrderPdf, orderSections } from "./orderPdf";
+import { getContent } from "./content";
 import { claimStaffNotification, releaseStaffNotification, type StoredOrder } from "./orders";
 
 /**
@@ -10,19 +11,31 @@ import { claimStaffNotification, releaseStaffNotification, type StoredOrder } fr
  *      ORDER_EMAIL_FROM (optional, e.g. "Bracelet By Ammit <orders@yourdomain.in>")
  */
 const KEY = process.env.RESEND_API_KEY ?? "";
-const TO = (process.env.STAFF_ORDER_EMAILS ?? "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+const ENV_TO = process.env.STAFF_ORDER_EMAILS ?? "";
+const parseEmails = (v: string) =>
+  v
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+
+/** Recipients: Site settings → "Order emails" first, then the STAFF_ORDER_EMAILS variable. */
+async function recipients() {
+  try {
+    const s = await getContent("settings");
+    const fromAdmin = parseEmails(s.staffEmails);
+    if (fromAdmin.length) return fromAdmin;
+  } catch {}
+  return parseEmails(ENV_TO);
+}
 const FROM = process.env.ORDER_EMAIL_FROM || "Bracelet By Ammit <onboarding@resend.dev>";
 const API = process.env.RESEND_API_BASE || "https://api.resend.com";
 
-export const staffEmailConfigured = () => !!KEY && TO.length > 0;
+export const staffEmailConfigured = async () => !!KEY && (await recipients()).length > 0;
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export async function notifyStaffOfPaidOrder(razorpayOrderId: string) {
-  if (!staffEmailConfigured()) {
+  if (!(await staffEmailConfigured())) {
     console.warn("[staff-email] not configured: set RESEND_API_KEY and STAFF_ORDER_EMAILS");
     return;
   }
@@ -61,7 +74,7 @@ ${sections
       headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: FROM,
-        to: TO,
+        to: await recipients(),
         subject: `New order ${order.ref}: ${order.bracelet_title} for ${order.wearer_first_name}`,
         html,
         attachments: [{ filename: `BBA-order-${order.ref}.pdf`, content: Buffer.from(pdf).toString("base64") }],

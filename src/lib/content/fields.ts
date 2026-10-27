@@ -1,0 +1,426 @@
+import type { PageId } from "./defaults";
+
+/** How each editable value is shown in the admin panel. */
+export type FieldType = "text" | "textarea" | "markdown" | "list" | "number" | "toggle" | "url" | "image" | "color" | "repeater";
+
+export type SubField = { key: string; label: string; type: Exclude<FieldType, "repeater" | "markdown"> };
+
+export type FieldDef = {
+  key: string;
+  label: string;
+  type: FieldType;
+  help?: string;
+  /** repeater only */
+  fields?: SubField[];
+  itemLabel?: string;
+  /** repeater: items can't be added or removed (e.g. mulank 1–9) */
+  fixed?: boolean;
+};
+
+export type PageDef = {
+  id: PageId;
+  title: string;
+  group: "Site" | "Pages" | "Numerology" | "Policies";
+  /** Public page to preview */
+  path?: string;
+  sections: { title: string; fields: FieldDef[] }[];
+};
+
+const t = (key: string, label: string, help?: string): FieldDef => ({ key, label, type: "text", help });
+const ta = (key: string, label: string, help?: string): FieldDef => ({ key, label, type: "textarea", help });
+const md = (key: string, label: string, help?: string): FieldDef => ({ key, label, type: "markdown", help });
+const list = (key: string, label: string, help = "One item per line."): FieldDef => ({ key, label, type: "list", help });
+const seo = (): { title: string; fields: FieldDef[] } => ({
+  title: "Search engines",
+  fields: [t("seoTitle", "Page title in Google", "Leave empty to use the default."), ta("seoDescription", "Description in Google")],
+});
+
+const PH = "You can use {{price}}, {{phone}}, {{address}}, {{minDays}}, {{maxDays}}.";
+const MD_HELP =
+  "Formatting: ## Heading, ### Smaller heading, - bullet, 1. numbered, **bold**, *italic*, [link text](/page or https://…). Placeholders: {{legalName}}, {{founder}}, {{phone}}, {{address}}, {{email}}, {{grievance}}, {{disclaimer}}, {{minDays}}, {{maxDays}}, {{price}}.";
+
+export const PAGES: PageDef[] = [
+  {
+    id: "settings",
+    title: "Site settings",
+    group: "Site",
+    sections: [
+      {
+        title: "Business details (footer, policies, Google)",
+        fields: [
+          t("brand", "Brand name"),
+          t("legalName", "Legal / business name"),
+          t("founder", "Founder line"),
+          ta("address", "Address"),
+          t("phone", "Phone"),
+          t("email", "Business email"),
+          t("gstin", "GSTIN", "Leave empty if not registered."),
+          t("grievanceName", "Grievance officer name"),
+          t("grievanceDesignation", "Grievance officer designation"),
+        ],
+      },
+      {
+        title: "Price and delivery",
+        fields: [
+          { key: "defaultPrice", label: "Default price for new products (₹)", type: "number" },
+          { key: "shippingMinDays", label: "Delivery: from (days)", type: "number" },
+          { key: "shippingMaxDays", label: "Delivery: to (days)", type: "number" },
+        ],
+      },
+      {
+        title: "Links",
+        fields: [
+          { key: "whatsapp", label: "WhatsApp link", type: "url" },
+          { key: "instagram", label: "Instagram", type: "url" },
+          { key: "youtube", label: "YouTube channel", type: "url" },
+          { key: "youtubeShorts", label: "YouTube Shorts", type: "url" },
+          { key: "instagramReviews", label: "Instagram reviews highlight", type: "url" },
+        ],
+      },
+      {
+        title: "Site-wide text",
+        fields: [
+          t("announcement", "Announcement bar"),
+          t("announcementLink", "Announcement link text", "Links to the consultation page."),
+          ta("disclaimer", "Disclaimer (footer and terms)"),
+          t("refNote", "Line on every product photo"),
+          { key: "showLoader", label: "Show the BBA intro animation on the homepage", type: "toggle" },
+        ],
+      },
+      {
+        title: "Ammit",
+        fields: [
+          t("ammitName", "Name"),
+          t("ammitRole", "Role line"),
+          { key: "ammitPhoto", label: "Portrait", type: "image" },
+          t("ammitPhotoAlt", "Portrait description (for screen readers)"),
+        ],
+      },
+      {
+        title: "Order emails",
+        fields: [
+          t("staffEmails", "Send the staff order PDF to", "Comma-separated email addresses. Needs the email service key in Vercel."),
+        ],
+      },
+      {
+        title: "Search engines (homepage and default)",
+        fields: [t("seoTitle", "Site title in Google"), ta("seoDescription", "Site description in Google")],
+      },
+    ],
+  },
+  {
+    id: "home",
+    title: "Homepage",
+    group: "Pages",
+    path: "/",
+    sections: [
+      { title: "Hero", fields: [ta("heroTitle", "Headline"), ta("heroLede", "Intro"), t("heroPrimary", "Main button"), t("heroSecondary", "Second button")] },
+      { title: "Intention list", fields: [t("editTitle", "Heading"), t("editLede", "Intro", PH), t("editHintHover", "Hint on computers"), t("editHintTouch", "Hint on phones")] },
+      {
+        title: "3 in 1",
+        fields: [
+          t("threeTitle", "Heading"),
+          ta("threeText", "Text"),
+          t("threeButton", "Button"),
+          t("threeLink", "Link"),
+          {
+            key: "threeStones",
+            label: "Crystal key",
+            type: "repeater",
+            itemLabel: "Crystal",
+            fields: [
+              { key: "name", label: "Crystal", type: "text" },
+              { key: "for", label: "Meaning", type: "text" },
+              { key: "color", label: "Dot colour", type: "color" },
+            ],
+          },
+        ],
+      },
+      { title: "Mulank picker", fields: [t("numberTitle", "Heading"), ta("numberText", "Text")] },
+      {
+        title: "Note from Ammit",
+        fields: [t("noteTitle", "Heading"), ta("noteBody1", "First paragraph"), ta("noteBody2", "Second paragraph"), ta("noteQuote", "Quote"), t("noteButton", "Button"), t("noteReadMore", "Read more link (homepage)")],
+      },
+      { title: "Gifts", fields: [t("giftsTitle", "Heading"), ta("giftsLede", "Intro")] },
+      { title: "Reviews", fields: [t("reviewsTitle", "Heading"), ta("reviewsLede", "Intro"), t("reviewsMore", "Instagram button")] },
+      { title: "Care", fields: [t("careTitle", "Heading"), ta("careText", "Text"), t("careWatch", "Video button"), t("careGuide", "Guide button")] },
+      seo(),
+    ],
+  },
+  {
+    id: "shared",
+    title: "Header, footer and shared blocks",
+    group: "Site",
+    sections: [
+      {
+        title: "Footer",
+        fields: [t("footerKicker", "Small line above the heading"), t("footerTitle", "Heading"), ta("footerText", "Text"), t("footerOrder", "Order button"), t("footerWhatsapp", "WhatsApp button"), t("footerTagline", "Tagline")],
+      },
+      { title: "Order band (bottom of most pages)", fields: [t("ctaTitle", "Default heading"), ta("ctaText", "Default text"), t("ctaButton", "Button")] },
+      {
+        title: "How your bracelet is made",
+        fields: [
+          t("howTitle", "Heading"),
+          { key: "howSteps", label: "Steps", type: "repeater", itemLabel: "Step", fields: [{ key: "title", label: "Title", type: "text" }, { key: "text", label: "Text", type: "textarea" }] },
+        ],
+      },
+      { title: "Trust bar", fields: [t("trustShipping", "Shipping line"), t("trustPayment", "Payment line")] },
+      { title: "Page not found", fields: [t("notFoundTitle", "Heading"), ta("notFoundText", "Text")] },
+    ],
+  },
+  {
+    id: "bracelets",
+    title: "Shop by intention",
+    group: "Pages",
+    path: "/bracelets",
+    sections: [{ title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro", PH), t("button", "Button"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] }, seo()],
+  },
+  {
+    id: "product",
+    title: "Bracelet pages (shared text)",
+    group: "Pages",
+    path: "/bracelets/better-studies",
+    sections: [
+      {
+        title: "Labels",
+        fields: [
+          t("eyebrow", "Small heading"),
+          t("comboEyebrow", "Small heading for the 3 in 1"),
+          t("priceNote", "Next to the price"),
+          t("orderButton", "Order button"),
+          t("askButton", "Second button"),
+          t("hint", "Line under the buttons"),
+          t("aboutTitle", "About heading"),
+          t("videoTitle", "Video heading"),
+          t("forWhomTitle", "\"For you if\" heading"),
+          t("crystalsTitle", "Crystals heading"),
+          ta("crystalsNote", "Crystals note"),
+          t("othersTitle", "Other bracelets heading"),
+        ],
+      },
+      {
+        title: "Questions (shown on every bracelet page)",
+        fields: [
+          t("faqTitle", "Heading"),
+          { key: "faqs", label: "Questions", type: "repeater", itemLabel: "Question", fields: [{ key: "q", label: "Question ({title} = bracelet name)", type: "text" }, { key: "a", label: "Answer", type: "textarea" }] },
+        ],
+      },
+    ],
+  },
+  {
+    id: "gifts",
+    title: "Gifts",
+    group: "Pages",
+    path: "/gifts",
+    sections: [
+      { title: "Gifts page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro", PH), t("howTitle", "Steps heading"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text"), t("ctaButton", "Bottom band button")] },
+      { title: "Each gift page", fields: [t("detailEyebrow", "Small heading"), t("priceNote", "Next to the price"), t("orderButton", "Order button"), t("sendTitle", "\"What to send\" heading"), t("ideasTitle", "Ideas heading"), t("othersLabel", "Other gifts label")] },
+      seo(),
+    ],
+  },
+  {
+    id: "about",
+    title: "About Ammit",
+    group: "Pages",
+    path: "/about-ammit",
+    sections: [
+      { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("videoTitle", "Video heading"), t("videoId", "YouTube video ID", "The code after youtube.com/shorts/ or watch?v="), t("workTitle", "Work heading")] },
+      {
+        title: "What Ammit does",
+        fields: [
+          {
+            key: "work",
+            label: "Cards",
+            type: "repeater",
+            itemLabel: "Card",
+            fields: [{ key: "title", label: "Title", type: "text" }, { key: "text", label: "Text", type: "textarea" }, { key: "cta", label: "Link text", type: "text" }, { key: "href", label: "Link", type: "url" }],
+          },
+          t("ctaTitle", "Bottom band heading"),
+        ],
+      },
+      seo(),
+    ],
+  },
+  {
+    id: "consultation",
+    title: "Consultation",
+    group: "Pages",
+    path: "/consultation",
+    sections: [
+      { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("button", "Button"), t("coversTitle", "\"What we cover\" heading"), list("covers", "What we cover"), t("stepsTitle", "\"How to book\" heading"), list("steps", "How to book"), ta("callout", "Note"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
+      seo(),
+    ],
+  },
+  {
+    id: "care",
+    title: "Bracelet care",
+    group: "Pages",
+    path: "/bracelet-care",
+    sections: [
+      { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro")] },
+      {
+        title: "Care cards (also on the homepage)",
+        fields: [{ key: "items", label: "Cards", type: "repeater", itemLabel: "Card", fields: [{ key: "term", label: "Title", type: "text" }, { key: "detail", label: "Text", type: "textarea" }] }],
+      },
+      { title: "Do and don't", fields: [t("dosTitle", "Do heading"), list("dos", "Do"), t("dontsTitle", "Don't heading"), list("donts", "Don't")] },
+      { title: "If it breaks", fields: [t("breakTitle", "Heading"), md("breakText", "Text", MD_HELP), t("videoId", "YouTube video ID"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
+      seo(),
+    ],
+  },
+  {
+    id: "reviews",
+    title: "Reviews",
+    group: "Pages",
+    path: "/reviews",
+    sections: [
+      { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
+      {
+        title: "Customer reviews (homepage, reviews page, reading)",
+        fields: [
+          {
+            key: "items",
+            label: "Reviews",
+            type: "repeater",
+            itemLabel: "Review",
+            fields: [
+              { key: "quote", label: "Their words", type: "textarea" },
+              { key: "name", label: "Name", type: "text" },
+              { key: "intention", label: "Bracelet they wear (slug, optional)", type: "text" },
+              { key: "sourceLabel", label: "Source label", type: "text" },
+              { key: "sourceUrl", label: "Source link", type: "url" },
+            ],
+          },
+        ],
+      },
+      seo(),
+    ],
+  },
+  {
+    id: "funnel",
+    title: "60-second reading",
+    group: "Pages",
+    path: "/find-your-bracelet",
+    sections: [
+      { title: "Start", fields: [t("introKicker", "Small heading"), t("introTitle", "Heading"), ta("introText", "Intro"), ta("introFine", "Small print")] },
+      {
+        title: "Questions",
+        fields: [
+          t("genderTitle", "Gender question"),
+          t("genderText", "Gender help"),
+          t("intentionTitle", "Intention question"),
+          t("intentionTitleGift", "Intention question (gift)"),
+          t("proofTitle", "Review step heading"),
+          ta("proofText", "Review step text"),
+          t("nameTitle", "Name question"),
+          t("nameTitleGift", "Name question (gift)"),
+          ta("nameText", "Name help"),
+          t("dobText", "Date of birth help"),
+          t("wristTitle", "Wrist question"),
+          t("wristTitleGift", "Wrist question (gift)"),
+          t("wristText", "Wrist help"),
+          t("matchingTitle", "Matching screen heading"),
+        ],
+      },
+      { title: "Result and checkout", fields: [list("nextSteps", "What happens next", "One step per line. " + PH), t("checkoutTitle", "Checkout heading"), ta("confirmedText", "Thank-you text", "{title} = bracelet, {ref} = order number")] },
+      seo(),
+    ],
+  },
+  {
+    id: "sizeGuide",
+    title: "Size guide",
+    group: "Pages",
+    path: "/size-guide",
+    sections: [
+      {
+        title: "Page",
+        fields: [
+          t("eyebrow", "Small heading"),
+          t("title", "Heading"),
+          ta("lede", "Intro"),
+          t("measureTitle", "Measuring heading"),
+          list("measureSteps", "Measuring steps"),
+          t("sizesTitle", "Sizes heading"),
+          { key: "sizes", label: "Sizes", type: "repeater", itemLabel: "Size", fields: [{ key: "label", label: "Fit", type: "text" }, { key: "women", label: "Women", type: "text" }, { key: "men", label: "Men", type: "text" }] },
+          md("note", "Note under the table", MD_HELP),
+          t("ctaTitle", "Bottom band heading"),
+        ],
+      },
+      seo(),
+    ],
+  },
+  {
+    id: "mulank",
+    title: "Mulank 1 to 9",
+    group: "Numerology",
+    path: "/mulank",
+    sections: [
+      { title: "Mulank page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("bornOn", "\"Born on\" label"), t("startTitle", "Section heading"), ta("startText", "Section text"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
+      {
+        title: "Each number's page",
+        fields: [
+          t("detailEyebrow", "Small heading", "{planet}, {planetHindi}, {n} are filled in."),
+          t("detailAsk", "First button"),
+          t("detailFind", "Second button"),
+          t("daysTitle", "Birth days heading"),
+          t("daysNote", "Under the days"),
+          t("traitsTitle", "Qualities heading"),
+          t("crystalsTitle", "Crystals heading"),
+          ta("crystalsText", "Crystals text"),
+          t("videoTitle", "Video heading"),
+        ],
+      },
+      {
+        title: "Numbers",
+        fields: [
+          {
+            key: "numbers",
+            label: "Mulank",
+            type: "repeater",
+            itemLabel: "Mulank",
+            fixed: true,
+            fields: [
+              { key: "number", label: "Number", type: "number" },
+              { key: "planet", label: "Planet", type: "text" },
+              { key: "planetHindi", label: "Planet (Hindi)", type: "text" },
+              { key: "summary", label: "Summary", type: "textarea" },
+              { key: "traits", label: "Qualities (one per line)", type: "list" },
+              { key: "videoId", label: "YouTube video ID", type: "text" },
+            ],
+          },
+        ],
+      },
+      seo(),
+    ],
+  },
+  {
+    id: "numerology",
+    title: "Numerology guides",
+    group: "Numerology",
+    path: "/numerology",
+    sections: [
+      {
+        title: "Guides page",
+        fields: [
+          t("eyebrow", "Small heading"),
+          t("title", "Heading"),
+          ta("lede", "Intro"),
+          { key: "guides", label: "Guide cards", type: "repeater", itemLabel: "Guide", fields: [{ key: "title", label: "Title", type: "text" }, { key: "text", label: "Text", type: "textarea" }, { key: "href", label: "Link", type: "url" }] },
+        ],
+      },
+      { title: "Mulank and bhagyank guide", fields: [t("guideTitle", "Heading"), ta("guideLede", "Intro"), md("guideBody", "Article", MD_HELP + " {{planets}} = list of planets.")] },
+      { title: "Lo Shu grid", fields: [t("loshuEyebrow", "Small heading"), t("loshuTitle", "Heading"), ta("loshuLede", "Intro"), md("loshuBody", "Article", MD_HELP), t("loshuLinesTitle", "Lines heading"), md("loshuNote", "Note", MD_HELP)] },
+      seo(),
+    ],
+  },
+  ...(["privacy", "terms", "shipping", "returns"] as const).map(
+    (id): PageDef => ({
+      id,
+      title: { privacy: "Privacy policy", terms: "Terms of use", shipping: "Shipping policy", returns: "Returns policy" }[id],
+      group: "Policies",
+      path: `/${id}`,
+      sections: [{ title: "Policy", fields: [t("title", "Heading"), ta("lede", "Intro", PH), t("updated", "Last updated (date shown)"), md("body", "Policy text", MD_HELP)] }],
+    }),
+  ),
+];
+
+export const pageDef = (id: string) => PAGES.find((p) => p.id === id);

@@ -5,9 +5,11 @@ import Link from "next/link";
 import Medallion from "../Medallion";
 import Sphere from "../Sphere";
 import ProductVisual from "../ProductVisual";
-import { BRACELETS, MULANK, braceletBySlug } from "@/data/pages";
-import { PRICE, PRICE_INR, SHIPPING, TESTIMONIALS } from "@/data/home";
-import TrustBar from "../TrustBar";
+import TrustBar, { type TrustText } from "../TrustBar";
+import type { FunnelProduct } from "@/lib/catalog-types";
+import type { Content } from "@/lib/content/defaults";
+import { fill } from "@/lib/content/fill";
+import { formatINR } from "@/lib/format";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
 import { deliveryWindow } from "@/lib/delivery";
 import { ageFrom, bhagyank, isValidDate, mulank } from "@/lib/numerology";
@@ -25,7 +27,16 @@ const QUESTIONS: StepId[] = ["who", "gender", "intention", "focus", "name", "dob
 
 /** Intentions that the 3 in 1 (love · protection · prosperity) covers */
 const THREE_IN_ONE = new Set(["better-married-life", "love-and-relationships", "buri-nazar-protection", "career-and-money"]);
-const INTENTION_CHOICES = BRACELETS.filter((b) => b.slug !== "3-in-1");
+const COMBO_SLUG = "3-in-1";
+
+export type FunnelData = {
+  products: (FunnelProduct & { listA: string[] })[];
+  mulank: { number: number; planet: string; planetHindi: string; traits: string[] }[];
+  review: { quote: string; name: string; sourceLabel: string; sourceUrl: string } | null;
+  copy: Content<"funnel">;
+  trust: TrustText;
+  refNote: string;
+};
 const MAX_INTENTIONS = 3;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -148,7 +159,12 @@ function Glyph({ children }: { children: React.ReactNode }) {
 /* Funnel                                                              */
 /* ------------------------------------------------------------------ */
 
-export default function Funnel({ photos = {} }: { photos?: Record<string, string[]> }) {
+export default function Funnel({ data }: { data: FunnelData }) {
+  const { copy, trust } = data;
+  const INTENTION_CHOICES = useMemo(() => data.products.filter((b) => b.inList), [data.products]);
+  const MULANK = data.mulank;
+  const braceletBySlug = useCallback((slug: string) => data.products.find((b) => b.slug === slug), [data.products]);
+  const win = () => deliveryWindow(trust.minDays, trust.maxDays);
   const [i, setI] = useState(0);
   const [a, setA] = useState<Answers>(EMPTY);
   const [co, setCo] = useState<Contact>(EMPTY_CONTACT);
@@ -226,7 +242,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
   const mInfo = MULANK.find((x) => x.number === m);
   const primary = a.intentions[0];
   const recSlug = useMemo(() => {
-    if (a.intentions.length >= 2 && a.intentions.every((s) => THREE_IN_ONE.has(s))) return "3-in-1";
+    if (a.intentions.length >= 2 && a.intentions.every((s) => THREE_IN_ONE.has(s)) && data.products.some((b) => b.slug === COMBO_SLUG)) return COMBO_SLUG;
     return primary;
   }, [a.intentions, primary]);
   const rec = recSlug ? braceletBySlug(recSlug) : undefined;
@@ -290,15 +306,12 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "who" && (
             <>
               <p className="fn-kicker">
-                <span aria-hidden="true">◆</span> 60-second crystal reading
+                <span aria-hidden="true">◆</span> {copy.introKicker}
               </p>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title is-hero">
-                Find the bracelet that suits your numbers
+                {copy.introTitle}
               </h1>
-              <p className="fn-sub">
-                Answer 7 quick questions. We&apos;ll work out your mulank and bhagyank and suggest the bracelet Ammit would
-                start with for you.
-              </p>
+              <p className="fn-sub">{copy.introText}</p>
               <p className="fn-label">Who is the bracelet for?</p>
               <div className="fn-tiles cols-2">
                 <Tile selected={a.who === "me"} onClick={() => pick("who", "me")}>
@@ -310,11 +323,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                   <span className="fn-tile-title">A gift for someone</span>
                 </Tile>
               </div>
-              <p className="fn-fine">
-                Your answers stay in this browser. Nothing is sent anywhere unless you choose to open the order form or
-                WhatsApp at the end. Crystal and numerology guidance is traditional belief, not medical, legal or
-                financial advice.
-              </p>
+              <p className="fn-fine">{copy.introFine}</p>
             </>
           )}
 
@@ -322,9 +331,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "gender" && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("Who will wear it?", "Who will wear it?")}
+                {copy.genderTitle}
               </h1>
-              <p className="fn-sub">This sets the wrist sizes we show later.</p>
+              <p className="fn-sub">{copy.genderText}</p>
               <div className="fn-tiles cols-3">
                 <Tile selected={a.gender === "female"} onClick={() => pick("gender", "female")}>
                   <Glyph>♀</Glyph>
@@ -346,7 +355,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "intention" && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("What are you asking of life right now?", "What would you like the bracelet to help them with?")}
+                {t(copy.intentionTitle, copy.intentionTitleGift)}
               </h1>
               <p className="fn-sub">Pick up to {MAX_INTENTIONS}, most important first.</p>
               <div className="fn-tiles is-list">
@@ -372,7 +381,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                         }))
                       }
                     >
-                      <Sphere color={b.sphere} shade={b.sphereShade} gloss={b.sphereGloss} size={40} />
+                      <Sphere color={b.visual.sphere} shade={b.visual.sphereShade} gloss={b.visual.sphereGloss} size={40} />
                       <span className="fn-tile-text">
                         <span className="fn-tile-title">{b.title}</span>
                         <span className="fn-tile-desc">{b.blurb}</span>
@@ -397,7 +406,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
               </h1>
               <p className="fn-sub">About {primaryDetail.title.toLowerCase()}.</p>
               <div className="fn-tiles is-list">
-                {[...primaryDetail.forWhom, "Something else"].map((f) => (
+                {[...primaryDetail.listA, "Something else"].map((f) => (
                   <Tile key={f} selected={a.focus === f} onClick={() => pick("focus", f)}>
                     <span className="fn-tile-title is-plain">{f}</span>
                   </Tile>
@@ -410,27 +419,24 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "proof" && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                Every bracelet starts with a reading
+                {copy.proofTitle}
               </h1>
-              <p className="fn-sub">
-                Ammit reads the wearer&apos;s name and date of birth before he chooses a single crystal. Here&apos;s what
-                one customer wrote to him:
-              </p>
-              {TESTIMONIALS[0] && (
+              <p className="fn-sub">{copy.proofText}</p>
+              {data.review && (
                 <figure className="fn-quote">
                   <span className="review-mark" aria-hidden="true">
                     &ldquo;
                   </span>
                   <blockquote>
-                    <p>{TESTIMONIALS[0].quote}</p>
+                    <p>{data.review.quote}</p>
                   </blockquote>
                   <figcaption>
-                    {TESTIMONIALS[0].name}
-                    {TESTIMONIALS[0].source && (
+                    {data.review.name}
+                    {data.review.sourceUrl && (
                       <>
                         {" · "}
-                        <a href={TESTIMONIALS[0].source.href} target="_blank" rel="noopener noreferrer">
-                          {TESTIMONIALS[0].source.label}
+                        <a href={data.review.sourceUrl} target="_blank" rel="noopener noreferrer">
+                          {data.review.sourceLabel || "Source"}
                         </a>
                       </>
                     )}
@@ -455,9 +461,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
               }}
             >
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("What's your name?", "What's the wearer's name?")}
+                {t(copy.nameTitle, copy.nameTitleGift)}
               </h1>
-              <p className="fn-sub">In numerology your name carries a number too. Use the name you go by every day.</p>
+              <p className="fn-sub">{copy.nameText}</p>
               <div className="fn-fields cols-2">
                 <label className="fn-field">
                   <span>First name</span>
@@ -499,7 +505,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
                 {t("When were you born?", `When was ${a.firstName.trim() || "the wearer"} born?`)}
               </h1>
-              <p className="fn-sub">Your mulank comes from the day; your bhagyank from the full date.</p>
+              <p className="fn-sub">{copy.dobText}</p>
               <div className="fn-fields cols-dob">
                 <label className="fn-field">
                   <span>Day</span>
@@ -595,9 +601,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "wrist" && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("What's your wrist size?", "What's their wrist size?")}
+                {t(copy.wristTitle, copy.wristTitleGift)}
               </h1>
-              <p className="fn-sub">Wrap a thread around the wrist bone and measure it in centimetres.</p>
+              <p className="fn-sub">{copy.wristText}</p>
               <div className="fn-tiles cols-3">
                 {wristChoices.map((w) => {
                   const [label, cm] = w.split("-");
@@ -622,7 +628,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
           {step === "matching" && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                Matching crystals to your answers
+                {copy.matchingTitle}
               </h1>
               <div className="fn-spinner" aria-hidden="true">
                 <Medallion width={58} height={64} />
@@ -647,7 +653,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                 {rec.title}
               </h1>
               <div className="fn-result-visual">
-                <ProductVisual cards={rec.cards} rings={rec.rings} label={`Illustration of the ${rec.title} bracelet`} photos={photos[rec.slug] ?? []} />
+                <ProductVisual cards={rec.visual.cards} rings={rec.visual.rings} label={`Illustration of the ${rec.title} bracelet`} photos={rec.photos} refNote={data.refNote} />
               </div>
               <ul className="fn-chips">
                 <li>
@@ -671,9 +677,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                 <p className="small-note">Ammit confirms the final stones after reading the full name and date of birth.</p>
               </div>
               <p className="fn-price">
-                {PRICE} <span>read for your numbers · strung by hand</span>
+                {formatINR(rec.priceInr)} <span>read for your numbers · strung by hand</span>
               </p>
-              <TrustBar compact />
+              <TrustBar compact text={trust} />
               <div className="fn-actions is-stack">
                 <button
                   type="button"
@@ -687,9 +693,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                 </button>
               </div>
               <ol className="num-list fn-next">
-                <li>Add a delivery address and pay securely: UPI, cards or net banking.</li>
-                <li>Ammit reads the full numbers and confirms the crystals with you on WhatsApp.</li>
-                <li>The bracelet is strung by hand and delivered free in {SHIPPING.minDays}–{SHIPPING.maxDays} days.</li>
+                {copy.nextSteps.map((x, i) => (
+                  <li key={i}>{fill(x, { minDays: trust.minDays, maxDays: trust.maxDays, price: formatINR(rec.priceInr) })}</li>
+                ))}
               </ol>
               <p className="small-note">
                 By ordering you agree to our{" "}
@@ -739,7 +745,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                   return;
                 }
                 setPayState({ status: "working" });
-                track("begin_checkout", { bracelet: rec.slug, value: PRICE_INR, currency: "INR" }, "InitiateCheckout");
+                track("begin_checkout", { bracelet: rec.slug, value: rec.priceInr, currency: "INR" }, "InitiateCheckout");
                 try {
                   const res = await fetch("/api/checkout/create", {
                     method: "POST",
@@ -807,7 +813,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                       if (v && v.ok) {
                         setOrderRef(data.ref);
                         setPayState({ status: "idle" });
-                        track("purchase", { transaction_id: data.ref, value: PRICE_INR, currency: "INR" }, "Purchase");
+                        track("purchase", { transaction_id: data.ref, value: rec.priceInr, currency: "INR" }, "Purchase");
                         goTo(STEPS.indexOf("confirmed"));
                       } else {
                         setPayState({
@@ -827,7 +833,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
               }}
             >
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                Delivery and payment
+                {copy.checkoutTitle}
               </h1>
 
               <div className="fn-summary" aria-label="Order summary">
@@ -839,7 +845,7 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                       {a.wrist && a.wrist !== "unsure" ? ` · ${a.wrist}` : ""}
                     </small>
                   </span>
-                  <span>{PRICE}</span>
+                  <span>{formatINR(rec.priceInr)}</span>
                 </div>
                 <div className="fn-summary-row">
                   <span>Shipping</span>
@@ -847,9 +853,9 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                 </div>
                 <div className="fn-summary-row is-total">
                   <span>Total</span>
-                  <span>{PRICE}</span>
+                  <span>{formatINR(rec.priceInr)}</span>
                 </div>
-                <p className="fn-summary-eta">Estimated delivery: {deliveryWindow()}</p>
+                <p className="fn-summary-eta">Estimated delivery: {win()}</p>
               </div>
 
               <fieldset className="fn-fieldset">
@@ -956,10 +962,10 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
               )}
               <div className="fn-actions is-stack">
                 <button type="submit" className="btn btn-lapis" disabled={payState.status === "working"}>
-                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${PRICE} securely`}
+                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${formatINR(rec.priceInr)} securely`}
                 </button>
               </div>
-              <TrustBar compact />
+              <TrustBar compact text={trust} />
               <p className="small-note">Payments are processed by Razorpay. We never see or store your card or UPI details.</p>
             </form>
           )}
@@ -974,12 +980,12 @@ export default function Funnel({ photos = {} }: { photos?: Record<string, string
                 Thank you{a.firstName.trim() && !gift ? `, ${a.firstName.trim()}` : ""}
               </h1>
               <p className="fn-sub">
-                Your {rec.title} bracelet is ordered and paid. Keep your order number <b>{orderRef}</b> handy.
+                {fill(copy.confirmedText, { title: rec.title, ref: orderRef })}
               </p>
               <ol className="num-list fn-next">
                 <li>Ammit reads {gift ? `${a.firstName.trim()}'s` : "your"} full name and date of birth and chooses the crystals.</li>
                 <li>We&apos;ll message you on WhatsApp at +91 {co.mobile} with any questions and your tracking details.</li>
-                <li>Free delivery, estimated {deliveryWindow()}.</li>
+                <li>Free delivery, estimated {win()}.</li>
               </ol>
               <div className="fn-actions is-stack">
                 <Link className="btn btn-lapis" href="/">
