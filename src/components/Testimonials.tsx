@@ -1,13 +1,18 @@
+import Image from "next/image";
 import RowAutoScroll from "./RowAutoScroll";
 import { getBracelets } from "@/lib/server/catalog";
+import { OLD_BRACELET_SLUGS } from "@/data/pages";
 import { getContent, getSite } from "@/lib/server/content";
 
 export default async function Testimonials() {
   const [home, r, { s }, bracelets] = await Promise.all([getContent("home"), getContent("reviews"), getSite(), getBracelets()]);
-  const bySlug = Object.fromEntries(bracelets.map((b) => [b.slug, b]));
+  const bySlug: Record<string, (typeof bracelets)[number]> = Object.fromEntries(bracelets.map((b) => [b.slug, b]));
+  for (const [old, now] of Object.entries(OLD_BRACELET_SLUGS)) if (bySlug[now]) bySlug[old] = bySlug[now];
+  // Instagram screenshots replace the written reviews as soon as any are added.
+  const shots = (r.shots ?? []).filter((x) => x.image);
   const TESTIMONIALS = r.items.filter((t) => t.quote.trim());
   const LINKS = { instagramReviews: s.instagramReviews };
-  const hasReviews = TESTIMONIALS.length > 0;
+  const hasReviews = shots.length > 0 || TESTIMONIALS.length > 0;
 
   return (
     <section id="reviews" className="reviews" aria-labelledby="reviews-title">
@@ -35,7 +40,36 @@ export default async function Testimonials() {
           </div>
         )}
 
-        {hasReviews && (
+        {shots.length > 0 && (
+          <ul id="reviews-list" className="reviews-list is-shots" tabIndex={0} aria-label="Customer reviews from Instagram">
+            {shots.map((x, idx) => (
+              <li key={idx} className="review-shot">
+                <figure>
+                  <div className="review-shot-frame">
+                    <Image
+                      src={x.image}
+                      alt={x.text ? `Instagram review${x.name ? ` from ${x.name}` : ""}: ${x.text}` : `Instagram review screenshot${x.name ? ` from ${x.name}` : ""}`}
+                      fill
+                      sizes="(max-width: 760px) 70vw, 280px"
+                    />
+                  </div>
+                  {(x.name || x.link) && (
+                    <figcaption>
+                      {x.name && <span className="review-name">{x.name}</span>}
+                      {x.link && (
+                        <a className="review-source" href={x.link} target="_blank" rel="noopener noreferrer">
+                          View on Instagram
+                        </a>
+                      )}
+                    </figcaption>
+                  )}
+                </figure>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {shots.length === 0 && TESTIMONIALS.length > 0 && (
         <ul id="reviews-list" className="reviews-list" tabIndex={0} aria-label="Customer reviews">
           {TESTIMONIALS.map((t, idx) => {
             const it = t.intention ? bySlug[t.intention] : undefined;

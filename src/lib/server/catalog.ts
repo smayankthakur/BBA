@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { BRACELETS, GIFT_DETAILS } from "@/data/pages";
+import { BRACELETS, GIFT_DETAILS, OLD_BRACELET_SLUGS } from "@/data/pages";
 import { GIFTS } from "@/data/home";
 import { BRACELET_VIDEOS } from "@/data/videos";
 import { DEFAULTS } from "@/lib/content/defaults";
@@ -39,7 +39,7 @@ function builtIn(): Product[] {
     priceInr: price,
     sort: (i + 1) * 10,
     status: "published",
-    inList: b.slug !== "3-in-1",
+    inList: true,
     photos: productPhotos(b.slug),
     photoAlt: null,
     videoId: BRACELET_VIDEOS[b.slug]?.id ?? null,
@@ -123,13 +123,39 @@ function seedOnce() {
   seeded ??= (async () => {
     await ensureSchema();
     const n = await sql<{ n: number }>`select count(*) :: int as n from products`;
-    if ((n[0]?.n ?? 0) > 0) return;
-    for (const p of builtIn()) await insertProduct(p);
+    if ((n[0]?.n ?? 0) === 0) for (const p of builtIn()) await insertProduct(p);
+    await migratePurposes2026();
   })().catch((e) => {
     seeded = null;
     throw e;
   });
   return seeded;
+}
+
+/**
+ * One-time move to the client's ten purposes and ₹1,200 pricing (28 Oct 2026):
+ * renames the six existing bracelets (and their photo paths), adds the four new
+ * ones, retires the 3 in 1, and moves every price from ₹1,199 to ₹1,200.
+ */
+async function migratePurposes2026() {
+  await sql`create table if not exists site_migrations (id text primary key, at timestamptz not null default now())`;
+  const claimed = await sql`insert into site_migrations (id) values ('purposes-2026-10') on conflict do nothing returning id`;
+  if (!claimed.length) return;
+  const built = builtIn().filter((p) => p.kind === "bracelet");
+  for (const [oldSlug, newSlug] of Object.entries(OLD_BRACELET_SLUGS)) {
+    const b = built.find((x) => x.slug === newSlug)!;
+    const taken = await sql`select 1 from products where kind = 'bracelet' and slug = ${newSlug}`;
+    if (taken.length) continue;
+    await sql`update products set slug = ${newSlug}, title = ${b.title}, blurb = ${b.blurb}, intro = ${b.intro}, list_a = ${b.listA},
+      crystals = ${b.crystals}, note = ${b.note}, video_id = coalesce(video_id, ${b.videoId}), video_title = coalesce(video_title, ${b.videoTitle}),
+      photos = array(select replace(u, ${`/products/${oldSlug}/`}, ${`/products/${newSlug}/`}) from unnest(photos) u),
+      sort_order = ${b.sort}, updated_at = now()
+      where kind = 'bracelet' and slug = ${oldSlug}`;
+  }
+  for (const b of built) await insertProduct(b);
+  await sql`update products set status = 'draft', in_list = false, updated_at = now() where kind = 'bracelet' and slug = '3-in-1' and status = 'published'`;
+  await sql`update products set price_inr = 1200, updated_at = now() where price_inr = 1199`;
+  await sql`update site_content set data = jsonb_set(data, '{defaultPrice}', '1200') where id = 'settings' and data->>'defaultPrice' = '1199'`;
 }
 
 async function insertProduct(p: Omit<Product, "id">) {
@@ -168,10 +194,6 @@ export async function getGifts() {
 }
 export async function getProduct(kind: ProductKind, slug: string) {
   return (await loadCatalog()).find((p) => p.kind === kind && p.slug === slug && p.status === "published") ?? null;
-}
-/** The 3 in 1 (shown in its own homepage section) */
-export async function getCombo() {
-  return getProduct("bracelet", "3-in-1");
 }
 /** Lowest published bracelet price, for "from ₹…" lines. */
 export async function lowestPrice() {

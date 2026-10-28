@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Notice from "@/components/admin/Notice";
-import { FULFILMENT, getOrder } from "@/lib/server/orders";
+import { FULFILMENT, getOrder, upgradesFor } from "@/lib/server/orders";
 import { updateOrderAction } from "@/app/admin/actions";
 import { formatINR } from "@/lib/format";
 import { PROGRESS } from "@/lib/orderProgress";
@@ -46,6 +46,7 @@ export default async function OrderPage({
   const o = await getOrder(id);
   if (!o) notFound();
   const utm = Object.entries(o.utm ?? {}).filter(([, v]) => v);
+  const ups = await upgradesFor(o.id);
 
   return (
     <>
@@ -89,7 +90,7 @@ export default async function OrderPage({
             <h2>Bracelet and payment</h2>
             <div className="ad-box-body">
               <dl className="ad-dl">
-                <Row k="Bracelet" v={o.bracelet_title} />
+                <Row k={`Purposes (${o.purposes?.length || 1})`} v={o.bracelet_title} />
                 {o.coupon_code ? (
                   <>
                     <Row k="Price" v={formatINR((o.amount_paise + (o.discount_paise ?? 0)) / 100)} />
@@ -98,6 +99,20 @@ export default async function OrderPage({
                   </>
                 ) : (
                   <Row k="Amount" v={formatINR(o.amount_paise / 100)} />
+                )}
+                {ups.map((u) => (
+                  <Row
+                    key={u.id}
+                    k={`Top-up (${u.status})`}
+                    v={`+ ${u.add_titles.join(" + ")}: ${formatINR(u.amount_paise / 100)}${u.paid_at ? `, paid ${fmt(u.paid_at)}` : ""}`}
+                  />
+                ))}
+                {(o.upgrade_paise ?? 0) > 0 && <Row k="Total paid" v={formatINR((o.amount_paise + (o.upgrade_paise ?? 0)) / 100)} />}
+                {o.partner_code && (
+                  <Row
+                    k="Partner"
+                    v={`${o.partner_code} · commission ${formatINR((o.commission_paise ?? 0) / 100)}${o.partner_kind === "percent" ? ` (${o.partner_rate}%)` : ""}`}
+                  />
                 )}
                 <Row k="Gift" v={o.is_gift ? "Yes" : "No"} />
                 {o.is_gift && <Row k="Gift message" v={o.gift_note} />}

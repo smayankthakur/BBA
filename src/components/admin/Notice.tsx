@@ -10,6 +10,9 @@ const OK: Record<string, string> = {
   revoked: "Invite cancelled.",
   updated: "Updated.",
   on: "Coupon switched on.",
+  pon: "Partner link switched on.",
+  poff: "Partner link switched off. Visits through it are no longer credited.",
+  payout: "Payout recorded.",
   off: "Coupon switched off. Customers can't use it until you switch it back on.",
 };
 const ERR: Record<string, string> = {
@@ -36,6 +39,12 @@ const ERR: Record<string, string> = {
   value: "Enter a discount: 1–90% or ₹1 and up.",
   dates: "The end date must be on or after the start date.",
   limits: "Limits must be whole numbers of 1 or more (or leave them empty).",
+  name: "Please enter a name.",
+  pcode: "Link codes are 2–31 lowercase letters, numbers or dashes, e.g. priya or yoga-studio.",
+  pcodeTaken: "Another partner already uses that link code.",
+  rate: "Commission must be 0–90% or a rupee amount.",
+  amount: "Enter the amount paid (at least ₹1).",
+  paidOn: "Choose the date it was paid.",
 };
 
 /** Green/red message at the top of an admin screen, from ?msg= or ?err=. */

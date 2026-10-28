@@ -141,13 +141,7 @@ export default function ProductForm({
               }}
             />
           </p>
-          {p?.slug === "3-in-1" && (
-            <p className="ad-help">
-              This is the 3 in 1 shown in its own homepage section. Keep the web
-              address as 3-in-1.
-            </p>
-          )}
-
+          
           <section className="ad-box">
             <h2>Description</h2>
             <div className="ad-box-body">

@@ -60,9 +60,11 @@ export const PAGES: PageDef[] = [
         ],
       },
       {
-        title: "Price and delivery",
+        title: "Prices and delivery",
         fields: [
-          { key: "defaultPrice", label: "Default price for new products (₹)", type: "number" },
+          { key: "defaultPrice", label: "Price: 1 purpose in 1 bracelet (₹)", type: "number", help: "Shown on the site, and the starting price for new products." },
+          { key: "price2", label: "Price: 2 purposes in 1 bracelet (₹)", type: "number", help: "Offered at checkout and after payment, never shown upfront." },
+          { key: "price3", label: "Price: 3 purposes in 1 bracelet (₹)", type: "number" },
           { key: "shippingMinDays", label: "Delivery: from (days)", type: "number" },
           { key: "shippingMaxDays", label: "Delivery: to (days)", type: "number" },
         ],
@@ -74,6 +76,7 @@ export const PAGES: PageDef[] = [
           { key: "instagram", label: "Instagram", type: "url" },
           { key: "youtube", label: "YouTube channel", type: "url" },
           { key: "youtubeShorts", label: "YouTube Shorts", type: "url" },
+          { key: "reelUrl", label: "Instagram reel on the homepage", type: "url", help: "Link to a reel, e.g. https://www.instagram.com/reel/…" },
           { key: "instagramReviews", label: "Instagram reviews highlight", type: "url" },
         ],
       },
@@ -117,23 +120,15 @@ export const PAGES: PageDef[] = [
       { title: "Hero", fields: [ta("heroTitle", "Headline"), ta("heroLede", "Intro"), t("heroPrimary", "Main button"), t("heroSecondary", "Second button")] },
       { title: "Intention list", fields: [t("editTitle", "Heading"), t("editLede", "Intro", PH), t("editHintHover", "Hint on computers"), t("editHintTouch", "Hint on phones")] },
       {
-        title: "3 in 1",
+        title: "Made for you (with Ammit's reel)",
         fields: [
-          t("threeTitle", "Heading"),
-          ta("threeText", "Text"),
-          t("threeButton", "Button"),
-          t("threeLink", "Link"),
-          {
-            key: "threeStones",
-            label: "Crystal key",
-            type: "repeater",
-            itemLabel: "Crystal",
-            fields: [
-              { key: "name", label: "Crystal", type: "text" },
-              { key: "for", label: "Meaning", type: "text" },
-              { key: "color", label: "Dot colour", type: "color" },
-            ],
-          },
+          t("madeTitle", "Heading"),
+          ta("madeText", "Text"),
+          list("madePoints", "Points"),
+          ta("madeNote", "Note under the points"),
+          t("madeButton", "Button"),
+          t("madeReelTitle", "Reel title"),
+          t("madeReelNote", "Small line under the reel title"),
         ],
       },
       { title: "Mulank picker", fields: [t("numberTitle", "Heading"), ta("numberText", "Text")] },
@@ -179,13 +174,12 @@ export const PAGES: PageDef[] = [
     id: "product",
     title: "Bracelet pages (shared text)",
     group: "Pages",
-    path: "/bracelets/better-studies",
+    path: "/bracelets/studies",
     sections: [
       {
         title: "Labels",
         fields: [
           t("eyebrow", "Small heading"),
-          t("comboEyebrow", "Small heading for the 3 in 1"),
           t("priceNote", "Next to the price"),
           t("orderButton", "Order button"),
           t("askButton", "Second button"),
@@ -275,7 +269,26 @@ export const PAGES: PageDef[] = [
     sections: [
       { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
       {
-        title: "Customer reviews (homepage, reviews page, reading)",
+        title: "Instagram review screenshots (shown instead of written reviews once added)",
+        fields: [
+          t("shotsTitle", "Heading on the reviews page"),
+          {
+            key: "shots",
+            label: "Screenshots",
+            help: "Add this week's screenshots from Instagram reviews or highlights. Newest first. Type what the review says so screen readers and Google can read it.",
+            type: "repeater",
+            itemLabel: "Screenshot",
+            fields: [
+              { key: "image", label: "Screenshot", type: "image" },
+              { key: "name", label: "Customer name or handle (optional)", type: "text" },
+              { key: "text", label: "What the review says", type: "textarea" },
+              { key: "link", label: "Link to the post or highlight (optional)", type: "url" },
+            ],
+          },
+        ],
+      },
+      {
+        title: "Written reviews (used until screenshots are added)",
         fields: [
           {
             key: "items",
@@ -285,7 +298,7 @@ export const PAGES: PageDef[] = [
             fields: [
               { key: "quote", label: "Their words", type: "textarea" },
               { key: "name", label: "Name", type: "text" },
-              { key: "intention", label: "Bracelet they wear (slug, optional)", type: "text" },
+              { key: "intention", label: "Bracelet they wear (web address, e.g. love-life; optional)", type: "text" },
               { key: "sourceLabel", label: "Source label", type: "text" },
               { key: "sourceUrl", label: "Source link", type: "url" },
             ],

@@ -4,7 +4,10 @@ import { CheckoutSchema } from "@/lib/checkoutSchema";
 import { createOrder, razorpayConfigured, razorpayKeyId } from "@/lib/server/razorpay";
 import { insertOrder } from "@/lib/server/orders";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
-import { getProduct } from "@/lib/server/catalog";
+import { getBracelets, getProduct } from "@/lib/server/catalog";
+import { getContent } from "@/lib/server/content";
+import { attributionFor } from "@/lib/server/partners";
+import { priceFor, type Tiers } from "@/lib/pricing";
 import { checkCoupon } from "@/lib/server/coupons";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 
@@ -40,16 +43,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please check your details." }, { status: 400 });
   }
 
-  // Price is decided here (from the product and coupon in the database), never by the browser.
+  // Price is decided here (product, purposes, coupon from the database), never by the browser.
+  const [all, settings] = await Promise.all([getBracelets(), getContent("settings")]);
+  const extraSlugs = [...new Set(d.extras ?? [])].filter((x) => x !== product.slug);
+  const extras = extraSlugs.map((x) => all.find((b) => b.slug === x && b.inList));
+  if (extras.some((x) => !x)) return NextResponse.json({ error: "Please choose your purposes again." }, { status: 400 });
+  const tiers: Tiers = [settings.defaultPrice, settings.price2, settings.price3];
+  const listInr = priceFor(product.priceInr, 1 + extras.length, tiers);
+  const purposeSlugs = [product.slug, ...extras.map((x) => x!.slug)];
+  const title = [product.title, ...extras.map((x) => x!.title)].join(" + ");
+
   let couponCode: string | null = null;
   let discountInr = 0;
   if (d.coupon) {
-    const c = await checkCoupon(d.coupon, product, d.contact.mobile).catch(() => ({ ok: false as const, error: "Couldn't check the coupon. Please try again." }));
+    const c = await checkCoupon(d.coupon, { slug: product.slug, title: product.title, priceInr: listInr }, d.contact.mobile).catch(() => ({ ok: false as const, error: "Couldn't check the coupon. Please try again." }));
     if (!c.ok) return NextResponse.json({ error: c.error, field: "coupon" }, { status: 400 });
     couponCode = c.code;
     discountInr = c.discountInr;
   }
-  const amountPaise = (product.priceInr - discountInr) * 100;
+  const amountPaise = (listInr - discountInr) * 100;
+  const partner = await attributionFor(req, amountPaise).catch(() => null);
   const ref = `BBA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
   const dob = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const m = mulank(day);
@@ -64,7 +77,9 @@ export async function POST(req: Request) {
   const notes: Record<string, string> = {
     ref,
     // (Razorpay allows 15 notes, so the coupon rides along with the bracelet.)
-    bracelet: cut(couponCode ? `${product.title} · coupon ${couponCode} -Rs ${discountInr} (list Rs ${product.priceInr})` : product.title),
+    bracelet: cut(
+      [title, couponCode && `coupon ${couponCode} -Rs ${discountInr} (list Rs ${listInr})`, partner && `partner ${partner.code}`].filter(Boolean).join(" · "),
+    ),
     wearer: cut(`${d.wearer.firstName} ${d.wearer.lastName ?? ""}`.trim()),
     dob,
     gender: d.wearer.gender,
@@ -86,7 +101,7 @@ export async function POST(req: Request) {
       ref,
       status: "pending",
       bracelet_slug: product.slug,
-      bracelet_title: product.title,
+      bracelet_title: title,
       amount_paise: amountPaise,
       wearer_first_name: d.wearer.firstName,
       wearer_last_name: d.wearer.lastName ?? "",
@@ -114,6 +129,11 @@ export async function POST(req: Request) {
       razorpay_order_id: order.id,
       coupon_code: couponCode,
       discount_paise: discountInr * 100,
+      purposes: purposeSlugs,
+      partner_code: partner?.code ?? null,
+      partner_kind: partner?.kind ?? null,
+      partner_rate: partner?.rate ?? null,
+      commission_paise: partner?.commissionPaise ?? 0,
     }).catch((e) => console.error("[checkout] db insert failed", e instanceof Error ? e.message : e));
 
     return NextResponse.json({ orderId: order.id, keyId: razorpayKeyId(), amount: amountPaise, currency: "INR", ref });

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getProduct } from "@/lib/server/catalog";
+import { getBracelets, getProduct } from "@/lib/server/catalog";
+import { getContent } from "@/lib/server/content";
+import { priceFor, type Tiers } from "@/lib/pricing";
 import { checkCoupon } from "@/lib/server/coupons";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
 
@@ -11,6 +13,7 @@ const Body = z.object({
   code: z.string().max(40),
   bracelet: z.string().max(60),
   mobile: z.string().regex(/^[6-9]\d{9}$/).optional().or(z.literal("")),
+  extras: z.array(z.string().max(60)).max(2).optional(),
 });
 
 /** Preview a coupon at checkout. The real check happens again when the payment is created. */
@@ -30,7 +33,12 @@ export async function POST(req: Request) {
   const product = await getProduct("bracelet", parsed.data.bracelet);
   if (!product) return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
   try {
-    const r = await checkCoupon(parsed.data.code, product, parsed.data.mobile || undefined);
+    // Same price the checkout will charge: base bracelet plus any extra purposes.
+    const [all, settings] = await Promise.all([getBracelets(), getContent("settings")]);
+    const extras = [...new Set(parsed.data.extras ?? [])].filter((x) => x !== product.slug && all.some((b) => b.slug === x && b.inList));
+    const tiers: Tiers = [settings.defaultPrice, settings.price2, settings.price3];
+    const priceInr = priceFor(product.priceInr, 1 + extras.length, tiers);
+    const r = await checkCoupon(parsed.data.code, { slug: product.slug, title: product.title, priceInr }, parsed.data.mobile || undefined);
     return NextResponse.json(r, { status: r.ok ? 200 : 400, headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     console.error("[coupon]", e instanceof Error ? e.message : e);

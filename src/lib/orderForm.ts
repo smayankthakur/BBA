@@ -17,12 +17,12 @@ const ENTRY = {
 
 /** Website intention slug → the form's "Purpose" option text. */
 export const PURPOSE_LABEL: Record<string, string> = {
-  "better-married-life": "Better Married Life & Relationship",
-  "buri-nazar-protection": "Protect from Negativity & Evil Energies (Buri Nazar)",
-  "better-studies": "Better Studies",
-  "health-and-mental-healing": "Better Overall Health, Emotional & Mental Balance",
-  "love-and-relationships": "Better Love Life & Relationship",
-  "career-and-money": "Better Career & Finance",
+  "married-life": "Better Married Life & Relationship",
+  "buri-nazar": "Protect from Negativity & Evil Energies (Buri Nazar)",
+  studies: "Better Studies",
+  health: "Better Overall Health, Emotional & Mental Balance",
+  "love-life": "Better Love Life & Relationship",
+  "career-and-finance": "Better Career & Finance",
 };
 
 export const WRIST_OPTIONS = {

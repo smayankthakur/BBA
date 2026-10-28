@@ -26,8 +26,8 @@ export async function POST(req: Request) {
   const p = evt.payload?.payment?.entity;
   try {
     if ((evt.event === "order.paid" || evt.event === "payment.captured") && p?.order_id && p.id) {
-      await markPaid(p.order_id, p.id, p.method);
-      await notifyStaffOfPaidOrder(p.order_id).catch((e) =>
+      const mainOrderId = await markPaid(p.order_id, p.id, p.method);
+      await notifyStaffOfPaidOrder(mainOrderId).catch((e) =>
         console.error("[webhook] staff email failed", e instanceof Error ? e.message : e),
       );
     } else if (evt.event === "payment.failed" && p?.order_id) {

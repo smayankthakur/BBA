@@ -16,15 +16,18 @@ export const DEFAULTS = {
     gstin: "",
     grievanceName: "Ammit Kukreja",
     grievanceDesignation: "Founder",
-    defaultPrice: 1199,
+    defaultPrice: 1200,
+    price2: 1900,
+    price3: 3000,
     shippingMinDays: 8,
     shippingMaxDays: 9,
     whatsapp: "https://wa.me/message/ENJCQVDZ2QU4L1",
     instagram: "https://www.instagram.com/braceletbyammit/",
     youtube: "https://www.youtube.com/@braceletbyammit",
     youtubeShorts: "https://www.youtube.com/@braceletbyammit/shorts",
+    reelUrl: "https://www.instagram.com/reel/DG7Kf4kCVvW/",
     instagramReviews: "https://www.instagram.com/stories/highlights/18046452023799577/",
-    announcement: "Every bracelet is read for your date of birth before it's strung.",
+    announcement: "Every bracelet is newly designed for your birth chart · Free shipping",
     announcementLink: "Ask Ammit",
     disclaimer:
       "Crystal and numerology guidance reflects traditional belief and personal experience. It is not a substitute for medical, psychological, legal or financial advice. Results vary from person to person.",
@@ -37,29 +40,33 @@ export const DEFAULTS = {
     ammitPhotoAlt: "Ammit Kukreja, numerologist and founder of Bracelet By Ammit",
     seoTitle: "Bracelet By Ammit — Crystal bracelets chosen for your birth date",
     seoDescription:
-      "Choose the intention. Numerologist Ammit Kukreja chooses the crystals for your birth date, then strings them by hand.",
+      "Charged and analysed crystal bracelets, newly designed for your name, date of birth and purpose by numerologist Ammit Kukreja. Cleansed, energised and shipped free.",
   },
 
   home: {
     heroTitle: "A bracelet for what you're asking of life.",
     heroLede:
-      "Choose the intention. Numerologist Ammit Kukreja chooses the crystals for your birth date, then strings them by hand.",
-    heroPrimary: "Shop by intention",
+      "Choose your purpose. Numerologist Ammit Kukreja studies your name, date of birth and planets, designs a bracelet only for you, then cleanses and energises it before it's sent.",
+    heroPrimary: "Shop by purpose",
     heroSecondary: "Find my bracelet",
-    editTitle: "The intention edit",
-    editLede: "Six bracelets, six purposes, each {{price}}.",
+    editTitle: "Choose your purpose",
+    editLede: "Ten purposes. Every bracelet newly designed for you, {{price}} with free shipping.",
     editHintHover: "Hover to see each one, then choose.",
     editHintTouch: "Tap one to choose.",
-    threeTitle: "Three intentions, one bracelet",
-    threeText:
-      "The 3 in 1 combines love, protection and prosperity on a single strand, balanced for your numbers so the crystals work together.",
-    threeButton: "Build my 3 in 1",
-    threeLink: "See the 3 in 1 →",
-    threeStones: [
-      { name: "Rose quartz", for: "Love", color: "#F2A7A0" },
-      { name: "Black tourmaline", for: "Protection", color: "#16161E" },
-      { name: "Citrine", for: "Prosperity", color: "#E7B32A" },
+    madeTitle: "Newly designed for you. Never a copy.",
+    madeText:
+      "Every bracelet is newly designed keeping your birth chart and purpose in mind. Ammit studies your name, date of birth and the dasha of your planets before choosing a single crystal. Your bracelet is cleansed and energised before it reaches you, and shipping is free.",
+    madePoints: [
+      "100% natural and authentic crystals",
+      "Made only for you: no copies, never the same bracelet twice",
+      "Your birth details and your purpose both studied first",
+      "A photo and full details of your bracelet on WhatsApp before it's couriered",
+      "Cleansed and energised for 1 to 2 days before dispatch",
     ],
+    madeNote: "We don't do any kind of jadu-tona or vashikaran. Only the natural power of crystals and your planets, to bring positivity into your life.",
+    madeButton: "Find my bracelet",
+    madeReelTitle: "How Ammit designs your bracelet",
+    madeReelNote: "Plays from Instagram",
     numberTitle: "Or start with your number",
     numberText:
       "Add the digits of the day you were born until one is left. Born on the 25th? 2 + 5 makes you a 7. Tap your number to see what it means.",
@@ -96,10 +103,10 @@ export const DEFAULTS = {
     ctaButton: "Order my bracelet",
     howTitle: "How your bracelet is made",
     howSteps: [
-      { title: "Choose your intention", text: "Pick the bracelet for what you're asking of life, or the 3 in 1." },
-      { title: "Send your date of birth", text: "Share the full date of birth (and the wearer's, if it's a gift) when you order." },
-      { title: "Ammit reads your numbers", text: "He works out your mulank and bhagyank and chooses the crystals that suit them." },
-      { title: "Strung by hand", text: "Your bracelet is strung by hand and sent to you." },
+      { title: "Choose your purpose", text: "Pick what you'd like your bracelet to support." },
+      { title: "Share your birth details", text: "Name and full date of birth (the wearer's, if it's a gift) when you order." },
+      { title: "Ammit designs it for you", text: "He studies your birth details, planets and purpose, then chooses every crystal. You get a photo and full details on WhatsApp." },
+      { title: "Cleansed, energised, delivered", text: "It's cleansed and energised for 1 to 2 days, then couriered free. About {{minDays}}–{{maxDays}} days in all." },
     ],
     trustShipping: "Free shipping across India",
     trustPayment: "Secure prepaid: UPI, cards, net banking",
@@ -108,20 +115,19 @@ export const DEFAULTS = {
   },
 
   bracelets: {
-    eyebrow: "Shop by intention",
+    eyebrow: "Shop by purpose",
     title: "A bracelet for what you're asking of life",
-    lede: "Choose the intention. Ammit reads your date of birth and chooses the crystals for your numbers, then strings them by hand. Every bracelet is {{price}}.",
+    lede: "Choose your purpose. Every bracelet is newly designed keeping your birth chart and purpose in mind, then cleansed and energised before it's sent. {{price}}, shipping free.",
     button: "Not sure? Take the 60-second reading",
     ctaTitle: "Not sure which one?",
     ctaText: "Take the 60-second reading: we'll work out your numbers and suggest the bracelet that suits them.",
-    seoTitle: "Shop by intention",
-    seoDescription: "Crystal bracelets for every intention, each {{price}}. Ammit Kukreja reads your date of birth before choosing the crystals.",
+    seoTitle: "Shop by purpose",
+    seoDescription: "Crystal bracelets for career, love, health, protection, studies, marriage and more, {{price}}. Newly designed for your birth chart by Ammit Kukreja.",
   },
 
   product: {
-    eyebrow: "Intention bracelet",
-    comboEyebrow: "Three intentions",
-    priceNote: "read for your date of birth · strung by hand",
+    eyebrow: "Purpose bracelet",
+    priceNote: "newly designed for you · free shipping",
     orderButton: "Order this bracelet",
     askButton: "Ask Ammit first",
     hint: "A 60-second reading works out your numbers, then takes you to secure checkout.",
@@ -130,12 +136,12 @@ export const DEFAULTS = {
     forWhomTitle: "This bracelet is for you if…",
     crystalsTitle: "Crystals often used",
     crystalsNote:
-      "These stones are traditionally linked with this intention. Ammit chooses your final stones after reading your numbers, so yours may differ.",
+      "These stones are traditionally linked with this purpose. Ammit chooses your final stones after studying your birth details, so yours may differ.",
     faqTitle: "Questions",
     faqs: [
       {
         q: "How is the {title} bracelet made for me?",
-        a: "Ammit reads the wearer's name and date of birth (mulank and bhagyank), chooses the crystals that suit those numbers for this intention, and the bracelet is strung by hand.",
+        a: "Ammit studies the wearer's name, date of birth and planets together with this purpose, chooses every crystal, and designs a new bracelet. You get a photo and full details on WhatsApp, then it's cleansed, energised and couriered free.",
       },
       {
         q: "Which size should I choose?",
@@ -154,7 +160,7 @@ export const DEFAULTS = {
         a: "No. Crystal and numerology guidance is traditional belief. Please keep following your doctor's or adviser's guidance.",
       },
     ],
-    othersTitle: "Other intentions",
+    othersTitle: "Other purposes",
   },
 
   gifts: {
@@ -218,7 +224,7 @@ export const DEFAULTS = {
     videoId: "CySF-l3yeBQ",
     workTitle: "What Ammit does",
     work: [
-      { title: "Crystal bracelets", text: "Intention bracelets, each read for your date of birth and strung by hand.", cta: "Shop by intention", href: "/bracelets" },
+      { title: "Crystal bracelets", text: "Bracelets for ten purposes, each newly designed for your birth chart.", cta: "Shop by purpose", href: "/bracelets" },
       { title: "Numerology consultations", text: "A one-to-one reading of your numbers, with advice on which crystals suit you.", cta: "About consultations", href: "/consultation" },
       { title: "Videos in Hinglish", text: "Short videos on mulank, number combinations and crystal care, on YouTube and Instagram.", cta: "Watch on YouTube", href: "https://www.youtube.com/@braceletbyammit" },
     ],
@@ -301,12 +307,14 @@ export const DEFAULTS = {
   reviews: {
     eyebrow: "Customer reviews",
     title: "What customers say",
-    lede: "Messages customers have sent Ammit about their bracelets, shared with their words unchanged except for spelling.",
+    lede: "Screenshots of messages customers have sent Ammit about their bracelets, straight from our Instagram.",
+    shotsTitle: "Straight from our Instagram",
+    shots: [] as { image: string; text: string; name: string; link: string }[],
     items: [
-      { quote: "I wore the bracelet in August 2025 and now I have finally received a job offer in a prestigious position in Germany. After wearing it I felt very positive and confident, and my job interviews were successful. I want to thank you from my heart.", name: "Sagnik", intention: "career-and-money", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
+      { quote: "I wore the bracelet in August 2025 and now I have finally received a job offer in a prestigious position in Germany. After wearing it I felt very positive and confident, and my job interviews were successful. I want to thank you from my heart.", name: "Sagnik", intention: "career-and-finance", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
       { quote: "I am wearing the spiritual bracelet you made for me as per the mentioned day and time, and I truly feel thankful for your work. I received great news today and I'm feeling very grateful. Your dedication and positive energy really reflect in your work.", name: "Vishakha", intention: "", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
-      { quote: "This is my 2nd purchase. My first was the love bracelet. I can't even explain it, it was magic: when I started wearing it, everything changed in our relationship. Now this one is for my career. Loads of love, Ammit sir and team.", name: "Customer on WhatsApp", intention: "love-and-relationships", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
-      { quote: "Maine aapse 3rd time bracelet purchase kiya hai. 2021 mein liya tha, phir 2023 mein, aur ab 2026 mein career aur financial ke liye. Aur sach mein yeh bahut achha kaam karta hai. Thank you so much, Ammit sir.", name: "Vijaya", intention: "career-and-money", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
+      { quote: "This is my 2nd purchase. My first was the love bracelet. I can't even explain it, it was magic: when I started wearing it, everything changed in our relationship. Now this one is for my career. Loads of love, Ammit sir and team.", name: "Customer on WhatsApp", intention: "love-life", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
+      { quote: "Maine aapse 3rd time bracelet purchase kiya hai. 2021 mein liya tha, phir 2023 mein, aur ab 2026 mein career aur financial ke liye. Aur sach mein yeh bahut achha kaam karta hai. Thank you so much, Ammit sir.", name: "Vijaya", intention: "career-and-finance", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
       { quote: "Thank you sir for the bracelet which you have made especially for me. It is making things easier for me. People and situations are changing for me, and I'm feeling more positive than ever. Thank you so much.", name: "Customer on WhatsApp", intention: "", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/17972703031853261/" },
       { quote: "The bracelet designed by Ammit ji is working for me. Wanted to thank you guys, and specifically Ammit ji.", name: "Alpana", intention: "", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
       { quote: "Thank you so much for the beautiful bracelet, just received. Bracelet ko open karte hi bahut positive vibes feel hui. Thank you so much.", name: "Deepika", intention: "", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
@@ -406,7 +414,7 @@ Methods differ between numerologists. Some also add the mulank and bhagyank; the
       "Your answers stay in this browser until you place an order. Crystal and numerology guidance is traditional belief, not medical, legal or financial advice.",
     genderTitle: "Who will wear it?",
     genderText: "This sets the wrist sizes we show later.",
-    intentionTitle: "What are you asking of life right now?",
+    intentionTitle: "What would you like your bracelet to help with?",
     intentionTitleGift: "What would you like the bracelet to help them with?",
     proofTitle: "Every bracelet starts with a reading",
     proofText: "Ammit reads the wearer's name and date of birth before he chooses a single crystal. Here's what one customer wrote to him:",
@@ -420,14 +428,14 @@ Methods differ between numerologists. Some also add the mulank and bhagyank; the
     matchingTitle: "Matching crystals to your answers",
     nextSteps: [
       "Add a delivery address and pay securely: UPI, cards or net banking.",
-      "Ammit reads the full numbers and confirms the crystals with you on WhatsApp.",
-      "The bracelet is strung by hand and delivered free in {{minDays}}–{{maxDays}} days.",
+      "Ammit studies your birth details and purpose, designs your bracelet and sends you a photo and full details on WhatsApp.",
+      "It's cleansed and energised for 1 to 2 days, then delivered free. About {{minDays}}–{{maxDays}} days in all.",
     ],
     checkoutTitle: "Delivery and payment",
     confirmedText: "Your {title} bracelet is ordered and paid. Keep your order number {ref} handy.",
     seoTitle: "Find your bracelet: 60-second crystal reading",
     seoDescription:
-      "Answer 7 quick questions to find your mulank, bhagyank and the crystal bracelet that suits your numbers. Strung by hand.",
+      "Answer 7 quick questions to find your mulank, bhagyank and the crystal bracelet for your purpose. Newly designed, cleansed and energised.",
   },
 
   privacy: {
@@ -443,6 +451,8 @@ This website is run by {{legalName}} ("we", "us"), founded by {{founder}}. For a
 ### When you browse this website
 
 The website itself does not ask you to log in and does not set advertising cookies. Our hosting provider (Vercel) keeps standard server logs, such as IP address, browser type and the pages requested, to keep the site secure and working. If we turn on analytics, it only runs after you click "Accept" on the cookie notice, and you can change your mind at any time from the footer.
+
+If you arrive through a link shared by one of our partners (an address with /p/ or ?ref= in it), we store a small cookie for 30 days that says which partner sent you, and a random visitor number so a visit is counted only once a day. If you order in that time, the partner's code is saved with your order so we can pay them their commission. Partners don't see your name, contact details or birth details.
 
 ### When you take the 60-second reading
 
@@ -522,7 +532,7 @@ Numerology readings, crystal suggestions and website content are offered as trad
 
 - Every bracelet is made after we read the wearer's name and date of birth, so details you give us must be accurate.
 - Crystals are natural. Colour, pattern and size vary from stone to stone, and photos and illustrations are a guide only.
-- The crystals named on product pages are those traditionally used for each intention. Ammit chooses the final stones for each wearer, so yours may differ.
+- The crystals named on product pages are those traditionally used for each purpose. Ammit chooses the final stones for each wearer, so yours may differ.
 
 ## Prices and payment
 
@@ -547,11 +557,11 @@ Message us on WhatsApp (link in the footer) or call {{phone}}. Our grievance off
 
   shipping: {
     title: "Shipping and delivery",
-    lede: "Free delivery across India, usually within {{minDays}}–{{maxDays}} days of your order. Every bracelet is read and strung by hand first.",
+    lede: "Free delivery across India, usually within {{minDays}}–{{maxDays}} days of your order. Every bracelet is newly designed, cleansed and energised first.",
     updated: "22 October 2026",
     body: `## Making your bracelet
 
-After your order is confirmed, Ammit reads the wearer's numbers, chooses the crystals and the bracelet is strung by hand. We'll tell you on WhatsApp when it's on its way.
+After your order is confirmed, Ammit studies the wearer's birth details and purpose, chooses the crystals and designs the bracelet. We send you a photo and full details on WhatsApp, then the bracelet is cleansed and energised for 1 to 2 days and couriered (usually 4 to 5 days). We'll tell you on WhatsApp when it's on its way.
 
 ## Where we deliver
 

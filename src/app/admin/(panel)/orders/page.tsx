@@ -159,7 +159,7 @@ export default async function OrdersPage({
                   </span>
                 </td>
                 <td>
-                  {formatINR(o.amount_paise / 100)}
+                  {formatINR((o.amount_paise + (o.upgrade_paise ?? 0)) / 100)}
                   {o.coupon_code && <div className="ad-muted">{o.coupon_code}</div>}
                 </td>
               </tr>

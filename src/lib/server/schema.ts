@@ -15,7 +15,24 @@ export function ensureSchema(): Promise<void> {
   return ready;
 }
 
+/** Bump when the statements below change, so existing databases upgrade once. */
+const SCHEMA_VERSION = 4;
+
 async function migrate() {
+  // Fast path: an up-to-date database needs one query, not dozens.
+  try {
+    const v = await sql<{ v: number }>`select v from schema_version limit 1`;
+    if ((v[0]?.v ?? 0) >= SCHEMA_VERSION) return;
+  } catch {
+    // table doesn't exist yet
+  }
+  await createAll();
+  await sql`create table if not exists schema_version (v integer not null)`;
+  await sql`delete from schema_version`;
+  await sql`insert into schema_version (v) values (${SCHEMA_VERSION})`;
+}
+
+async function createAll() {
   // Orders (checkout)
   await sql`create table if not exists orders (
     id uuid primary key default gen_random_uuid(),
@@ -62,6 +79,61 @@ async function migrate() {
   await sql`alter table orders add column if not exists updated_at timestamptz`;
   await sql`alter table orders add column if not exists coupon_code text`;
   await sql`alter table orders add column if not exists discount_paise integer not null default 0`;
+
+  // Purposes and top-ups (Oct 2026)
+  await sql`alter table orders add column if not exists purposes text[] not null default '{}'`;
+  await sql`alter table orders add column if not exists upgrade_paise integer not null default 0`;
+  await sql`create table if not exists order_upgrades (
+    id uuid primary key default gen_random_uuid(),
+    order_id uuid not null references orders(id) on delete cascade,
+    razorpay_order_id text not null unique,
+    razorpay_payment_id text,
+    add_slugs text[] not null,
+    add_titles text[] not null,
+    amount_paise integer not null,
+    status text not null default 'pending' check (status in ('pending', 'paid', 'failed')),
+    created_at timestamptz not null default now(),
+    paid_at timestamptz
+  )`;
+
+  // Partner programme
+  await sql`alter table orders add column if not exists partner_code text`;
+  await sql`alter table orders add column if not exists partner_kind text`;
+  await sql`alter table orders add column if not exists partner_rate integer`;
+  await sql`alter table orders add column if not exists commission_paise integer not null default 0`;
+  await sql`create table if not exists partners (
+    id uuid primary key default gen_random_uuid(),
+    code text not null unique,
+    name text not null,
+    phone text not null default '',
+    email text not null default '',
+    kind text not null check (kind in ('percent', 'flat')),
+    rate integer not null check (rate >= 0),
+    notes text not null default '',
+    active boolean not null default true,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  )`;
+  await sql`create table if not exists partner_clicks (
+    id bigserial primary key,
+    partner_code text not null,
+    visitor text not null,
+    day date not null default (now() at time zone 'Asia/Kolkata')::date,
+    landing text,
+    at timestamptz not null default now(),
+    unique (partner_code, visitor, day)
+  )`;
+  await sql`create table if not exists partner_payouts (
+    id uuid primary key default gen_random_uuid(),
+    partner_id uuid not null references partners(id) on delete cascade,
+    amount_paise integer not null check (amount_paise > 0),
+    paid_on date not null,
+    reference text not null default '',
+    note text not null default '',
+    created_by uuid,
+    created_at timestamptz not null default now()
+  )`;
+  await sql`create index if not exists orders_partner_idx on orders (partner_code) where partner_code is not null`;
 
   // Coupons (discount codes)
   await sql`create table if not exists coupons (

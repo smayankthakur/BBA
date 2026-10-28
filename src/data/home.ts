@@ -14,8 +14,8 @@ export const LINKS = {
   instagramReviews: "https://www.instagram.com/stories/highlights/18046452023799577/",
 } as const;
 
-/** Every bracelet is the same price for now. The server charges PRICE_INR (never a client-sent amount). */
-export const PRICE_INR = 1199;
+/** Price of a bracelet made for one purpose (2 and 3 purposes are set in Settings). */
+export const PRICE_INR = 1200;
 export const PRICE = `₹${PRICE_INR.toLocaleString("en-IN")}`;
 
 /** Shipping promise shown next to prices (confirmed by Ammit, 25 Oct 2026). */
@@ -53,126 +53,122 @@ export type Intention = {
   rings: [[string, string, string], [string, string, string], [string, string, string]];
 };
 
+/** Builds the card gradients and bead rings from three bead colours and a soft card tint. */
+function look(a: string, b: string, c: string, tint: [string, string]): Pick<Intention, "cards" | "rings"> {
+  return {
+    cards: [`linear-gradient(160deg,${tint[0]},${tint[1]})`, `linear-gradient(200deg,#FFFFFF,${tint[0]})`, `linear-gradient(180deg,${tint[0]},${tint[1]})`],
+    rings: [
+      [a, b, c],
+      [b, a, a],
+      [c, a, b],
+    ],
+  };
+}
+
+/**
+ * The ten purposes (client's list, 28 Oct 2026). Order = order on the site.
+ * Every bracelet is newly designed for the wearer; one purpose is the price
+ * shown on the site, extra purposes are offered at checkout.
+ */
 export const INTENTIONS: Intention[] = [
   {
-    slug: "better-married-life",
-    title: "Better married life",
-    blurb: "Patience, warmth and fewer arguments at home.",
-    price: PRICE,
-    sphere: "#F2A7A0",
-    sphereShade: "rgba(120,20,40,.35)",
-    cards: [
-      "linear-gradient(160deg,#FBE9EA,#F2C9CC)",
-      "linear-gradient(200deg,#FFF4F0,#F4D6CF)",
-      "linear-gradient(180deg,#F6EEF0,#E9D3D8)",
-    ],
-    rings: [
-      ["#F2A7A0", "#FFFFFF", "#8E1F3A"],
-      ["#8E1F3A", "#F2A7A0", "#FFFFFF"],
-      ["#FFFFFF", "#8E1F3A", "#F2A7A0"],
-    ],
-  },
-  {
-    slug: "buri-nazar-protection",
-    title: "Buri nazar protection",
-    blurb: "A shield against the evil eye for you and your family.",
-    price: PRICE,
-    sphere: "#1C1C26",
-    sphereShade: "rgba(0,0,0,.45)",
-    sphereGloss: 0.85,
-    cards: [
-      "linear-gradient(160deg,#E3E6F2,#C3C8DE)",
-      "linear-gradient(200deg,#E8EAF4,#CDD1E4)",
-      "linear-gradient(180deg,#DDE1EE,#B6BCD6)",
-    ],
-    rings: [
-      ["#16161E", "#1B4FD8", "#3A3A4A"],
-      ["#1B4FD8", "#16161E", "#16161E"],
-      ["#3A3A4A", "#16161E", "#1B4FD8"],
-    ],
-  },
-  {
-    slug: "better-studies",
-    title: "Better studies",
-    blurb: "Focus, memory and calm before exams.",
-    price: PRICE,
-    sphere: "#7A3FC0",
-    sphereShade: "rgba(40,10,70,.45)",
-    cards: [
-      "linear-gradient(160deg,#EEE6F8,#D6C6EE)",
-      "linear-gradient(200deg,#F1ECF9,#DCD0F0)",
-      "linear-gradient(180deg,#E9E1F6,#CFBDEA)",
-    ],
-    rings: [
-      ["#7A3FC0", "#6BBFA3", "#EDEFF5"],
-      ["#6BBFA3", "#7A3FC0", "#7A3FC0"],
-      ["#EDEFF5", "#7A3FC0", "#6BBFA3"],
-    ],
-  },
-  {
-    slug: "health-and-mental-healing",
-    title: "Health and mental healing",
-    blurb: "Support for body and mind while you recover.",
-    price: PRICE,
-    sphere: "#2E9E4F",
-    sphereShade: "rgba(10,50,20,.4)",
-    cards: [
-      "linear-gradient(160deg,#E3F1E7,#C3E0CB)",
-      "linear-gradient(200deg,#EAF4ED,#CFE6D6)",
-      "linear-gradient(180deg,#DDEEE2,#B7D9C1)",
-    ],
-    rings: [
-      ["#2E9E4F", "#EDEFF5", "#7A3FC0"],
-      ["#EDEFF5", "#2E9E4F", "#2E9E4F"],
-      ["#7A3FC0", "#2E9E4F", "#EDEFF5"],
-    ],
-  },
-  {
-    slug: "love-and-relationships",
-    title: "Love and relationships",
-    blurb: "Attract the right person, or bring closeness back.",
-    price: PRICE,
-    sphere: "#D96B86",
-    sphereShade: "rgba(110,20,50,.38)",
-    cards: [
-      "linear-gradient(160deg,#FBE4EA,#F1C2CF)",
-      "linear-gradient(200deg,#FDEDF1,#F4CFD9)",
-      "linear-gradient(180deg,#F8DDE5,#EDB5C5)",
-    ],
-    rings: [
-      ["#D96B86", "#F7D7DA", "#F2A7A0"],
-      ["#F2A7A0", "#D96B86", "#D96B86"],
-      ["#F7D7DA", "#D96B86", "#F2A7A0"],
-    ],
-  },
-  {
-    slug: "career-and-money",
-    title: "Career and money",
+    slug: "career-and-finance",
+    title: "Better Career & Finance",
     blurb: "Growth at work, steady income, sharper decisions.",
     price: PRICE,
     sphere: "#E7B32A",
     sphereShade: "rgba(110,70,10,.4)",
-    cards: [
-      "linear-gradient(160deg,#FAF0D6,#EBD49A)",
-      "linear-gradient(200deg,#FBF4E2,#EFDCAC)",
-      "linear-gradient(180deg,#F7EACB,#E6CB86)",
-    ],
-    rings: [
-      ["#E7B32A", "#A0602A", "#B8913D"],
-      ["#A0602A", "#E7B32A", "#E7B32A"],
-      ["#B8913D", "#E7B32A", "#A0602A"],
-    ],
+    ...look("#E7B32A", "#A0602A", "#B8913D", ["#FAF0D6", "#EBD49A"]),
+  },
+  {
+    slug: "love-life",
+    title: "Better Love Life",
+    blurb: "Attract the right person, or bring closeness back.",
+    price: PRICE,
+    sphere: "#D96B86",
+    sphereShade: "rgba(110,20,50,.38)",
+    ...look("#D96B86", "#F7D7DA", "#F2A7A0", ["#FBE4EA", "#F1C2CF"]),
+  },
+  {
+    slug: "clarity-and-confidence",
+    title: "Clarity & Confidence",
+    blurb: "A clearer head, firmer decisions and the courage to act.",
+    price: PRICE,
+    sphere: "#3D6FD9",
+    sphereShade: "rgba(10,30,90,.42)",
+    ...look("#3D6FD9", "#E7B32A", "#EDEFF5", ["#E4EBFA", "#C5D3F2"]),
+  },
+  {
+    slug: "health",
+    title: "Health",
+    blurb: "Support for body and mind, day to day and while you recover.",
+    price: PRICE,
+    sphere: "#2E9E4F",
+    sphereShade: "rgba(10,50,20,.4)",
+    ...look("#2E9E4F", "#EDEFF5", "#7A3FC0", ["#E3F1E7", "#C3E0CB"]),
+  },
+  {
+    slug: "buri-nazar",
+    title: "Buri Nazar & Protection from Negative Energies",
+    blurb: "A shield against the evil eye and negativity, for you and your family.",
+    price: PRICE,
+    sphere: "#1C1C26",
+    sphereShade: "rgba(0,0,0,.45)",
+    sphereGloss: 0.85,
+    ...look("#16161E", "#1B4FD8", "#3A3A4A", ["#E3E6F2", "#C3C8DE"]),
+  },
+  {
+    slug: "self-healing",
+    title: "Self Healing",
+    blurb: "Calm, inner balance and letting go of what weighs on you.",
+    price: PRICE,
+    sphere: "#4FA79A",
+    sphereShade: "rgba(10,60,55,.4)",
+    ...look("#4FA79A", "#B79BE0", "#F2D4DA", ["#E2F2EF", "#C2E2DC"]),
+  },
+  {
+    slug: "married-life",
+    title: "Better Married Life",
+    blurb: "Patience, warmth and fewer arguments at home.",
+    price: PRICE,
+    sphere: "#F2A7A0",
+    sphereShade: "rgba(120,20,40,.35)",
+    ...look("#F2A7A0", "#FFFFFF", "#8E1F3A", ["#FBE9EA", "#F2C9CC"]),
+  },
+  {
+    slug: "studies",
+    title: "Studies",
+    blurb: "Focus, memory and calm before exams.",
+    price: PRICE,
+    sphere: "#7A3FC0",
+    sphereShade: "rgba(40,10,70,.45)",
+    ...look("#7A3FC0", "#6BBFA3", "#EDEFF5", ["#EEE6F8", "#D6C6EE"]),
+  },
+  {
+    slug: "delay-in-marriage",
+    title: "Delay in Marriage",
+    blurb: "For when the right match keeps getting delayed.",
+    price: PRICE,
+    sphere: "#B8325A",
+    sphereShade: "rgba(90,10,35,.42)",
+    ...look("#B8325A", "#F7D7DA", "#E3C67C", ["#F9E3EA", "#EFC0CF"]),
+  },
+  {
+    slug: "weight-loss",
+    title: "Weight Loss",
+    blurb: "Motivation and discipline for your fitness journey.",
+    price: PRICE,
+    sphere: "#E07A2E",
+    sphereShade: "rgba(110,45,10,.4)",
+    ...look("#E07A2E", "#5AA9C8", "#F3D9B8", ["#FBEBDD", "#F2CFAE"]),
   },
 ];
 
 /** Bead colours cycling around the hero bracelet */
 export const HERO_BEADS = ["#050E8F", "#DCE0EE", "#7A3FC0"] as const;
 
-/** Ring colours in the "3 in 1" band: love, protection, prosperity */
-/** Shown on every product and gift photo. */
 export const REF_NOTE = "This is a reference image, your bracelet will be customized according to you.";
 
-export const THREE_IN_ONE_RINGS = ["#F2A7A0", "#16161E", "#E7B32A"] as const;
 
 export const MULANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 

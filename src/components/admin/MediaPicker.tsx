@@ -11,7 +11,9 @@ export default function MediaPicker({
   multiple = false,
   onPick,
   onClose,
+  addLabel = "Add to product",
 }: {
+  addLabel?: string;
   multiple?: boolean;
   onPick: (urls: string[]) => void;
   onClose: () => void;
@@ -176,7 +178,7 @@ export default function MediaPicker({
               onClose();
             }}
           >
-            {multiple ? "Add to product" : "Use this photo"}
+            {multiple ? addLabel : "Use this photo"}
           </button>
         </div>
       </div>

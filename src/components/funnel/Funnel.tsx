@@ -15,6 +15,7 @@ import { deliveryWindow } from "@/lib/delivery";
 import { ageFrom, bhagyank, isValidDate, mulank } from "@/lib/numerology";
 import { WRIST_OPTIONS, type Gender } from "@/lib/orderForm";
 import { track } from "@/lib/analytics";
+import { MAX_PURPOSES, extraFor, priceFor, type Tiers } from "@/lib/pricing";
 
 /* ------------------------------------------------------------------ */
 /* Steps                                                               */
@@ -25,17 +26,16 @@ type StepId = (typeof STEPS)[number];
 /** Steps that count towards "Question x of y" */
 const QUESTIONS: StepId[] = ["who", "gender", "intention", "focus", "name", "dob", "wrist"];
 
-/** Intentions that the 3 in 1 (love · protection · prosperity) covers */
-const THREE_IN_ONE = new Set(["better-married-life", "love-and-relationships", "buri-nazar-protection", "career-and-money"]);
-const COMBO_SLUG = "3-in-1";
 
 export type FunnelData = {
   products: (FunnelProduct & { listA: string[] })[];
   mulank: { number: number; planet: string; planetHindi: string; traits: string[] }[];
-  review: { quote: string; name: string; sourceLabel: string; sourceUrl: string } | null;
+  review: { quote: string; name: string; sourceLabel: string; sourceUrl: string; image?: string } | null;
   copy: Content<"funnel">;
   trust: TrustText;
   refNote: string;
+  /** Prices for 1, 2 and 3 purposes in one bracelet */
+  tiers: Tiers;
 };
 const MAX_INTENTIONS = 3;
 
@@ -155,6 +155,76 @@ function Glyph({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * "Add another purpose to the same bracelet": chips for the other purposes,
+ * the ones the customer already picked in the reading first.
+ */
+function PurposeAdd({
+  choices,
+  suggested,
+  selected,
+  locked,
+  onChange,
+  nextPrice,
+  title,
+  text,
+  idBase,
+}: {
+  choices: { slug: string; title: string }[];
+  suggested: string[];
+  selected: string[];
+  locked: string[];
+  onChange: (next: string[]) => void;
+  nextPrice: number | null;
+  title: string;
+  text: string;
+  idBase: string;
+}) {
+  const room = MAX_PURPOSES - locked.length;
+  const list = [...choices].filter((c) => !locked.includes(c.slug)).sort((a, b) => Number(suggested.includes(b.slug)) - Number(suggested.includes(a.slug)));
+  return (
+    <section className="fn-addon" aria-labelledby={`${idBase}-title`}>
+      <h2 id={`${idBase}-title`} className="fn-addon-title">
+        {title}
+      </h2>
+      <p className="fn-addon-text">
+        {text}
+        {nextPrice !== null && (
+          <>
+            {" "}
+            <b>
+              {locked.length + selected.length === 1 ? "2nd purpose" : "3rd purpose"}: +{formatINR(nextPrice)}
+            </b>
+          </>
+        )}
+      </p>
+      <ul className="fn-addon-list">
+        {list.map((c) => {
+          const on = selected.includes(c.slug);
+          const full = !on && selected.length >= room;
+          return (
+            <li key={c.slug}>
+              <button
+                type="button"
+                className={`fn-addon-chip${on ? " is-on" : ""}`}
+                aria-pressed={on}
+                disabled={full}
+                onClick={() => onChange(on ? selected.filter((x) => x !== c.slug) : [...selected, c.slug])}
+              >
+                <span aria-hidden="true">{on ? "✓" : "+"}</span>
+                <span className="t">
+                  {c.title}
+                  {suggested.includes(c.slug) && !on && <small>You chose this</small>}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Funnel                                                              */
 /* ------------------------------------------------------------------ */
@@ -171,12 +241,20 @@ export default function Funnel({ data }: { data: FunnelData }) {
   const [showErrors, setShowErrors] = useState(false);
   const [payState, setPayState] = useState<{ status: "idle" | "working" | "error"; message?: string }>({ status: "idle" });
   const [orderRef, setOrderRef] = useState("");
+  // Extra purposes in the same bracelet (offered at checkout, and after payment).
+  const [extras, setExtras] = useState<string[]>([]);
+  const [paidPurposes, setPaidPurposes] = useState<string[]>([]);
+  const [mainRzpOrder, setMainRzpOrder] = useState("");
+  const [topUp, setTopUp] = useState<string[]>([]);
+  const [topUpState, setTopUpState] = useState<{ status: "idle" | "working" | "error" | "done"; message?: string }>({ status: "idle" });
   // Coupon: the server decides the discount; this only shows it.
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; discountInr: number; totalInr: number } | null>(null);
   const [couponMsg, setCouponMsg] = useState<{ busy?: boolean; error?: string } | null>(null);
   const couponAuto = useRef(false);
+  const appliedCode = useRef("");
+  const urlCoupon = useRef("");
   const utmRef = useRef<Record<string, string>>({});
   const headingRef = useRef<HTMLHeadingElement>(null);
   const step = STEPS[i];
@@ -203,14 +281,10 @@ export default function Funnel({ data }: { data: FunnelData }) {
     if (cq) {
       setCouponInput(cq);
       setCouponOpen(true);
+      urlCoupon.current = cq;
     }
     const wanted = q.get("intention");
-    const preset =
-      wanted === "3-in-1"
-        ? ["love-and-relationships", "buri-nazar-protection", "career-and-money"]
-        : INTENTION_CHOICES.some((b) => b.slug === wanted)
-          ? [wanted as string]
-          : [];
+    const preset = INTENTION_CHOICES.some((b) => b.slug === wanted) ? [wanted as string] : [];
     if (preset.length || q.get("for") === "gift") {
       setA((s) => ({ ...s, intentions: preset, who: q.get("for") === "gift" ? "gift" : s.who }));
     }
@@ -253,12 +327,12 @@ export default function Funnel({ data }: { data: FunnelData }) {
   const bh = dobValid ? bhagyank(a.day!, a.month!, a.year!) : undefined;
   const mInfo = MULANK.find((x) => x.number === m);
   const primary = a.intentions[0];
-  const recSlug = useMemo(() => {
-    if (a.intentions.length >= 2 && a.intentions.every((s) => THREE_IN_ONE.has(s)) && data.products.some((b) => b.slug === COMBO_SLUG)) return COMBO_SLUG;
-    return primary;
-  }, [a.intentions, primary]);
+  const recSlug = primary;
   const rec = recSlug ? braceletBySlug(recSlug) : undefined;
-  const total = rec ? (coupon ? coupon.totalInr : rec.priceInr) : 0;
+  const tiers = data.tiers;
+  const listTotal = rec ? priceFor(rec.priceInr, 1 + extras.length, tiers) : 0;
+  const total = rec ? (coupon ? coupon.totalInr : listTotal) : 0;
+  const nextExtra = rec && extras.length < MAX_PURPOSES - 1 ? extraFor(rec.priceInr, 1 + extras.length, 2 + extras.length, tiers) : null;
 
   const applyCoupon = useCallback(
     async (raw: string) => {
@@ -272,11 +346,12 @@ export default function Funnel({ data }: { data: FunnelData }) {
       const res = await fetch("/api/checkout/coupon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, bracelet: rec.slug, mobile: /^[6-9]\d{9}$/.test(co.mobile.trim()) ? co.mobile.trim() : "" }),
+        body: JSON.stringify({ code, bracelet: rec.slug, extras, mobile: /^[6-9]\d{9}$/.test(co.mobile.trim()) ? co.mobile.trim() : "" }),
       }).catch(() => null);
       const data = res ? await res.json().catch(() => ({})) : {};
       if (res?.ok && data.ok) {
         setCoupon({ code: data.code, discountInr: data.discountInr, totalInr: data.totalInr });
+        appliedCode.current = data.code;
         setCouponMsg(null);
         track("apply_coupon", { coupon: data.code, bracelet: rec.slug });
       } else {
@@ -284,21 +359,27 @@ export default function Funnel({ data }: { data: FunnelData }) {
         setCouponMsg({ error: data.error ?? "Couldn't check the coupon. Please try again." });
       }
     },
-    [rec, co.mobile],
+    [rec, co.mobile, extras],
   );
 
   // A different bracelet means the coupon has to be checked again.
   useEffect(() => {
     setCoupon(null);
+    setExtras([]);
     couponAuto.current = false;
   }, [rec?.slug]);
+  // Adding or removing a purpose changes the price, so re-check an applied coupon.
+  useEffect(() => {
+    if (appliedCode.current && step === "checkout") applyCoupon(appliedCode.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extras]);
   // Apply a code from an offer link once the customer reaches checkout.
   useEffect(() => {
-    if (step === "checkout" && couponInput && !coupon && !couponAuto.current) {
+    if (step === "checkout" && urlCoupon.current && !coupon && !couponAuto.current) {
       couponAuto.current = true;
-      applyCoupon(couponInput);
+      applyCoupon(urlCoupon.current);
     }
-  }, [step, couponInput, coupon, applyCoupon]);
+  }, [step, coupon, applyCoupon]);
   const primaryDetail = primary ? braceletBySlug(primary) : undefined;
   const wristChoices =
     a.gender === "female" ? WRIST_OPTIONS.female : a.gender === "male" ? WRIST_OPTIONS.male : [...WRIST_OPTIONS.female, ...WRIST_OPTIONS.male];
@@ -475,7 +556,24 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 {copy.proofTitle}
               </h1>
               <p className="fn-sub">{copy.proofText}</p>
-              {data.review && (
+              {data.review?.image && (
+                <figure className="fn-shot">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={data.review.image}
+                    alt={data.review.quote ? `Instagram review: ${data.review.quote}` : "Instagram review screenshot"}
+                    loading="lazy"
+                  />
+                  {data.review.sourceUrl && (
+                    <figcaption>
+                      <a href={data.review.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        {data.review.sourceLabel}
+                      </a>
+                    </figcaption>
+                  )}
+                </figure>
+              )}
+              {data.review && !data.review.image && (
                 <figure className="fn-quote">
                   <span className="review-mark" aria-hidden="true">
                     &ldquo;
@@ -716,9 +814,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 {a.focus && a.focus !== "Something else" && <li>{a.focus}</li>}
               </ul>
               <p className="fn-sub">
-                {recSlug === "3-in-1"
-                  ? "You picked more than one intention, so the 3 in 1 puts love, protection and prosperity on a single strand, balanced for your numbers."
-                  : rec.blurb}
+                {rec.blurb}
               </p>
               <div className="fn-crystals">
                 <p className="fn-label">Crystals often used</p>
@@ -831,6 +927,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       marketing: co.marketing,
                       utm: utmRef.current,
                       ...(coupon ? { coupon: coupon.code } : {}),
+                      extras,
                     }),
                   });
                   const data = await res.json().catch(() => ({}));
@@ -852,7 +949,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     amount: data.amount,
                     currency: data.currency,
                     name: "Bracelet By Ammit",
-                    description: `${rec.title} bracelet`,
+                    description: `${[rec.title, ...extras.map((x) => braceletBySlug(x)?.title ?? x)].join(" + ")} bracelet`,
                     image: `${window.location.origin}/brand/emblem.png`,
                     prefill: { name: co.deliveryName, email: co.email.trim() || undefined, contact: `+91${co.mobile.trim()}` },
                     notes: { ref: data.ref },
@@ -870,6 +967,8 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       const vd = v ? await v.json().catch(() => ({})) : {};
                       if (v && v.ok) {
                         setOrderRef(data.ref);
+                        setMainRzpOrder(data.orderId);
+                        setPaidPurposes([rec.slug, ...extras]);
                         setPayState({ status: "idle" });
                         track("purchase", { transaction_id: data.ref, value: data.amount / 100, currency: "INR", ...(coupon ? { coupon: coupon.code } : {}) }, "Purchase");
                         goTo(STEPS.indexOf("confirmed"));
@@ -905,6 +1004,15 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   </span>
                   <span>{formatINR(rec.priceInr)}</span>
                 </div>
+                {extras.map((x, n) => (
+                  <div className="fn-summary-row is-extra" key={x}>
+                    <span>
+                      + {braceletBySlug(x)?.title ?? x}
+                      <small>{n === 0 ? "2nd purpose, same bracelet" : "3rd purpose, same bracelet"}</small>
+                    </span>
+                    <span>+{formatINR(extraFor(rec.priceInr, 1 + n, 2 + n, tiers))}</span>
+                  </div>
+                ))}
                 {coupon && (
                   <div className="fn-summary-row is-discount">
                     <span>
@@ -915,6 +1023,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                         onClick={() => {
                           setCoupon(null);
                           setCouponMsg(null);
+                          appliedCode.current = "";
                         }}
                       >
                         Remove
@@ -973,6 +1082,18 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   ))}
                 <p className="fn-summary-eta">Estimated delivery: {win()}</p>
               </div>
+
+              <PurposeAdd
+                idBase="fn-add"
+                title={gift ? "Add another purpose to their bracelet" : "Add another purpose to the same bracelet"}
+                text="Ammit can design one bracelet for up to 3 purposes, balancing the crystals for all of them."
+                choices={INTENTION_CHOICES.map((b) => ({ slug: b.slug, title: b.title }))}
+                suggested={a.intentions.filter((x) => x !== rec.slug)}
+                locked={[rec.slug]}
+                selected={extras}
+                onChange={setExtras}
+                nextPrice={nextExtra}
+              />
 
               <fieldset className="fn-fieldset">
                 <legend>Contact</legend>
@@ -1098,6 +1219,93 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <p className="fn-sub">
                 {fill(copy.confirmedText, { title: rec.title, ref: orderRef })}
               </p>
+              {paidPurposes.length > 0 && paidPurposes.length < MAX_PURPOSES && mainRzpOrder && topUpState.status !== "done" && (
+                <div className="fn-topup">
+                  <PurposeAdd
+                    idBase="fn-topup"
+                    title="Before Ammit starts: add another purpose?"
+                    text={`Your bracelet hasn't been designed yet, so Ammit can still build ${paidPurposes.length === 1 ? "a 2nd purpose" : "a 3rd purpose"} into it.`}
+                    choices={INTENTION_CHOICES.map((b) => ({ slug: b.slug, title: b.title }))}
+                    suggested={a.intentions.filter((x) => !paidPurposes.includes(x))}
+                    locked={paidPurposes}
+                    selected={topUp}
+                    onChange={setTopUp}
+                    nextPrice={
+                      paidPurposes.length + topUp.length < MAX_PURPOSES
+                        ? extraFor(rec.priceInr, paidPurposes.length + topUp.length, paidPurposes.length + topUp.length + 1, tiers)
+                        : null
+                    }
+                  />
+                  {topUp.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-gold"
+                      disabled={topUpState.status === "working"}
+                      onClick={async () => {
+                        setTopUpState({ status: "working" });
+                        try {
+                          const res = await fetch("/api/checkout/upgrade", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderId: mainRzpOrder, add: topUp }),
+                          });
+                          const d = await res.json().catch(() => ({}));
+                          if (!res.ok) return setTopUpState({ status: "error", message: d.error ?? "Something went wrong. Please try again." });
+                          if (!(await loadRazorpay()) || !window.Razorpay) return setTopUpState({ status: "error", message: "The payment window couldn't load. Please try again." });
+                          const added = topUp.map((x) => braceletBySlug(x)?.title ?? x);
+                          const rzp = new window.Razorpay({
+                            key: d.keyId,
+                            order_id: d.orderId,
+                            amount: d.amount,
+                            currency: d.currency,
+                            name: "Bracelet By Ammit",
+                            description: `Add ${added.join(" + ")} to order ${d.ref}`,
+                            image: `${window.location.origin}/brand/emblem.png`,
+                            prefill: d.prefill,
+                            notes: { ref: d.ref },
+                            theme: { color: "#050E8F" },
+                            modal: { ondismiss: () => setTopUpState({ status: "idle" }) },
+                            handler: async (r: RzpResponse) => {
+                              setTopUpState({ status: "working", message: "Confirming your payment…" });
+                              const v = await fetch("/api/checkout/verify", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(r),
+                              }).catch(() => null);
+                              if (v?.ok) {
+                                setPaidPurposes((p) => [...p, ...topUp]);
+                                setTopUp([]);
+                                setTopUpState({ status: "done", message: `Added ${added.join(" and ")}. Ammit will design your bracelet for all of them.` });
+                                track("purchase", { transaction_id: `${d.ref}-up`, value: d.amount / 100, currency: "INR", upgrade: 1 }, "Purchase");
+                              } else {
+                                setTopUpState({ status: "error", message: `We couldn't confirm the payment. If money was taken, contact us with reference ${d.ref}.` });
+                              }
+                            },
+                          });
+                          rzp.on("payment.failed", (r) => setTopUpState({ status: "error", message: r.error?.description ?? "Payment failed. Please try again." }));
+                          rzp.open();
+                        } catch {
+                          setTopUpState({ status: "error", message: "Something went wrong. Please try again." });
+                        }
+                      }}
+                    >
+                      {topUpState.status === "working"
+                        ? topUpState.message ?? "Opening secure payment…"
+                        : `Add for ${formatINR(extraFor(rec.priceInr, paidPurposes.length, paidPurposes.length + topUp.length, tiers))}`}
+                    </button>
+                  )}
+                  {topUpState.status === "error" && (
+                    <p className="fn-error" role="alert">
+                      {topUpState.message}
+                    </p>
+                  )}
+                </div>
+              )}
+              {topUpState.status === "done" && (
+                <p className="fn-topup-done" role="status">
+                  {topUpState.message}
+                </p>
+              )}
               <ol className="num-list fn-next">
                 <li>Ammit reads {gift ? `${a.firstName.trim()}'s` : "your"} full name and date of birth and chooses the crystals.</li>
                 <li>We&apos;ll message you on WhatsApp at +91 {co.mobile} with any questions and your tracking details.</li>

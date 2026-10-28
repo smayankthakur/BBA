@@ -2,7 +2,7 @@
 // Ammit's practice, never as guaranteed results. Anything marked CONFIRM needs
 // the client's sign-off before public launch.
 
-import { INTENTIONS, PRICE, THREE_IN_ONE_RINGS, type Intention } from "./home";
+import { INTENTIONS, PRICE, type Intention } from "./home";
 
 /* ------------------------------------------------------------------ */
 /* Bracelets                                                           */
@@ -29,72 +29,13 @@ export type BraceletDetail = {
   rings: Intention["rings"];
 };
 
+const MADE = "Every bracelet is newly designed for the wearer, keeping their birth chart and purpose in mind, then cleansed and energised before it's sent.";
+
 const DETAILS: Record<string, Omit<BraceletDetail, "slug" | "title" | "blurb" | "sphere" | "sphereShade" | "sphereGloss" | "cards" | "rings">> = {
-  "better-married-life": {
-    intro: [
-      "Small arguments that never quite end, distance that creeps in, patience that runs out. This bracelet is made for couples who want more warmth and understanding at home.",
-      "Ammit reads your date of birth first, and your partner's if you share it, then chooses crystals traditionally linked with harmony, patience and affection.",
-    ],
-    forWhom: [
-      "You want fewer arguments and more patience at home",
-      "You feel you and your partner have drifted apart",
-      "You're newly married and want to start on a calm footing",
-    ],
-    crystals: ["Rose quartz", "Moonstone", "Garnet"],
-  },
-  "buri-nazar-protection": {
-    intro: [
-      "When things that were going well suddenly stop, many families feel it's buri nazar. This bracelet is made as a protective shield for you and the people close to you.",
-      "Ammit chooses grounding, protective stones that suit your numbers, so the protection sits comfortably with the rest of your chart.",
-    ],
-    forWhom: [
-      "You feel things keep going wrong without a clear reason",
-      "You're starting something new and want protection around it",
-      "You want a protective bracelet for a child or family member",
-    ],
-    crystals: ["Black tourmaline", "Black obsidian", "Lapis lazuli"],
-  },
-  "better-studies": {
-    intro: [
-      "For students who sit down to study and find their mind elsewhere. This bracelet is made for focus, memory and a calmer head before exams.",
-      "Parents often order it for their children. Send the student's date of birth and Ammit chooses the stones for their numbers, not yours.",
-    ],
-    forWhom: [
-      "You find it hard to concentrate for long",
-      "Exam nerves get in the way of what you know",
-      "You're preparing for a competitive or government exam",
-    ],
-    crystals: ["Amethyst", "Green fluorite", "Clear quartz"],
-  },
-  "health-and-mental-healing": {
-    intro: [
-      "For anyone going through a difficult stretch, physically or mentally, who wants something calming to wear while they recover.",
-      "Ammit chooses stones traditionally associated with calm, balance and renewal, matched to your date of birth.",
-    ],
-    forWhom: [
-      "You're recovering and want support that feels steady",
-      "Stress or worry has been weighing on you",
-      "You want to feel calmer and more balanced day to day",
-    ],
-    crystals: ["Green aventurine", "Amethyst", "Clear quartz"],
-    note: "Crystals are worn alongside medical care, never instead of it. Please keep following your doctor's advice.",
-  },
-  "love-and-relationships": {
-    intro: [
-      "Whether you're hoping to meet the right person or want closeness back in a relationship you already have, this bracelet is made for love.",
-      "Ammit reads your numbers before choosing the stones, so the bracelet supports what you're looking for in a way that suits you.",
-    ],
-    forWhom: [
-      "You're single and want to attract the right person",
-      "You want to rebuild trust or closeness with your partner",
-      "You'd like more self-love and confidence",
-    ],
-    crystals: ["Rose quartz", "Rhodonite", "Strawberry quartz"],
-  },
-  "career-and-money": {
+  "career-and-finance": {
     intro: [
       "For growth at work, a steadier income and sharper decisions. This bracelet is made for people who are putting in the effort and want things to move.",
-      "Ammit chooses stones traditionally linked with confidence, abundance and clear thinking, matched to your numbers.",
+      `Ammit studies your name, date of birth and the dasha of your planets, then chooses crystals traditionally linked with confidence, abundance and clear thinking. ${MADE}`,
     ],
     forWhom: [
       "You're working hard but feel stuck at the same level",
@@ -103,57 +44,149 @@ const DETAILS: Record<string, Omit<BraceletDetail, "slug" | "title" | "blurb" | 
     ],
     crystals: ["Citrine", "Tiger eye", "Pyrite"],
   },
-};
-
-export const BRACELETS: BraceletDetail[] = [
-  ...INTENTIONS.map((it) => ({
-    slug: it.slug,
-    title: it.title,
-    blurb: it.blurb,
-    sphere: it.sphere,
-    sphereShade: it.sphereShade,
-    sphereGloss: it.sphereGloss,
-    cards: it.cards,
-    rings: it.rings,
-    ...DETAILS[it.slug],
-  })),
-  {
-    slug: "3-in-1",
-    title: "3 in 1 bracelet",
-    blurb: "Love, protection and prosperity on a single strand, balanced for your numbers.",
+  "love-life": {
     intro: [
-      "Most people want more than one thing from life. The 3 in 1 combines love, protection and prosperity on a single strand, so you don't have to choose.",
-      "Because three intentions share one bracelet, Ammit balances the stones carefully against your date of birth so the crystals work together, not against each other.",
+      "Whether you're hoping to meet the right person or want closeness back in a relationship you already have, this bracelet is made for love.",
+      `Ammit reads your birth details before choosing the stones, so the bracelet supports what you're looking for in a way that suits you. ${MADE}`,
     ],
     forWhom: [
-      "You want support for relationships, protection and money together",
-      "You'd rather wear one bracelet than three",
-      "You're not sure which single intention to choose",
+      "You're single and want to attract the right person",
+      "You want to rebuild trust or closeness with your partner",
+      "You'd like more self-love and confidence",
     ],
-    crystals: ["Rose quartz", "Black tourmaline", "Citrine"],
-    sphere: "#E7B32A",
-    sphereShade: "rgba(110,70,10,.4)",
-    cards: [
-      "linear-gradient(160deg,#FBE9EA,#F2C9CC)",
-      "linear-gradient(200deg,#FAF0D6,#EBD49A)",
-      "linear-gradient(180deg,#E3E6F2,#C3C8DE)",
-    ],
-    rings: [
-      [THREE_IN_ONE_RINGS[0], "#FFFFFF", THREE_IN_ONE_RINGS[1]],
-      [THREE_IN_ONE_RINGS[2], THREE_IN_ONE_RINGS[0], THREE_IN_ONE_RINGS[1]],
-      [THREE_IN_ONE_RINGS[1], THREE_IN_ONE_RINGS[2], THREE_IN_ONE_RINGS[0]],
-    ],
+    crystals: ["Rose quartz", "Rhodonite", "Strawberry quartz"],
   },
-];
+  "clarity-and-confidence": {
+    intro: [
+      "For the times when your mind keeps going in circles, or you know what to do but can't quite bring yourself to do it. This bracelet is made for a clearer head and steadier self-belief.",
+      `Ammit chooses stones traditionally linked with focus, courage and calm judgement, matched to your birth details. ${MADE}`,
+    ],
+    forWhom: [
+      "You overthink and find it hard to decide",
+      "You'd like to speak up and present yourself with confidence",
+      "You're at a crossroads and want clarity on the way forward",
+    ],
+    crystals: ["Clear quartz", "Tiger eye", "Sodalite"],
+  },
+  health: {
+    intro: [
+      "For anyone who wants steadier energy and wellbeing, or is going through a difficult stretch and wants something calming to wear while they recover.",
+      `Ammit chooses stones traditionally associated with vitality, calm and balance, matched to your birth details. ${MADE}`,
+    ],
+    forWhom: [
+      "You want more energy and balance day to day",
+      "You're recovering and want support that feels steady",
+      "Stress or worry has been weighing on your health",
+    ],
+    crystals: ["Green aventurine", "Amethyst", "Clear quartz"],
+    note: "Crystals are worn alongside medical care, never instead of it. Please keep following your doctor's advice.",
+  },
+  "buri-nazar": {
+    intro: [
+      "When things that were going well suddenly stop, many families feel it's buri nazar or negative energy around them. This bracelet is made as a protective shield for you and the people close to you.",
+      `Ammit chooses grounding, protective stones that suit your birth details, so the protection sits comfortably with the rest of your chart. ${MADE}`,
+    ],
+    forWhom: [
+      "You feel things keep going wrong without a clear reason",
+      "You feel drained around certain people or places",
+      "You want a protective bracelet for a child or family member",
+    ],
+    crystals: ["Black tourmaline", "Black obsidian", "Lapis lazuli"],
+  },
+  "self-healing": {
+    intro: [
+      "For when you've been carrying too much for too long: old hurt, constant stress, or simply feeling disconnected from yourself. This bracelet is made for calm, inner balance and letting go.",
+      `Ammit chooses stones traditionally associated with peace, emotional healing and self-love, matched to your birth details. ${MADE}`,
+    ],
+    forWhom: [
+      "You want to let go of past hurt and move forward",
+      "Your mind rarely feels at rest",
+      "You're starting meditation or a spiritual practice",
+    ],
+    crystals: ["Amethyst", "Lepidolite", "Rose quartz"],
+    note: "If you're struggling with your mental health, please also speak to a doctor or counsellor. Crystals are worn alongside care, never instead of it.",
+  },
+  "married-life": {
+    intro: [
+      "Small arguments that never quite end, distance that creeps in, patience that runs out. This bracelet is made for couples who want more warmth and understanding at home.",
+      `Ammit reads your birth details first, and your partner's if you share them, then chooses crystals traditionally linked with harmony, patience and affection. ${MADE}`,
+    ],
+    forWhom: [
+      "You want fewer arguments and more patience at home",
+      "You feel you and your partner have drifted apart",
+      "You're newly married and want to start on a calm footing",
+    ],
+    crystals: ["Rose quartz", "Moonstone", "Garnet"],
+  },
+  studies: {
+    intro: [
+      "For students who sit down to study and find their mind elsewhere. This bracelet is made for focus, memory and a calmer head before exams.",
+      `Parents often order it for their children. Send the student's name and date of birth and Ammit chooses the stones for their chart, not yours. ${MADE}`,
+    ],
+    forWhom: [
+      "You find it hard to concentrate for long",
+      "Exam nerves get in the way of what you know",
+      "You're preparing for a competitive or government exam",
+    ],
+    crystals: ["Amethyst", "Green fluorite", "Clear quartz"],
+  },
+  "delay-in-marriage": {
+    intro: [
+      "When proposals keep falling through, or the right match seems to keep getting delayed, many families look for support beyond the usual efforts. This bracelet is made for that wait.",
+      `Ammit studies the birth details of the person hoping to marry and chooses stones traditionally linked with attraction, harmony and timing. ${MADE}`,
+    ],
+    forWhom: [
+      "Proposals come but don't move forward",
+      "You or your family feel marriage is getting delayed",
+      "You want to feel more confident and open to the right match",
+    ],
+    crystals: ["Rose quartz", "Moonstone", "Garnet"],
+  },
+  "weight-loss": {
+    intro: [
+      "For anyone working on their weight who wants a daily reminder to stay on track. This bracelet is made for motivation, discipline and fewer cravings getting the better of you.",
+      `Ammit chooses stones traditionally associated with willpower and a balanced appetite, matched to your birth details. ${MADE}`,
+    ],
+    forWhom: [
+      "You start a diet or routine but find it hard to keep going",
+      "Cravings and stress eating get in the way",
+      "You want a daily reminder of your fitness goal",
+    ],
+    crystals: ["Apatite", "Citrine", "Carnelian"],
+    note: "A bracelet supports your intention; it doesn't replace a healthy diet, exercise or medical advice.",
+  },
+};
+
+export const BRACELETS: BraceletDetail[] = INTENTIONS.map((it) => ({
+  slug: it.slug,
+  title: it.title,
+  blurb: it.blurb,
+  sphere: it.sphere,
+  sphereShade: it.sphereShade,
+  sphereGloss: it.sphereGloss,
+  cards: it.cards,
+  rings: it.rings,
+  ...DETAILS[it.slug],
+}));
+
+/** Old web addresses (before the Oct 2026 purpose list) → new ones. */
+export const OLD_BRACELET_SLUGS: Record<string, string> = {
+  "career-and-money": "career-and-finance",
+  "love-and-relationships": "love-life",
+  "health-and-mental-healing": "health",
+  "buri-nazar-protection": "buri-nazar",
+  "better-married-life": "married-life",
+  "better-studies": "studies",
+};
 
 export const braceletBySlug = (slug: string) => BRACELETS.find((b) => b.slug === slug);
 
 /** How every bracelet is made — shared by product pages. */
 export const HOW_IT_WORKS = [
-  { title: "Choose your intention", text: "Pick the bracelet for what you're asking of life, or the 3 in 1." },
-  { title: "Send your date of birth", text: "Message us on WhatsApp with your full date of birth (and the wearer's, if it's a gift)." },
-  { title: "Ammit reads your numbers", text: "He works out your mulank and bhagyank and chooses the crystals that suit them." },
-  { title: "Strung by hand", text: "Your bracelet is strung by hand and sent to you." },
+  { title: "Choose your purpose", text: "Pick what you'd like your bracelet to support." },
+  { title: "Share your birth details", text: "Name and full date of birth (the wearer's, if it's a gift)." },
+  { title: "Ammit designs it for you", text: "He studies your birth details and purpose, then chooses every crystal." },
+  { title: "Cleansed, energised, delivered", text: "You see a photo first; it's cleansed and energised, then sent free." },
 ] as const;
 
 /* ------------------------------------------------------------------ */

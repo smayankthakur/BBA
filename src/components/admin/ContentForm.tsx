@@ -242,6 +242,9 @@ function Repeater({
     (s) => s.type === "text" || s.type === "textarea",
   );
   const label = f.itemLabel ?? "Item";
+  // Lists of pictures (e.g. review screenshots): add several at once.
+  const imageKey = subs.find((s) => s.type === "image")?.key;
+  const [bulk, setBulk] = useState(false);
 
   return (
     <div className="ad-field">
@@ -327,6 +330,23 @@ function Repeater({
           >
             Add {label.toLowerCase()}
           </button>
+          {imageKey && (
+            <button type="button" className="ad-btn is-small is-primary" onClick={() => setBulk(true)}>
+              Upload or pick several
+            </button>
+          )}
+          {bulk && imageKey && (
+            <MediaPicker
+              multiple
+              addLabel="Add these"
+              onPick={(urls) => {
+                // Newest first.
+                onChange([...urls.map((u) => ({ ...blank(), [imageKey]: u })), ...items]);
+                setOpen((o) => [...urls.map(() => false), ...items.map((_, j) => !!o[j])]);
+              }}
+              onClose={() => setBulk(false)}
+            />
+          )}
         </div>
       )}
     </div>

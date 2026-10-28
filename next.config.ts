@@ -36,7 +36,7 @@ const imgSrc = [
   META && "https://www.facebook.com",
   RZP && "https://cdn.razorpay.com",
 ];
-const frameSrc = ["https://www.youtube-nocookie.com", RZP && "https://api.razorpay.com https://checkout.razorpay.com"];
+const frameSrc = ["https://www.youtube-nocookie.com", "https://www.instagram.com", RZP && "https://api.razorpay.com https://checkout.razorpay.com"];
 
 const csp = [
   "default-src 'self'",
@@ -74,6 +74,21 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: "/**" }],
     // Photos uploaded in the admin panel live in Vercel Blob.
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
+  },
+  // Bracelet pages renamed for the client's purpose list (Oct 2026).
+  async redirects() {
+    const moved: Record<string, string> = {
+      "career-and-money": "career-and-finance",
+      "love-and-relationships": "love-life",
+      "health-and-mental-healing": "health",
+      "buri-nazar-protection": "buri-nazar",
+      "better-married-life": "married-life",
+      "better-studies": "studies",
+    };
+    return [
+      ...Object.entries(moved).map(([from, to]) => ({ source: `/bracelets/${from}`, destination: `/bracelets/${to}`, permanent: true })),
+      { source: "/bracelets/3-in-1", destination: "/bracelets", permanent: false },
+    ];
   },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

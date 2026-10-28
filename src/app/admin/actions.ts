@@ -37,6 +37,7 @@ import { FULFILMENT, updateOrderAdmin, type Fulfilment } from "@/lib/server/orde
 import { deleteMedia } from "@/lib/server/media";
 import { codeTaken, deleteCoupon, getCoupon, saveCoupon, setCouponActive } from "@/lib/server/coupons";
 import { COUPON_RE, normCode } from "@/lib/coupon-types";
+import { PARTNER_CODE_RE, addPayout, codeInUse, deletePartner, deletePayout, getPartner, savePartner } from "@/lib/server/partners";
 import { pageDef } from "@/lib/content/fields";
 import type { PageId } from "@/lib/content/defaults";
 import { SLUG_RE, type Product, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
@@ -457,4 +458,76 @@ export async function couponAction(fd: FormData) {
   else go("/admin/coupons", { err: "missing" });
   await logAction(user.id, `coupon.${op}`, c!.code);
   go("/admin/coupons", { msg: op === "delete" ? "deleted" : op });
+}
+
+/* ------------------------------------------------------------------ */
+/* Partners                                                             */
+/* ------------------------------------------------------------------ */
+
+export async function savePartnerAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40) || null;
+  const back: (err: string) => never = (err) => go(id ? `/admin/partners/${id}` : "/admin/partners/new", { err });
+  if (id && !(await getPartner(id))) go("/admin/partners", { err: "missing" });
+  const name = str(fd, "name", 100);
+  if (!name) back("name");
+  const code = str(fd, "code", 40).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  if (!PARTNER_CODE_RE.test(code)) back("pcode");
+  if (await codeInUse(code, id ?? undefined)) back("pcodeTaken");
+  const kind = str(fd, "kind", 10) === "flat" ? "flat" : "percent";
+  const rate = Math.round(Number(str(fd, "rate", 10)));
+  if (!Number.isFinite(rate) || rate < 0 || (kind === "percent" ? rate > 90 : rate > 100000)) back("rate");
+  const email = str(fd, "email", 200);
+  if (email && !validEmail(email)) back("email");
+  const saved = await savePartner(id, {
+    code,
+    name,
+    phone: str(fd, "phone", 20).replace(/[^\d+ ]/g, ""),
+    email,
+    kind,
+    rate,
+    notes: str(fd, "notes", 1000),
+    active: fd.get("active") === "on",
+  });
+  if (!saved) back("pcodeTaken");
+  await logAction(user.id, id ? "partner.update" : "partner.create", code);
+  go(`/admin/partners/${saved}`, { msg: id ? "saved" : "created" });
+}
+
+export async function partnerAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40);
+  const op = str(fd, "op", 10);
+  const p = await getPartner(id);
+  if (!p) go("/admin/partners", { err: "missing" });
+  if (op === "on" || op === "off") {
+    await savePartner(id, { ...p!, active: op === "on" });
+  } else if (op === "delete") {
+    await deletePartner(id);
+  } else go("/admin/partners", { err: "missing" });
+  await logAction(user.id, `partner.${op}`, p!.code);
+  go("/admin/partners", { msg: op === "delete" ? "deleted" : op === "on" ? "pon" : "poff" });
+}
+
+export async function addPayoutAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40);
+  const p = await getPartner(id);
+  if (!p) go("/admin/partners", { err: "missing" });
+  const amount = Math.round(Number(str(fd, "amount", 12)) * 100);
+  const paidOn = str(fd, "paidOn", 10);
+  if (!Number.isFinite(amount) || amount < 100 || amount > 100_000_000) go(`/admin/partners/${id}`, { err: "amount" });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(paidOn)) go(`/admin/partners/${id}`, { err: "paidOn" });
+  await addPayout(id, amount, paidOn, str(fd, "reference", 120), str(fd, "note", 300), user.id);
+  await logAction(user.id, "partner.payout", `${p!.code}:${amount / 100}`);
+  go(`/admin/partners/${id}`, { msg: "payout" });
+}
+
+export async function deletePayoutAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40);
+  const payout = str(fd, "payout", 40);
+  if (/^[0-9a-f-]{36}$/i.test(payout)) await deletePayout(payout);
+  await logAction(user.id, "partner.payout.delete", payout);
+  go(`/admin/partners/${id}`, { msg: "deleted" });
 }

@@ -5,6 +5,7 @@ import { adminCounts } from "@/lib/server/catalog";
 import { mediaStorageReady } from "@/lib/server/media";
 import { razorpayConfigured } from "@/lib/server/razorpay";
 import { formatINR } from "@/lib/format";
+import { contentUpdatedAt, getContent } from "@/lib/server/content";
 
 const fmt = (d: string | Date) =>
   new Intl.DateTimeFormat("en-IN", {
@@ -22,11 +23,18 @@ export default async function Dashboard({
 }) {
   const sp = await searchParams;
   const user = await requireAdmin();
-  const [stats, recent, counts] = await Promise.all([
+  const [stats, recent, counts, updated, reviews] = await Promise.all([
     orderStats(),
     listOrders({ limit: 8 }),
     adminCounts(),
+    contentUpdatedAt(),
+    getContent("reviews"),
   ]);
+  // Reviews should be refreshed with new Instagram screenshots every week.
+  const hasShots = (reviews.shots ?? []).some((x) => x.image);
+  const reviewsAt = updated["reviews"] ? new Date(updated["reviews"]) : null;
+  const reviewDays = reviewsAt ? Math.floor((Date.now() - reviewsAt.getTime()) / 86_400_000) : null;
+  const reviewsDue = !hasShots || reviewDays === null || reviewDays >= 7;
   const count = (kind: string) =>
     counts
       .filter((c) => c.kind === kind && c.status === "published")
@@ -48,6 +56,16 @@ export default async function Dashboard({
       {sp.denied && (
         <div className="ad-notice is-err" role="alert">
           <p>Your role doesn&apos;t have access to that screen.</p>
+        </div>
+      )}
+      {reviewsDue && (
+        <div className="ad-notice is-warn">
+          <p>
+            {!hasShots
+              ? "No Instagram review screenshots yet. The site is showing written reviews until you add some."
+              : `Reviews were last updated ${reviewDays} days ago.`}{" "}
+            <Link href="/admin/pages/reviews">Add this week&apos;s Instagram screenshots →</Link>
+          </p>
         </div>
       )}
       {!razorpayConfigured() && (

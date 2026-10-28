@@ -51,6 +51,12 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
         ["Order number", o.ref],
         ["Status", "PAID"],
         ["Amount", `Rs. ${(o.amount_paise / 100).toLocaleString("en-IN")} (free shipping)`],
+        ...((o.upgrade_paise ?? 0) > 0
+          ? ([
+              ["Added after payment", `Rs. ${((o.upgrade_paise ?? 0) / 100).toLocaleString("en-IN")} (extra purpose top-up)`],
+              ["Total paid", `Rs. ${((o.amount_paise + (o.upgrade_paise ?? 0)) / 100).toLocaleString("en-IN")}`],
+            ] as [string, string][])
+          : []),
         ...(o.coupon_code
           ? ([["Coupon", `${o.coupon_code}: Rs. ${((o.discount_paise ?? 0) / 100).toLocaleString("en-IN")} off Rs. ${((o.amount_paise + (o.discount_paise ?? 0)) / 100).toLocaleString("en-IN")}`]] as [string, string][])
           : []),
@@ -61,9 +67,9 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
       ],
     },
     {
-      title: "Bracelet",
+      title: (o.upgrade_paise ?? 0) > 0 ? "Bracelet (UPDATED: purpose added after payment)" : "Bracelet",
       rows: [
-        ["Bracelet", o.bracelet_title],
+        ["Purposes in this bracelet", `${o.bracelet_title} (${(o.purposes?.length || 1)} of 3)`],
         ["Intentions chosen", o.intentions?.length ? o.intentions.map(intentionName).join(", ") : "-"],
         ["What they want help with", o.focus || "-"],
       ],

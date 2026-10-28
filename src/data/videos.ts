@@ -5,10 +5,10 @@
 export type Video = { id: string; title: string };
 
 export const BRACELET_VIDEOS: Record<string, Video> = {
-  "better-married-life": { id: "VSYo63ReE6U", title: "Better married life bracelet" },
-  "buri-nazar-protection": { id: "rtr6Afi4tTk", title: "Buri nazar and evil eye bracelet" },
-  "better-studies": { id: "7e-IxrQ65Mw", title: "Better studies bracelet" },
-  "health-and-mental-healing": { id: "RglftpSW5sQ", title: "Bracelet for better health and mental healing" },
+  "married-life": { id: "VSYo63ReE6U", title: "Better married life bracelet" },
+  "buri-nazar": { id: "rtr6Afi4tTk", title: "Buri nazar and evil eye bracelet" },
+  "studies": { id: "7e-IxrQ65Mw", title: "Better studies bracelet" },
+  "health": { id: "RglftpSW5sQ", title: "Bracelet for better health and mental healing" },
 };
 
 export const MULANK_VIDEOS: Record<number, Video> = {

@@ -3,7 +3,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import IntentionEdit from "@/components/IntentionEdit";
-import ThreeInOne from "@/components/ThreeInOne";
+import MadeForYou from "@/components/MadeForYou";
 import MulankPicker from "@/components/MulankPicker";
 import NoteFromAmmit from "@/components/NoteFromAmmit";
 import Gifts from "@/components/Gifts";
@@ -34,7 +34,7 @@ export default async function HomePage() {
       <main id="main">
         <Hero />
         <IntentionEdit />
-        <ThreeInOne />
+        <MadeForYou />
         <MulankPicker />
         <NoteFromAmmit compact />
         <Gifts />

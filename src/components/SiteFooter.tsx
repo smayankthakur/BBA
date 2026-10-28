@@ -14,8 +14,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Shop",
     links: [
       { label: "Find your bracelet", href: "/find-your-bracelet" },
-      { label: "Shop by intention", href: "/bracelets" },
-      { label: "3 in 1 bracelet", href: "/bracelets/3-in-1" },
+      { label: "Shop by purpose", href: "/bracelets" },
       { label: "Gifts", href: "/gifts" },
     ],
   },

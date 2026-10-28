@@ -1107,6 +1107,46 @@ a:hover {
   max-width: 46ch;
 }
 
+/* Made for you (homepage) */
+.made-media {
+  flex: 1 1 300px;
+  display: flex;
+  justify-content: center;
+}
+.made .vid {
+  max-width: 300px;
+}
+.made-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.made-points li {
+  position: relative;
+  padding-left: 28px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--cream);
+}
+.made-points li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--gold-text);
+  font-weight: 700;
+}
+.three-copy .made-note {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--on-lapis-muted);
+  border-left: 2px solid var(--gold-deep);
+  padding-left: 14px;
+}
+
 /* ---------- Mulank ---------- */
 .number {
   padding: 112px 24px;
@@ -1402,6 +1442,47 @@ a:hover {
 }
 .reviews-list::-webkit-scrollbar {
   display: none;
+}
+.reviews-list.is-shots {
+  grid-auto-columns: calc((100% - 108px) / 4);
+}
+.reviews-list > .review-shot {
+  scroll-snap-align: start;
+}
+.review-shot figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.review-shot-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: var(--night);
+  box-shadow: 0 0 0 1px rgba(227, 198, 124, 0.55), 0 24px 40px -26px rgba(0, 0, 0, 0.7);
+}
+.review-shot-frame img {
+  object-fit: cover;
+  object-position: top;
+}
+.review-shot figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  font-size: 14px;
+}
+@media (max-width: 960px) {
+  .reviews-list.is-shots {
+    grid-auto-columns: calc((100% - 36px) / 2);
+  }
+}
+@media (max-width: 760px) {
+  .reviews-list.is-shots {
+    grid-auto-columns: 68%;
+  }
 }
 .reviews-list > .review {
   scroll-snap-align: start;
@@ -4082,6 +4163,121 @@ a:hover {
   font-size: 17px;
   color: var(--lapis);
 }
+.fn-shot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.fn-shot img {
+  width: min(280px, 100%);
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--lilac-line), 0 20px 40px -24px rgba(5, 14, 143, 0.45);
+}
+.fn-summary-row.is-extra {
+  color: var(--ink);
+}
+.fn-summary-row.is-extra small {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.fn-addon {
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #fbf6ea, #f4ecff);
+  box-shadow: 0 0 0 1px var(--lilac-line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fn-addon-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--lapis);
+}
+.fn-addon-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.fn-addon-text b {
+  color: var(--price);
+}
+.fn-addon-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fn-addon-chip {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--lilac-line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.fn-addon-chip .t {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.fn-addon-chip small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--price);
+}
+.fn-addon-chip.is-on {
+  background: var(--lapis);
+  border-color: var(--lapis);
+  color: var(--white);
+}
+.fn-addon-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fn-addon-chip:focus-visible {
+  outline: 2px solid var(--lapis);
+  outline-offset: 2px;
+}
+.fn-topup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.fn-topup .btn {
+  align-self: flex-start;
+}
+.fn-topup-done {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #e8f5ec;
+  color: #1d5e33;
+  font-weight: 600;
+}
 .fn-summary-row.is-discount {
   color: var(--price);
   font-weight: 600;
@@ -4158,11 +4354,17 @@ a:hover {
   color: var(--price);
 }
 .fn-fields.cols-3-addr {
-  grid-template-columns: 1.2fr 1.2fr 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1fr);
+}
+/* Long state names must not stretch the row past the screen. */
+.fn-fields .fn-field select,
+.fn-fields .fn-field input {
+  min-width: 0;
+  width: 100%;
 }
 @media (max-width: 520px) {
   .fn-fields.cols-3-addr {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .fn-fields.cols-3-addr .fn-field:first-child {
     grid-column: 1 / -1;
@@ -4347,7 +4549,7 @@ a:hover {
   }
   .edit-list {
     position: relative;
-    padding-top: 262px;
+    padding-top: 250px;
     box-shadow: none;
   }
   .edit-list .row:first-child {
@@ -4356,16 +4558,17 @@ a:hover {
   .row {
     position: static;
     flex-wrap: nowrap;
-    gap: 12px;
-    padding: 9px 10px;
+    gap: 10px;
+    padding: 6px 10px;
   }
   .row .sphere {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
   .row-title {
     flex: 1 1 auto;
-    font-size: 21px;
+    font-size: 18px;
+    line-height: 1.15;
   }
   .row .muted,
   .row .go {

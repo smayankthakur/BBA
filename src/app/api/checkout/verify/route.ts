@@ -39,10 +39,11 @@ export async function POST(req: Request) {
     if (p.order_id !== razorpay_order_id || !expected || p.amount !== expected || p.currency !== "INR" || !okStatus) {
       return NextResponse.json({ error: "Payment could not be verified." }, { status: 400 });
     }
-    await markPaid(razorpay_order_id, razorpay_payment_id, p.method).catch((e) =>
-      console.error("[checkout] db update failed", e instanceof Error ? e.message : e),
-    );
-    await notifyStaffOfPaidOrder(razorpay_order_id).catch((e) =>
+    const mainOrderId = await markPaid(razorpay_order_id, razorpay_payment_id, p.method).catch((e) => {
+      console.error("[checkout] db update failed", e instanceof Error ? e.message : e);
+      return razorpay_order_id;
+    });
+    await notifyStaffOfPaidOrder(mainOrderId).catch((e) =>
       console.error("[checkout] staff email failed", e instanceof Error ? e.message : e),
     );
     return NextResponse.json({ ok: true });

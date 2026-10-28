@@ -1,8 +1,9 @@
 Product photos (picked up automatically on the next deploy)
 
 Put three photos per bracelet in a folder named after the bracelet:
-  better-married-life/  buri-nazar-protection/  better-studies/
-  health-and-mental-healing/  love-and-relationships/  career-and-money/  3-in-1/
+  career-and-finance/  love-life/  clarity-and-confidence/  health/  buri-nazar/
+  self-healing/  married-life/  studies/  delay-in-marriage/  weight-loss/
+(Easier: upload photos in the admin panel, Bracelets -> Edit -> Photos.)
 
 Inside each folder:
   1.jpg  on the wrist

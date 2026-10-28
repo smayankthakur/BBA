@@ -84,7 +84,7 @@ export default async function BraceletPage({ params }: Params) {
         <div className="product-info">
           <PageHero
             crumbs={[{ label: "Bracelets", href: "/bracelets" }, { label: b.title }]}
-            eyebrow={b.inList ? c.eyebrow : c.comboEyebrow}
+            eyebrow={c.eyebrow}
             title={b.title}
             lede={<p>{b.blurb}</p>}
           />

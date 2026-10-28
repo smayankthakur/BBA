@@ -17,7 +17,8 @@ export default async function FindYourBraceletPage() {
     getContent("shared"),
     getSite(),
   ]);
-  const review = reviews.items.find((r) => r.quote.trim()) ?? null;
+  const shot = (reviews.shots ?? []).find((x) => x.image);
+  const written = reviews.items.find((r) => r.quote.trim());
   const data: FunnelData = {
     products: bracelets.map((b) => ({
       slug: b.slug,
@@ -31,10 +32,16 @@ export default async function FindYourBraceletPage() {
       listA: b.listA,
     })),
     mulank: mulank.numbers.map((m) => ({ number: m.number, planet: m.planet, planetHindi: m.planetHindi, traits: m.traits })),
-    review: review ? { quote: review.quote, name: review.name, sourceLabel: review.sourceLabel, sourceUrl: review.sourceUrl } : null,
+    // An Instagram screenshot when there is one, otherwise a written review.
+    review: shot
+      ? { quote: shot.text, name: shot.name, sourceLabel: "View on Instagram", sourceUrl: shot.link, image: shot.image }
+      : written
+        ? { quote: written.quote, name: written.name, sourceLabel: written.sourceLabel, sourceUrl: written.sourceUrl }
+        : null,
     copy,
     trust: { shipping: shared.trustShipping, payment: shared.trustPayment, minDays: s.shippingMinDays, maxDays: s.shippingMaxDays },
     refNote: s.refNote,
+    tiers: [s.defaultPrice, s.price2, s.price3],
   };
   return <Funnel data={data} />;
 }
