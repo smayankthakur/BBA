@@ -5,6 +5,7 @@ import { DetailsSchema } from "@/lib/checkoutSchema";
 import { saveOrderDetails } from "@/lib/server/orders";
 import { notifyStaffOfDetails } from "@/lib/server/staffNotify";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
+import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,9 +27,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
   if (!parsed.success) return NextResponse.json({ error: Q.checkDetails }, { status: 400 });
-  const { orderId, gender, focus, note, lang } = parsed.data;
+  const { orderId, gender, focus, note, lang, wearer, address, isGift, wrist, deliveryName, marketing } = parsed.data;
   const M = uiFor(lang ?? "en").server;
-  const order = await saveOrderDetails(orderId, { gender, focus, note }).catch((e) => {
+  if (wearer && (!isValidDate(wearer.day, wearer.month, wearer.year) || new Date(wearer.year, wearer.month - 1, wearer.day) > new Date())) {
+    return NextResponse.json({ error: M.checkDetails }, { status: 400 });
+  }
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const order = await saveOrderDetails(orderId, {
+    isGift,
+    gender,
+    wrist,
+    focus,
+    note,
+    marketing,
+    deliveryName,
+    ...(wearer
+      ? {
+          firstName: wearer.firstName,
+          lastName: wearer.lastName ?? "",
+          dob: `${wearer.year}-${pad(wearer.month)}-${pad(wearer.day)}`,
+          mulank: mulank(wearer.day),
+          bhagyank: bhagyank(wearer.day, wearer.month, wearer.year),
+        }
+      : {}),
+    ...(address ? { line1: address.line1, line2: address.line2 ?? "", city: address.city, state: address.state, pincode: address.pincode } : {}),
+  }).catch((e) => {
     console.error("[details] save failed", e instanceof Error ? e.message : e);
     return null;
   });

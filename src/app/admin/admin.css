@@ -427,6 +427,7 @@
 .ad-body input[type="number"],
 .ad-body input[type="url"],
 .ad-body input[type="search"],
+.ad-body input[type="date"],
 .ad-body select,
 .ad-body textarea {
   width: 100%;
@@ -885,4 +886,78 @@
   color: var(--ad-soft);
   font-size: 12px;
   white-space: pre-wrap;
+}
+
+/* Order: every detail in one form */
+.ad-order-form {
+  max-width: 980px;
+}
+.ad-order-form fieldset.ad-box {
+  margin: 0 0 18px;
+  padding: 0;
+  min-width: 0;
+}
+.ad-order-form legend {
+  float: left;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--ad-line);
+}
+.ad-order-form legend + * {
+  clear: both;
+}
+.ad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding: 14px;
+}
+.ad-grid .is-wide {
+  grid-column: span 2;
+}
+.ad-grid .ad-check {
+  align-self: end;
+  padding-bottom: 8px;
+}
+.ad-field.is-fixed output {
+  display: block;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  background: var(--ad-bg);
+  border: 1px dashed var(--ad-line);
+  overflow-wrap: anywhere;
+}
+.ad-order-save {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  background: var(--ad-panel);
+  border: 1px solid var(--ad-line);
+  box-shadow: 0 -6px 16px -12px rgba(0, 0, 0, 0.3);
+}
+.ad-callout {
+  padding: 10px 12px;
+  border-left: 4px solid #dba617;
+  background: #fcf9e8;
+  color: #1d2327;
+}
+@media (max-width: 900px) {
+  .ad-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .ad-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ad-grid .is-wide {
+    grid-column: auto;
+  }
 }

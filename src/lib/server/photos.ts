@@ -9,7 +9,7 @@ const EXT = ["jpg", "jpeg", "webp", "png"];
  * Product photos are picked up automatically at build time from
  * public/products/<slug>/1.jpg, 2.jpg, 3.jpg (jpg/jpeg/webp/png).
  * 1 = on the wrist, 2 = close-up, 3 = in the packaging.
- * Until they exist, the bead-ring illustrations are shown.
+ * Until they exist, the brand emblem is shown.
  */
 /**
  * Adds a short content hash (?v=…) so a replaced photo with the same file name

@@ -21,15 +21,18 @@ import type { QuickData } from "./types";
 const THIS_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 1929 }, (_, i) => THIS_YEAR - i);
 const WRISTS = ["14cm", "15cm", "16cm", "17cm", "18cm"];
+/** A paid order whose details haven't been added yet (so a reminder can bring the form back). */
+const PENDING_KEY = "bba_pending_order";
+const PENDING_DAYS = 14;
 
-type Form = {
-  mobile: string;
+type Details = {
   gift: boolean;
-  name: string;
+  wearerName: string;
   day: string;
   month: string;
   year: string;
   guardian: boolean;
+  gender: "female" | "male" | "other" | "";
   wrist: string;
   deliverTo: string;
   pincode: string;
@@ -37,16 +40,18 @@ type Form = {
   area: string;
   city: string;
   state: string;
+  focus: string;
+  note: string;
   marketing: boolean;
 };
-const EMPTY: Form = {
-  mobile: "",
+const EMPTY_DETAILS: Details = {
   gift: false,
-  name: "",
+  wearerName: "",
   day: "",
   month: "",
   year: "",
   guardian: false,
+  gender: "",
   wrist: "unsure",
   deliverTo: "",
   pincode: "",
@@ -54,15 +59,36 @@ const EMPTY: Form = {
   area: "",
   city: "",
   state: "",
+  focus: "",
+  note: "",
   marketing: false,
 };
-type Field = "purpose" | "mobile" | "name" | "dob" | "guardian" | "deliverTo" | "pincode" | "house" | "city" | "state";
+type PreField = "purpose" | "name" | "mobile";
+type DetailField = "wearerName" | "dob" | "guardian" | "deliverTo" | "pincode" | "house" | "city" | "state";
 
-type Paid = { ref: string; rzpOrderId: string; purposes: string[] };
+type Paid = { ref: string; rzpOrderId: string; purposes: string[]; name: string; mobile: string; at: number };
+
+const readPending = (): Paid | null => {
+  try {
+    const p = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "null") as Paid | null;
+    if (p && p.rzpOrderId && Date.now() - p.at < PENDING_DAYS * 864e5) return p;
+    localStorage.removeItem(PENDING_KEY);
+  } catch {}
+  return null;
+};
+const writePending = (p: Paid | null) => {
+  try {
+    if (p) localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    else localStorage.removeItem(PENDING_KEY);
+  } catch {}
+};
 
 /**
- * The one-screen order: purpose → a short form → Razorpay. The reading
- * questions (gender, what they want help with, a note) come after payment.
+ * Ordering in two steps:
+ *  1. before paying, only the name and WhatsApp number (plus purpose, coupon);
+ *  2. right after paying, the details form: who it's for, birth date,
+ *     wrist, address, gender, what they want help with, a note.
+ * If the second form is closed, a reminder brings it back.
  */
 export default function QuickOrder({ data }: { data: QuickData }) {
   const { ui, lang } = useLang();
@@ -73,26 +99,28 @@ export default function QuickOrder({ data }: { data: QuickData }) {
   const [open, setOpen] = useState(false);
   const [slug, setSlug] = useState<string>("");
   const [picking, setPicking] = useState(false);
-  const [f, setF] = useState<Form>(EMPTY);
-  const [errorsOn, setErrorsOn] = useState(false);
+  // Step 1
+  const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [preErrorsOn, setPreErrorsOn] = useState(false);
   const [extras, setExtras] = useState<string[]>([]);
   const [showExtras, setShowExtras] = useState(false);
-  const [pin, setPin] = useState<{ status: "idle" | "loading" | "found" | "failed"; edit?: boolean }>({ status: "idle" });
   const [pay, setPay] = useState<{ status: "idle" | "working" | "error"; message?: string }>({ status: "idle" });
   const [whatsAppOnly, setWhatsAppOnly] = useState(!data.payEnabled);
-  // Coupon: the server decides the discount; this only shows it.
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; discountInr: number; totalInr: number } | null>(null);
   const [couponMsg, setCouponMsg] = useState<{ busy?: boolean; error?: string } | null>(null);
   const urlCoupon = useRef("");
   const utm = useRef<Record<string, string>>({});
-  // After payment
+  // Step 2 (after payment)
   const [paid, setPaid] = useState<Paid | null>(null);
+  const [pending, setPending] = useState<Paid | null>(null);
+  const [remindHidden, setRemindHidden] = useState(false);
   const [stage, setStage] = useState<"details" | "numbers">("details");
-  const [gender, setGender] = useState<"female" | "male" | "other" | "">("");
-  const [focus, setFocus] = useState("");
-  const [note, setNote] = useState("");
+  const [d, setD] = useState<Details>(EMPTY_DETAILS);
+  const [detErrorsOn, setDetErrorsOn] = useState(false);
+  const [pin, setPin] = useState<{ status: "idle" | "loading" | "found" | "failed"; edit?: boolean }>({ status: "idle" });
   const [detailsState, setDetailsState] = useState<{ status: "idle" | "working" | "error" | "saved"; message?: string }>({ status: "idle" });
   const [topUp, setTopUp] = useState<string[]>([]);
   const [topUpState, setTopUpState] = useState<{ status: "idle" | "working" | "error" | "done"; message?: string }>({ status: "idle" });
@@ -106,20 +134,34 @@ export default function QuickOrder({ data }: { data: QuickData }) {
   const products = data.products;
   const product = products.find((p) => p.slug === slug);
   const bySlug = useCallback((s: string) => products.find((p) => p.slug === s), [products]);
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((s) => ({ ...s, [k]: v }));
+  const setDet = <K extends keyof Details>(k: K, v: Details[K]) => setD((s) => ({ ...s, [k]: v }));
 
   /* ---- opening and closing ---- */
-  const show = useCallback((s?: string) => {
-    const known = !!s && products.some((p) => p.slug === s);
-    if (known) setSlug(s!);
-    setPicking((cur) => (known ? false : !slug || cur));
+  const pushHistory = () => {
+    if (pushed.current) return;
+    window.history.pushState({ ...(window.history.state ?? {}), bbaOrder: 1 }, "");
+    pushed.current = true;
+  };
+  const show = useCallback(
+    (s?: string) => {
+      const known = !!s && products.some((p) => p.slug === s);
+      if (known) setSlug(s!);
+      setPicking((cur) => (known ? false : !slug || cur));
+      setOpen(true);
+      pushHistory();
+      track("order_sheet_open", { bracelet: s ?? "" });
+    },
+    [products, slug],
+  );
+
+  /** Reminder: reopen the details form for a paid order. */
+  const showDetails = (p: Paid) => {
+    setPaid(p);
+    setStage("details");
+    setD((s) => ({ ...s, wearerName: s.wearerName || p.name, deliverTo: s.deliverTo || p.name }));
     setOpen(true);
-    if (!pushed.current) {
-      window.history.pushState({ ...(window.history.state ?? {}), bbaOrder: 1 }, "");
-      pushed.current = true;
-    }
-    track("order_sheet_open", { bracelet: s ?? "" });
-  }, [products, slug]);
+    pushHistory();
+  };
 
   const close = useCallback(() => {
     if (busy.current) return;
@@ -154,6 +196,10 @@ export default function QuickOrder({ data }: { data: QuickData }) {
 
   // Links can carry ?order=<purpose> (opens the sheet), ?coupon=CODE and utm_*.
   useEffect(() => {
+    setPending(readPending());
+    try {
+      setRemindHidden(sessionStorage.getItem("bba_remind_hidden") === "1");
+    } catch {}
     const p = new URLSearchParams(window.location.search);
     p.forEach((v, k) => {
       if (k.startsWith("utm_") && Object.keys(utm.current).length < 8) utm.current[k] = v.slice(0, 100);
@@ -214,18 +260,18 @@ export default function QuickOrder({ data }: { data: QuickData }) {
 
   /* ---- PIN code → city and state ---- */
   useEffect(() => {
-    if (!/^[1-9]\d{5}$/.test(f.pincode)) {
+    if (!/^[1-9]\d{5}$/.test(d.pincode)) {
       setPin((p) => (p.status === "idle" ? p : { status: "idle" }));
       return;
     }
     let live = true;
     setPin({ status: "loading" });
-    fetch(`/api/pincode?pin=${f.pincode}`)
+    fetch(`/api/pincode?pin=${d.pincode}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { city?: string; state?: string } | null) => {
+      .then((x: { city?: string; state?: string } | null) => {
         if (!live) return;
-        if (d?.city && d.state) {
-          setF((s) => ({ ...s, city: d.city!, state: d.state! }));
+        if (x?.city && x.state) {
+          setD((s) => ({ ...s, city: x.city!, state: x.state! }));
           setPin({ status: "found" });
         } else setPin({ status: "failed" });
       })
@@ -233,14 +279,13 @@ export default function QuickOrder({ data }: { data: QuickData }) {
     return () => {
       live = false;
     };
-  }, [f.pincode]);
+  }, [d.pincode]);
 
   /* ---- prices ---- */
   const listTotal = product ? priceFor(product.priceInr, 1 + extras.length, data.tiers) : 0;
   const total = coupon ? coupon.totalInr : listTotal;
   const nextExtra = product && extras.length < MAX_PURPOSES - 1 ? extraFor(product.priceInr, 1 + extras.length, 2 + extras.length, data.tiers) : null;
 
-  // A different bracelet or purposes: drop extras / re-check the coupon.
   useEffect(() => {
     setExtras([]);
     setCoupon(null);
@@ -255,18 +300,18 @@ export default function QuickOrder({ data }: { data: QuickData }) {
       const res = await fetch("/api/checkout/coupon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang, code, bracelet: product.slug, extras, mobile: /^[6-9]\d{9}$/.test(f.mobile) ? f.mobile : "" }),
+        body: JSON.stringify({ lang, code, bracelet: product.slug, extras, mobile: /^[6-9]\d{9}$/.test(mobile) ? mobile : "" }),
       }).catch(() => null);
-      const d = res ? await res.json().catch(() => ({})) : {};
-      if (res?.ok && d.ok) {
-        setCoupon({ code: d.code, discountInr: d.discountInr, totalInr: d.totalInr });
+      const x = res ? await res.json().catch(() => ({})) : {};
+      if (res?.ok && x.ok) {
+        setCoupon({ code: x.code, discountInr: x.discountInr, totalInr: x.totalInr });
         setCouponMsg(null);
       } else {
         setCoupon(null);
-        setCouponMsg({ error: d.error ?? u.couponFailed });
+        setCouponMsg({ error: x.error ?? u.couponFailed });
       }
     },
-    [product, extras, f.mobile, lang, u.couponEmpty, u.couponFailed],
+    [product, extras, mobile, lang, u.couponEmpty, u.couponFailed],
   );
   useEffect(() => {
     if (open && product && urlCoupon.current && !coupon) applyCoupon(urlCoupon.current);
@@ -274,67 +319,68 @@ export default function QuickOrder({ data }: { data: QuickData }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, product?.slug, extras]);
 
-  /* ---- validation ---- */
-  const day = Number(f.day), month = Number(f.month), year = Number(f.year);
+  /* ---- step 1: validation ---- */
+  const preErrors = useMemo(() => {
+    const e: Partial<Record<PreField, string>> = {};
+    if (!product) e.purpose = q.errors.purpose;
+    if (!name.trim()) e.name = q.errors.name;
+    if (!/^[6-9]\d{9}$/.test(mobile)) e.mobile = u.errors.mobile;
+    return e;
+  }, [product, name, mobile, q, u]);
+
+  /* ---- step 2: validation ---- */
+  const day = Number(d.day), month = Number(d.month), year = Number(d.year);
   const dobValid = !!(day && month && year && isValidDate(day, month, year) && new Date(year, month - 1, day) <= new Date());
   const minor = dobValid && ageFrom(day, month, year) < 18;
-  const errors = useMemo(() => {
-    const e: Partial<Record<Field, string>> = {};
-    if (!product) e.purpose = q.errors.purpose;
-    if (!/^[6-9]\d{9}$/.test(f.mobile)) e.mobile = u.errors.mobile;
-    if (!f.name.trim()) e.name = q.errors.name;
-    if (!dobValid) e.dob = f.day && f.month && f.year ? c.badDate : q.errors.dob;
-    if (minor && !f.guardian) e.guardian = q.errors.guardian;
-    if (f.gift && !f.deliverTo.trim()) e.deliverTo = u.errors.deliveryName;
-    if (!/^[1-9]\d{5}$/.test(f.pincode)) e.pincode = u.errors.pincode;
-    if (!f.house.trim()) e.house = u.errors.line1;
-    if (!f.city.trim()) e.city = u.errors.city;
-    if (!f.state) e.state = u.errors.state;
+  const detErrors = useMemo(() => {
+    const e: Partial<Record<DetailField, string>> = {};
+    if (!d.wearerName.trim()) e.wearerName = q.errors.name;
+    if (!dobValid) e.dob = d.day && d.month && d.year ? c.badDate : q.errors.dob;
+    if (minor && !d.guardian) e.guardian = q.errors.guardian;
+    if (d.gift && !d.deliverTo.trim()) e.deliverTo = u.errors.deliveryName;
+    if (!/^[1-9]\d{5}$/.test(d.pincode)) e.pincode = u.errors.pincode;
+    if (!d.house.trim()) e.house = u.errors.line1;
+    if (!d.city.trim()) e.city = u.errors.city;
+    if (!d.state) e.state = u.errors.state;
     return e;
-  }, [product, f, dobValid, minor, q, u, c.badDate]);
-  const err = (k: Field) => (errorsOn ? errors[k] : undefined);
-  const errProps = (k: Field) => ({ "aria-invalid": !!err(k), "aria-describedby": err(k) ? `qo-err-${k}` : undefined });
-  const ErrMsg = ({ k }: { k: Field }) =>
-    err(k) ? (
+  }, [d, dobValid, minor, q, u, c.badDate]);
+
+  type AnyField = PreField | DetailField;
+  const errOf = (k: AnyField): string | undefined =>
+    (preErrorsOn && (preErrors as Record<string, string>)[k]) || (detErrorsOn && (detErrors as Record<string, string>)[k]) || undefined;
+  const errProps = (k: AnyField) => ({ "aria-invalid": !!errOf(k), "aria-describedby": errOf(k) ? `qo-err-${k}` : undefined });
+  const errMsg = (k: AnyField) =>
+    errOf(k) ? (
       <em className="fn-err" id={`qo-err-${k}`}>
-        {err(k)}
+        {errOf(k)}
       </em>
     ) : null;
+  const focusFirstError = () => window.setTimeout(() => panel.current?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus(), 40);
 
-  const [firstName, ...rest] = f.name.trim().split(/\s+/);
+  const [firstName, ...rest] = name.trim().split(/\s+/);
   const lastName = rest.join(" ");
-  const deliverName = f.gift ? f.deliverTo.trim() : f.name.trim();
-  const showCityState = pin.status === "failed" || pin.edit || (pin.status !== "found" && pin.status !== "loading" && (f.city || f.state)) || (errorsOn && (errors.city || errors.state));
+  const titles = (list: string[]) => list.map((x) => bySlug(x)?.title ?? x).join(" + ");
 
-  /* ---- WhatsApp order (before online payment is switched on) ---- */
-  const whatsAppText = () =>
-    [
-      tf(q.waOrder, { title: [product?.title, ...extras.map((x) => bySlug(x)?.title ?? x)].join(" + "), amount: formatINR(total) }),
-      tf(q.waLines, {
-        name: f.name.trim(),
-        dob: `${f.day}/${f.month}/${f.year}`,
-        wrist: f.wrist === "unsure" ? q.wristUnsure : f.wrist,
-        deliverTo: deliverName,
-        address: [f.house, f.area, f.city, f.state, f.pincode].filter(Boolean).join(", "),
-        mobile: f.mobile,
-      }),
-      coupon ? `${u.coupon}: ${coupon.code}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-  /* ---- pay ---- */
+  /* ---- step 1: pay ---- */
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (Object.keys(errors).length) {
-      setErrorsOn(true);
-      window.setTimeout(() => panel.current?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus(), 30);
+    if (Object.keys(preErrors).length) {
+      setPreErrorsOn(true);
+      focusFirstError();
       return;
     }
     if (!product) return;
+    const purposes = [product.slug, ...extras];
     if (whatsAppOnly) {
       track("order_whatsapp", { bracelet: product.slug, value: total, currency: "INR" });
-      window.open(`https://wa.me/${data.waPhone}?text=${encodeURIComponent(whatsAppText())}`, "_blank", "noopener,noreferrer");
+      const text = [
+        tf(q.waOrder, { title: titles(purposes), amount: formatINR(total) }),
+        tf(q.waShort, { name: name.trim(), mobile }),
+        coupon ? `${u.coupon}: ${coupon.code}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      window.open(`https://wa.me/${data.waPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
       return;
     }
     setPay({ status: "working" });
@@ -347,50 +393,47 @@ export default function QuickOrder({ data }: { data: QuickData }) {
           lang,
           source: "quick",
           bracelet: product.slug,
-          wearer: { firstName, lastName, day, month, year, wrist: f.wrist || "unsure" },
-          intentions: [product.slug, ...extras],
+          wearer: { firstName, lastName, wrist: "unsure" },
+          intentions: purposes,
           focus: "",
-          isGift: f.gift,
+          isGift: false,
           giftNote: "",
-          contact: { deliveryName: deliverName, mobile: f.mobile, email: "" },
-          address: { line1: f.house.trim(), line2: f.area.trim(), landmark: "", city: f.city.trim(), state: f.state, pincode: f.pincode },
+          contact: { deliveryName: name.trim(), mobile, email: "" },
           consent: true,
-          marketing: f.marketing,
+          marketing: false,
           utm: utm.current,
           ...(coupon ? { coupon: coupon.code } : {}),
           extras,
         }),
       });
-      const d = await res.json().catch(() => ({}));
+      const x = await res.json().catch(() => ({}));
       if (res.status === 503) {
-        // Payments not switched on yet: send the order on WhatsApp instead.
         setWhatsAppOnly(true);
         setPay({ status: "error", message: q.noPayYet });
         return;
       }
       if (!res.ok) {
-        if (d.field === "coupon") {
+        if (x.field === "coupon") {
           setCoupon(null);
-          setCouponMsg({ error: d.error });
+          setCouponMsg({ error: x.error });
         }
-        setPay({ status: "error", message: d.error ?? u.payGeneric });
+        setPay({ status: "error", message: x.error ?? u.payGeneric });
         return;
       }
       if (!(await loadRazorpay()) || !window.Razorpay) {
         setPay({ status: "error", message: u.payLoad });
         return;
       }
-      const purposes = [product.slug, ...extras];
       const rzp = new window.Razorpay({
-        key: d.keyId,
-        order_id: d.orderId,
-        amount: d.amount,
-        currency: d.currency,
+        key: x.keyId,
+        order_id: x.orderId,
+        amount: x.amount,
+        currency: x.currency,
         name: "Bracelet By Ammit",
-        description: tf(u.rzpDescription, { title: purposes.map((x) => bySlug(x)?.title ?? x).join(" + ") }),
+        description: tf(u.rzpDescription, { title: titles(purposes) }),
         image: `${window.location.origin}/brand/emblem.png`,
-        prefill: { name: deliverName, contact: `+91${f.mobile}` },
-        notes: { ref: d.ref },
+        prefill: { name: name.trim(), contact: `+91${mobile}` },
+        notes: { ref: x.ref },
         theme: { color: "#050E8F" },
         modal: { ondismiss: () => setPay({ status: "error", message: u.payDismissed }) },
         handler: async (r: RzpResponse) => {
@@ -402,12 +445,16 @@ export default function QuickOrder({ data }: { data: QuickData }) {
           }).catch(() => null);
           const vd = v ? await v.json().catch(() => ({})) : {};
           if (v?.ok) {
-            setPaid({ ref: d.ref, rzpOrderId: d.orderId, purposes });
+            const p: Paid = { ref: x.ref, rzpOrderId: x.orderId, purposes, name: name.trim(), mobile, at: Date.now() };
+            writePending(p);
+            setPending(p);
+            setPaid(p);
             setStage("details");
+            setD({ ...EMPTY_DETAILS, wearerName: name.trim(), deliverTo: name.trim() });
             setPay({ status: "idle" });
-            track("purchase", { transaction_id: d.ref, value: d.amount / 100, currency: "INR", ...(coupon ? { coupon: coupon.code } : {}) }, "Purchase");
+            track("purchase", { transaction_id: x.ref, value: x.amount / 100, currency: "INR", ...(coupon ? { coupon: coupon.code } : {}) }, "Purchase");
           } else {
-            setPay({ status: "error", message: vd.error ?? tf(u.payUnconfirmed, { ref: d.ref }) });
+            setPay({ status: "error", message: vd.error ?? tf(u.payUnconfirmed, { ref: x.ref }) });
           }
         },
       });
@@ -418,28 +465,47 @@ export default function QuickOrder({ data }: { data: QuickData }) {
     }
   };
 
-  /* ---- after payment: details for Ammit ---- */
-  const saveDetails = async (skip = false) => {
+  /* ---- step 2: save the details ---- */
+  const saveDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!paid) return;
-    if (skip || (!gender && !focus && !note.trim())) {
-      setStage("numbers");
+    if (Object.keys(detErrors).length) {
+      setDetErrorsOn(true);
+      focusFirstError();
       return;
     }
+    const [wFirst, ...wRest] = d.wearerName.trim().split(/\s+/);
     setDetailsState({ status: "working" });
     const res = await fetch("/api/order/details", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId: paid.rzpOrderId, lang, ...(gender ? { gender } : {}), focus, note: note.trim() }),
+      body: JSON.stringify({
+        orderId: paid.rzpOrderId,
+        lang,
+        isGift: d.gift,
+        wearer: { firstName: wFirst, lastName: wRest.join(" "), day, month, year },
+        ...(d.gender ? { gender: d.gender } : {}),
+        wrist: d.wrist || "unsure",
+        deliveryName: d.gift ? d.deliverTo.trim() : d.wearerName.trim(),
+        address: { line1: d.house.trim(), line2: d.area.trim(), city: d.city.trim(), state: d.state, pincode: d.pincode },
+        focus: d.focus,
+        note: d.note.trim(),
+        marketing: d.marketing,
+      }),
     }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
+    const x = res ? await res.json().catch(() => ({})) : {};
     if (res?.ok) {
-      setDetailsState({ status: "saved", message: q.saved });
+      writePending(null);
+      setPending(null);
+      setDetailsState({ status: "saved", message: q.detailsSaved });
       setStage("numbers");
-    } else setDetailsState({ status: "error", message: d.error ?? ui.server.detailsFailed });
+      track("order_details", { ref: paid.ref });
+    } else setDetailsState({ status: "error", message: x.error ?? ui.server.detailsFailed });
   };
 
   const startTopUp = async () => {
-    if (!paid || !product) return;
+    const base = paid ? bySlug(paid.purposes[0]) : undefined;
+    if (!paid || !base) return;
     setTopUpState({ status: "working" });
     try {
       const res = await fetch("/api/checkout/upgrade", {
@@ -447,20 +513,20 @@ export default function QuickOrder({ data }: { data: QuickData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, orderId: paid.rzpOrderId, add: topUp }),
       });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) return setTopUpState({ status: "error", message: d.error ?? u.payGeneric });
+      const x = await res.json().catch(() => ({}));
+      if (!res.ok) return setTopUpState({ status: "error", message: x.error ?? u.payGeneric });
       if (!(await loadRazorpay()) || !window.Razorpay) return setTopUpState({ status: "error", message: u.payLoad });
-      const added = topUp.map((x) => bySlug(x)?.title ?? x);
+      const added = topUp.map((t) => bySlug(t)?.title ?? t);
       const rzp = new window.Razorpay({
-        key: d.keyId,
-        order_id: d.orderId,
-        amount: d.amount,
-        currency: d.currency,
+        key: x.keyId,
+        order_id: x.orderId,
+        amount: x.amount,
+        currency: x.currency,
         name: "Bracelet By Ammit",
-        description: tf(u.rzpTopUp, { title: added.join(" + "), ref: d.ref }),
+        description: tf(u.rzpTopUp, { title: added.join(" + "), ref: x.ref }),
         image: `${window.location.origin}/brand/emblem.png`,
-        prefill: d.prefill,
-        notes: { ref: d.ref },
+        prefill: x.prefill,
+        notes: { ref: x.ref },
         theme: { color: "#050E8F" },
         modal: { ondismiss: () => setTopUpState({ status: "idle" }) },
         handler: async (r: RzpResponse) => {
@@ -474,8 +540,8 @@ export default function QuickOrder({ data }: { data: QuickData }) {
             setPaid((p) => (p ? { ...p, purposes: [...p.purposes, ...topUp] } : p));
             setTopUp([]);
             setTopUpState({ status: "done", message: tf(u.topUpDone, { titles: added.join(u.and) }) });
-            track("purchase", { transaction_id: `${d.ref}-up`, value: d.amount / 100, currency: "INR", upgrade: 1 }, "Purchase");
-          } else setTopUpState({ status: "error", message: tf(u.topUpUnconfirmed, { ref: d.ref }) });
+            track("purchase", { transaction_id: `${x.ref}-up`, value: x.amount / 100, currency: "INR", upgrade: 1 }, "Purchase");
+          } else setTopUpState({ status: "error", message: tf(u.topUpUnconfirmed, { ref: x.ref }) });
         },
       });
       rzp.on("payment.failed", (r) => setTopUpState({ status: "error", message: r.error?.description ?? u.payFailed }));
@@ -486,15 +552,14 @@ export default function QuickOrder({ data }: { data: QuickData }) {
   };
 
   const finish = () => {
-    // Start fresh next time.
     setPaid(null);
-    setF(EMPTY);
-    setErrorsOn(false);
+    setName("");
+    setMobile("");
+    setPreErrorsOn(false);
+    setDetErrorsOn(false);
     setExtras([]);
     setCoupon(null);
-    setGender("");
-    setFocus("");
-    setNote("");
+    setD(EMPTY_DETAILS);
     setDetailsState({ status: "idle" });
     setTopUp([]);
     setTopUpState({ status: "idle" });
@@ -502,14 +567,41 @@ export default function QuickOrder({ data }: { data: QuickData }) {
     close();
   };
 
-  if (!open) return null;
+  /* ---- reminder for a paid order without details ---- */
+  const reminder =
+    pending && !open && !remindHidden ? (
+      <div className="qo-remind" role="status">
+        <p>{tf(q.remind, { ref: pending.ref })}</p>
+        <button type="button" className="btn btn-gold" onClick={() => showDetails(pending)}>
+          {q.remindButton}
+        </button>
+        <button
+          type="button"
+          className="qo-remind-x"
+          aria-label={q.remindHide}
+          onClick={() => {
+            setRemindHidden(true);
+            try {
+              sessionStorage.setItem("bba_remind_hidden", "1");
+            } catch {}
+          }}
+        >
+          ×
+        </button>
+      </div>
+    ) : null;
+
+  if (!open) return reminder;
 
   const win = deliveryWindow(data.minDays, data.maxDays, new Date(), INTL_LOCALE[lang]);
-  const wearer = firstName || "";
+  const wearer = (d.wearerName.trim() || paid?.name || "").split(/\s+/)[0];
   const m = dobValid ? mulank(day) : undefined;
   const bh = dobValid ? bhagyank(day, month, year) : undefined;
   const mInfo = data.mulank.find((x) => x.number === m);
   const paidProduct = paid ? bySlug(paid.purposes[0]) : undefined;
+  const showCityState =
+    pin.status === "failed" || pin.edit || (pin.status === "idle" && !!(d.city || d.state)) || (detErrorsOn && !!(detErrors.city || detErrors.state));
+  const waHelp = paid ? `https://wa.me/${data.waPhone}?text=${encodeURIComponent(tf(q.waDetails, { ref: paid.ref }))}` : "";
 
   return (
     <>
@@ -517,9 +609,9 @@ export default function QuickOrder({ data }: { data: QuickData }) {
       <div ref={panel} className="qo" role="dialog" aria-modal="true" aria-labelledby="qo-title">
         <div className="qo-head">
           <h2 id="qo-title" ref={titleRef} tabIndex={-1} className="qo-title">
-            {paid ? (firstName && !f.gift ? tf(q.paidTitleName, { name: firstName }) : q.paidTitle) : picking ? q.choosePurpose : q.dialog}
+            {paid ? (paid.name ? tf(q.paidTitleName, { name: paid.name.split(/\s+/)[0] }) : q.paidTitle) : picking ? q.choosePurpose : q.dialog}
           </h2>
-          <button type="button" className="qo-close" onClick={paid ? finish : close} aria-label={q.close} disabled={pay.status === "working"}>
+          <button type="button" className="qo-close" onClick={paid && stage === "numbers" ? finish : close} aria-label={q.close} disabled={pay.status === "working"}>
             <span />
             <span />
           </button>
@@ -540,7 +632,13 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                       setPicking(false);
                     }}
                   >
-                    <Sphere color={p.sphere.color} shade={p.sphere.shade} gloss={p.sphere.gloss} size={34} />
+                    {p.photo ? (
+                      <span className="qo-purpose-img">
+                        <Image src={p.photo} alt="" fill sizes="48px" />
+                      </span>
+                    ) : (
+                      <Sphere color={p.sphere.color} shade={p.sphere.shade} gloss={p.sphere.gloss} size={34} />
+                    )}
                     <span className="qo-purpose-t">
                       <b>{p.title}</b>
                       <small>{p.blurb}</small>
@@ -553,7 +651,7 @@ export default function QuickOrder({ data }: { data: QuickData }) {
           </div>
         )}
 
-        {/* The order form */}
+        {/* Step 1: name + WhatsApp, then pay */}
         {!paid && !picking && product && (
           <form className="qo-form" noValidate onSubmit={submit}>
             <div className="qo-body">
@@ -566,22 +664,12 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                   )}
                 </span>
                 <span className="qo-product-t">
-                  <b>{[product.title, ...extras.map((x) => bySlug(x)?.title ?? x)].join(" + ")}</b>
+                  <b>{titles([product.slug, ...extras])}</b>
                   <small>{q.made}</small>
                   <span className="qo-product-links">
                     <button type="button" className="fn-link" onClick={() => setPicking(true)}>
                       {q.change}
                     </button>
-                    <Link
-                      href={`/bracelets/${product.slug}`}
-                      onClick={() => {
-                        // Leaving for the bracelet page: close without stepping back in history.
-                        pushed.current = false;
-                        setOpen(false);
-                      }}
-                    >
-                      {q.about}
-                    </Link>
                   </span>
                 </span>
                 <span className="qo-product-p">{formatINR(listTotal)}</span>
@@ -595,7 +683,7 @@ export default function QuickOrder({ data }: { data: QuickData }) {
               {(showExtras || extras.length > 0) && (
                 <PurposeAdd
                   idBase="qo-add"
-                  title={f.gift ? u.addTitleGift : u.addTitle}
+                  title={u.addTitle}
                   text={u.addText}
                   labels={{ second: u.addSecond, third: u.addThird, youChose: u.youChose }}
                   choices={products.map((p) => ({ slug: p.slug, title: p.title }))}
@@ -607,151 +695,29 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                 />
               )}
 
+              <p className="qo-lead">{q.prePay}</p>
+
+              <label className="fn-field">
+                <span>{q.yourName}</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} {...errProps("name")} />
+                {errMsg("name")}
+              </label>
+
               <label className="fn-field">
                 <span>{q.mobile}</span>
                 <span className="qo-tel">
                   <span aria-hidden="true">+91</span>
                   <input
-                    value={f.mobile}
-                    onChange={(e) => set("mobile", e.target.value.replace(/\D/g, "").replace(/^91(?=\d{10})/, "").slice(0, 10))}
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").replace(/^91(?=\d{10})/, "").slice(0, 10))}
                     inputMode="numeric"
                     autoComplete="tel-national"
                     placeholder={u.mobilePlaceholder}
                     {...errProps("mobile")}
                   />
                 </span>
-                {err("mobile") ? <ErrMsg k="mobile" /> : <small className="qo-help">{q.mobileHelp}</small>}
+                {errOf("mobile") ? errMsg("mobile") : <small className="qo-help">{q.mobileHelp}</small>}
               </label>
-
-              <label className="fn-check qo-gift">
-                <input type="checkbox" checked={f.gift} onChange={(e) => set("gift", e.target.checked)} />
-                <span>{q.gift}</span>
-              </label>
-
-              <label className="fn-field">
-                <span>{f.gift ? q.nameGift : q.name}</span>
-                <input
-                  value={f.name}
-                  onChange={(e) => set("name", e.target.value)}
-                  autoComplete={f.gift ? "off" : "name"}
-                  maxLength={100}
-                  {...errProps("name")}
-                />
-                <ErrMsg k="name" />
-              </label>
-
-              <fieldset className="qo-dob">
-                <legend>{f.gift ? q.dobGift : q.dob}</legend>
-                <div className="fn-fields cols-dob">
-                  <select value={f.day} onChange={(e) => set("day", e.target.value)} aria-label={c.day} {...errProps("dob")}>
-                    <option value="">{c.day}</option>
-                    {Array.from({ length: 31 }, (_, d) => (
-                      <option key={d + 1} value={d + 1}>
-                        {d + 1}
-                      </option>
-                    ))}
-                  </select>
-                  <select value={f.month} onChange={(e) => set("month", e.target.value)} aria-label={c.month} {...errProps("dob")}>
-                    <option value="">{c.month}</option>
-                    {c.months.map((mo, i) => (
-                      <option key={mo} value={i + 1}>
-                        {mo}
-                      </option>
-                    ))}
-                  </select>
-                  <select value={f.year} onChange={(e) => set("year", e.target.value)} aria-label={c.year} {...errProps("dob")}>
-                    <option value="">{c.year}</option>
-                    {YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {err("dob") ? <ErrMsg k="dob" /> : <small className="qo-help">{q.dobHelp}</small>}
-              </fieldset>
-              {minor && (
-                <label className="fn-check">
-                  <input type="checkbox" checked={f.guardian} onChange={(e) => set("guardian", e.target.checked)} {...errProps("guardian")} />
-                  <span>{u.minor}</span>
-                </label>
-              )}
-              <ErrMsg k="guardian" />
-
-              <fieldset className="qo-wrist">
-                <legend>{q.wrist}</legend>
-                <div className="qo-chips">
-                  {[...WRISTS, "unsure"].map((w) => (
-                    <button key={w} type="button" className={`qo-chip${f.wrist === w ? " is-on" : ""}`} aria-pressed={f.wrist === w} onClick={() => set("wrist", w)}>
-                      {w === "unsure" ? q.wristUnsure : w.replace("cm", " cm")}
-                    </button>
-                  ))}
-                </div>
-                <small className="qo-help">
-                  <RichText text={q.wristHelp} newTab />
-                </small>
-              </fieldset>
-
-              <fieldset className="qo-address">
-                <legend>{u.address}</legend>
-                {f.gift && (
-                  <label className="fn-field">
-                    <span>{q.deliverTo}</span>
-                    <input value={f.deliverTo} onChange={(e) => set("deliverTo", e.target.value)} autoComplete="name" maxLength={80} {...errProps("deliverTo")} />
-                    <ErrMsg k="deliverTo" />
-                  </label>
-                )}
-                <label className="fn-field qo-pin">
-                  <span>{q.pincode}</span>
-                  <input
-                    value={f.pincode}
-                    onChange={(e) => set("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                    {...errProps("pincode")}
-                  />
-                  <ErrMsg k="pincode" />
-                  {pin.status === "loading" && <small className="qo-help" aria-live="polite">{q.pinFinding}</small>}
-                  {pin.status === "found" && !pin.edit && (
-                    <small className="qo-found" aria-live="polite">
-                      ✓ {f.city}, {f.state}{" "}
-                      <button type="button" className="fn-link" onClick={() => setPin((p) => ({ ...p, edit: true }))}>
-                        {q.change}
-                      </button>
-                    </small>
-                  )}
-                </label>
-                <label className="fn-field">
-                  <span>{q.house}</span>
-                  <input value={f.house} onChange={(e) => set("house", e.target.value)} autoComplete="address-line1" maxLength={120} {...errProps("house")} />
-                  <ErrMsg k="house" />
-                </label>
-                <label className="fn-field">
-                  <span>{q.area}</span>
-                  <input value={f.area} onChange={(e) => set("area", e.target.value)} autoComplete="address-line2" maxLength={120} />
-                </label>
-                {showCityState && (
-                  <div className="fn-fields cols-2">
-                    <label className="fn-field">
-                      <span>{q.city}</span>
-                      <input value={f.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" maxLength={60} {...errProps("city")} />
-                      <ErrMsg k="city" />
-                    </label>
-                    <label className="fn-field">
-                      <span>{q.state}</span>
-                      <select value={f.state} onChange={(e) => set("state", e.target.value)} autoComplete="address-level1" {...errProps("state")}>
-                        <option value="">{u.chooseState}</option>
-                        {INDIAN_STATES.map((st) => (
-                          <option key={st} value={st}>
-                            {st}
-                          </option>
-                        ))}
-                      </select>
-                      <ErrMsg k="state" />
-                    </label>
-                  </div>
-                )}
-              </fieldset>
 
               <div className="qo-coupon">
                 {coupon ? (
@@ -806,11 +772,6 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                   </button>
                 )}
               </div>
-
-              <label className="fn-check is-light">
-                <input type="checkbox" checked={f.marketing} onChange={(e) => set("marketing", e.target.checked)} />
-                <span>{u.marketing}</span>
-              </label>
               <p className="qo-eta">
                 {data.trust.shipping} · {tf(u.eta, { dates: win })}
               </p>
@@ -822,7 +783,7 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                   {pay.message}
                 </p>
               )}
-              {errorsOn && Object.keys(errors).length > 0 && pay.status !== "error" && (
+              {preErrorsOn && Object.keys(preErrors).length > 0 && pay.status !== "error" && (
                 <p className="fn-error" role="alert">
                   {q.fixErrors}
                 </p>
@@ -830,160 +791,326 @@ export default function QuickOrder({ data }: { data: QuickData }) {
               <button type="submit" className={`btn ${whatsAppOnly ? "btn-gold" : "btn-lapis"} qo-pay`} disabled={pay.status === "working"}>
                 {pay.status === "working" ? (pay.message ?? u.opening) : whatsAppOnly ? q.sendWhatsApp : tf(q.pay, { amount: formatINR(total) })}
               </button>
+              <p className="qo-agree">{whatsAppOnly ? q.noPayYet : <RichText text={q.agree} newTab />}</p>
+            </div>
+          </form>
+        )}
+
+        {/* Step 2: the details form */}
+        {paid && stage === "details" && (
+          <form className="qo-form" noValidate onSubmit={saveDetails}>
+            <div className="qo-body qo-after">
+              <p className="fn-kicker">
+                <span aria-hidden="true">◆</span> {tf(q.paidKicker, { ref: paid.ref })}
+              </p>
+              <div>
+                <h3 className="qo-h3">{q.detailsTitle}</h3>
+                <p className="qo-help">{q.detailsNeed}</p>
+              </div>
+
+              <fieldset>
+                <legend>{q.forWhom}</legend>
+                <div className="qo-chips">
+                  {(
+                    [
+                      [false, u.forMe],
+                      [true, u.forGift],
+                    ] as const
+                  ).map(([g, label]) => (
+                    <button
+                      key={String(g)}
+                      type="button"
+                      className={`qo-chip${d.gift === g ? " is-on" : ""}`}
+                      aria-pressed={d.gift === g}
+                      onClick={() =>
+                        setD((s) => ({
+                          ...s,
+                          gift: g,
+                          // The buyer's name fits "for me"; for a gift, ask the wearer's.
+                          wearerName: g ? (s.wearerName === paid.name ? "" : s.wearerName) : s.wearerName || paid.name,
+                        }))
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <label className="fn-field">
+                <span>{d.gift ? q.wearerName : q.name}</span>
+                <input value={d.wearerName} onChange={(e) => setDet("wearerName", e.target.value)} autoComplete={d.gift ? "off" : "name"} maxLength={100} {...errProps("wearerName")} />
+                {errMsg("wearerName")}
+              </label>
+
+              <fieldset className="qo-dob">
+                <legend>{d.gift ? q.dobGift : q.dob}</legend>
+                <div className="fn-fields cols-dob">
+                  <select value={d.day} onChange={(e) => setDet("day", e.target.value)} aria-label={c.day} {...errProps("dob")}>
+                    <option value="">{c.day}</option>
+                    {Array.from({ length: 31 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                  <select value={d.month} onChange={(e) => setDet("month", e.target.value)} aria-label={c.month} {...errProps("dob")}>
+                    <option value="">{c.month}</option>
+                    {c.months.map((mo, i) => (
+                      <option key={mo} value={i + 1}>
+                        {mo}
+                      </option>
+                    ))}
+                  </select>
+                  <select value={d.year} onChange={(e) => setDet("year", e.target.value)} aria-label={c.year} {...errProps("dob")}>
+                    <option value="">{c.year}</option>
+                    {YEARS.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errOf("dob") ? errMsg("dob") : <small className="qo-help">{q.dobHelp}</small>}
+              </fieldset>
+              {minor && (
+                <label className="fn-check">
+                  <input type="checkbox" checked={d.guardian} onChange={(e) => setDet("guardian", e.target.checked)} {...errProps("guardian")} />
+                  <span>{u.minor}</span>
+                </label>
+              )}
+              {errMsg("guardian")}
+
+              <fieldset>
+                <legend>{q.genderLabel}</legend>
+                <div className="qo-chips">
+                  {(
+                    [
+                      ["female", u.woman],
+                      ["male", u.man],
+                      ["other", u.preferNot],
+                    ] as const
+                  ).map(([g, label]) => (
+                    <button key={g} type="button" className={`qo-chip${d.gender === g ? " is-on" : ""}`} aria-pressed={d.gender === g} onClick={() => setDet("gender", g)}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="qo-wrist">
+                <legend>{q.wrist}</legend>
+                <div className="qo-chips">
+                  {[...WRISTS, "unsure"].map((w) => (
+                    <button key={w} type="button" className={`qo-chip${d.wrist === w ? " is-on" : ""}`} aria-pressed={d.wrist === w} onClick={() => setDet("wrist", w)}>
+                      {w === "unsure" ? q.wristUnsure : w.replace("cm", " cm")}
+                    </button>
+                  ))}
+                </div>
+                <small className="qo-help">
+                  <RichText text={q.wristHelp} newTab />
+                </small>
+              </fieldset>
+
+              <fieldset className="qo-address">
+                <legend>{u.address}</legend>
+                {d.gift && (
+                  <label className="fn-field">
+                    <span>{q.deliverTo}</span>
+                    <input value={d.deliverTo} onChange={(e) => setDet("deliverTo", e.target.value)} autoComplete="name" maxLength={80} {...errProps("deliverTo")} />
+                    {errMsg("deliverTo")}
+                  </label>
+                )}
+                <label className="fn-field qo-pin">
+                  <span>{q.pincode}</span>
+                  <input
+                    value={d.pincode}
+                    onChange={(e) => setDet("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    {...errProps("pincode")}
+                  />
+                  {errMsg("pincode")}
+                  {pin.status === "loading" && (
+                    <small className="qo-help" aria-live="polite">
+                      {q.pinFinding}
+                    </small>
+                  )}
+                  {pin.status === "found" && !pin.edit && (
+                    <small className="qo-found" aria-live="polite">
+                      ✓ {d.city}, {d.state}{" "}
+                      <button type="button" className="fn-link" onClick={() => setPin((p) => ({ ...p, edit: true }))}>
+                        {q.change}
+                      </button>
+                    </small>
+                  )}
+                </label>
+                <label className="fn-field">
+                  <span>{q.house}</span>
+                  <input value={d.house} onChange={(e) => setDet("house", e.target.value)} autoComplete="address-line1" maxLength={120} {...errProps("house")} />
+                  {errMsg("house")}
+                </label>
+                <label className="fn-field">
+                  <span>{q.area}</span>
+                  <input value={d.area} onChange={(e) => setDet("area", e.target.value)} autoComplete="address-line2" maxLength={120} />
+                </label>
+                {showCityState && (
+                  <div className="fn-fields cols-2">
+                    <label className="fn-field">
+                      <span>{q.city}</span>
+                      <input value={d.city} onChange={(e) => setDet("city", e.target.value)} autoComplete="address-level2" maxLength={60} {...errProps("city")} />
+                      {errMsg("city")}
+                    </label>
+                    <label className="fn-field">
+                      <span>{q.state}</span>
+                      <select value={d.state} onChange={(e) => setDet("state", e.target.value)} autoComplete="address-level1" {...errProps("state")}>
+                        <option value="">{u.chooseState}</option>
+                        {INDIAN_STATES.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                      {errMsg("state")}
+                    </label>
+                  </div>
+                )}
+              </fieldset>
+
+              {paidProduct && paidProduct.listA.length > 0 && (
+                <fieldset>
+                  <legend>{q.focusLabel}</legend>
+                  <div className="qo-chips is-list">
+                    {[...paidProduct.listA, u.somethingElse].map((x) => (
+                      <button key={x} type="button" className={`qo-chip${d.focus === x ? " is-on" : ""}`} aria-pressed={d.focus === x} onClick={() => setDet("focus", d.focus === x ? "" : x)}>
+                        {x}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+              <label className="fn-field">
+                <span>{q.noteLabel}</span>
+                <textarea rows={2} value={d.note} onChange={(e) => setDet("note", e.target.value)} maxLength={500} placeholder={q.notePlaceholder} />
+              </label>
+              <label className="fn-check is-light">
+                <input type="checkbox" checked={d.marketing} onChange={(e) => setDet("marketing", e.target.checked)} />
+                <span>{u.marketing}</span>
+              </label>
+            </div>
+            <div className="qo-foot">
+              {detailsState.status === "error" && (
+                <p className="fn-error" role="alert">
+                  {detailsState.message}
+                </p>
+              )}
+              {detErrorsOn && Object.keys(detErrors).length > 0 && detailsState.status !== "error" && (
+                <p className="fn-error" role="alert">
+                  {q.fixErrors}
+                </p>
+              )}
+              <button type="submit" className="btn btn-lapis qo-pay" disabled={detailsState.status === "working"}>
+                {detailsState.status === "working" ? q.saving : q.saveDetails}
+              </button>
               <p className="qo-agree">
-                {whatsAppOnly ? q.noPayYet : <RichText text={q.agree} newTab />}
+                <RichText text={tf(q.viaWhatsApp, { url: waHelp })} />
               </p>
             </div>
           </form>
         )}
 
-        {/* After payment: details, then the numbers */}
-        {paid && paidProduct && (
+        {/* After the details: numbers, add a purpose, what happens next */}
+        {paid && stage === "numbers" && paidProduct && (
           <div className="qo-body qo-after">
             <p className="fn-kicker">
               <span aria-hidden="true">◆</span> {tf(q.paidKicker, { ref: paid.ref })}
             </p>
-
-            {stage === "details" && (
-              <div className="qo-details">
-                <h3 className="qo-h3">{q.detailsTitle}</h3>
-                <p className="qo-help">{f.gift ? tf(q.detailsTextGift, { name: wearer || u.theWearer }) : q.detailsText}</p>
-                <fieldset>
-                  <legend>{q.genderLabel}</legend>
-                  <div className="qo-chips">
-                    {(
-                      [
-                        ["female", u.woman],
-                        ["male", u.man],
-                        ["other", u.preferNot],
-                      ] as const
-                    ).map(([g, label]) => (
-                      <button key={g} type="button" className={`qo-chip${gender === g ? " is-on" : ""}`} aria-pressed={gender === g} onClick={() => setGender(g)}>
-                        {label}
-                      </button>
+            <div className="qo-numbers">
+              {detailsState.status === "saved" && (
+                <p className="fn-topup-done" role="status">
+                  {detailsState.message}
+                </p>
+              )}
+              {mInfo && (
+                <>
+                  <h3 className="qo-h3">{d.gift ? tf(q.numbersTitleGift, { name: wearer || u.theWearer }) : q.numbersTitle}</h3>
+                  <div className="fn-medals" aria-hidden="true">
+                    <span className="fn-medal">
+                      <b>{m}</b>
+                      <small>{u.mulank}</small>
+                    </span>
+                    <span className="fn-medal is-alt">
+                      <b>{bh}</b>
+                      <small>{u.bhagyank}</small>
+                    </span>
+                  </div>
+                  <p className="qo-reveal">
+                    <b>{tf(u.revealTitle, { m, planet: mInfo.planet })}</b>{" "}
+                    {tf(u.revealText, {
+                      day,
+                      m,
+                      b: bh,
+                      planet: `${mInfo.planet}${mInfo.planetHindi && mInfo.planetHindi !== mInfo.planet ? `, ${mInfo.planetHindi}` : ""}`,
+                    })}
+                  </p>
+                  <ul className="fn-traits">
+                    {mInfo.traits.map((t) => (
+                      <li key={t}>{t}</li>
                     ))}
-                  </div>
-                </fieldset>
-                {paidProduct.listA.length > 0 && (
-                  <fieldset>
-                    <legend>{q.focusLabel}</legend>
-                    <div className="qo-chips is-list">
-                      {[...paidProduct.listA, u.somethingElse].map((x) => (
-                        <button key={x} type="button" className={`qo-chip${focus === x ? " is-on" : ""}`} aria-pressed={focus === x} onClick={() => setFocus(focus === x ? "" : x)}>
-                          {x}
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-                )}
-                <label className="fn-field">
-                  <span>{q.noteLabel}</span>
-                  <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder={q.notePlaceholder} />
-                </label>
-                {detailsState.status === "error" && (
-                  <p className="fn-error" role="alert">
-                    {detailsState.message}
-                  </p>
-                )}
-                <div className="qo-actions">
-                  <button type="button" className="btn btn-lapis" onClick={() => saveDetails()} disabled={detailsState.status === "working"}>
-                    {detailsState.status === "working" ? q.saving : q.showNumbers}
-                  </button>
-                  <button type="button" className="fn-link" onClick={() => saveDetails(true)}>
-                    {q.skip}
-                  </button>
-                </div>
-              </div>
-            )}
+                  </ul>
+                </>
+              )}
 
-            {stage === "numbers" && (
-              <div className="qo-numbers">
-                {detailsState.status === "saved" && (
-                  <p className="fn-topup-done" role="status">
-                    {detailsState.message}
-                  </p>
-                )}
-                {mInfo && (
-                  <>
-                    <h3 className="qo-h3">{f.gift ? tf(q.numbersTitleGift, { name: wearer || u.theWearer }) : q.numbersTitle}</h3>
-                    <div className="fn-medals" aria-hidden="true">
-                      <span className="fn-medal">
-                        <b>{m}</b>
-                        <small>{u.mulank}</small>
-                      </span>
-                      <span className="fn-medal is-alt">
-                        <b>{bh}</b>
-                        <small>{u.bhagyank}</small>
-                      </span>
-                    </div>
-                    <p className="qo-reveal">
-                      <b>{tf(u.revealTitle, { m, planet: mInfo.planet })}</b>{" "}
-                      {tf(u.revealText, {
-                        day,
-                        m,
-                        b: bh,
-                        planet: `${mInfo.planet}${mInfo.planetHindi && mInfo.planetHindi !== mInfo.planet ? `, ${mInfo.planetHindi}` : ""}`,
-                      })}
+              {paid.purposes.length < MAX_PURPOSES && topUpState.status !== "done" && (
+                <div className="fn-topup">
+                  <PurposeAdd
+                    idBase="qo-topup"
+                    title={u.topUpTitle}
+                    text={paid.purposes.length === 1 ? u.topUpText2 : u.topUpText3}
+                    labels={{ second: u.addSecond, third: u.addThird, youChose: u.youChose }}
+                    choices={products.map((p) => ({ slug: p.slug, title: p.title }))}
+                    suggested={[]}
+                    locked={paid.purposes}
+                    selected={topUp}
+                    onChange={setTopUp}
+                    nextPrice={
+                      paid.purposes.length + topUp.length < MAX_PURPOSES
+                        ? extraFor(paidProduct.priceInr, paid.purposes.length + topUp.length, paid.purposes.length + topUp.length + 1, data.tiers)
+                        : null
+                    }
+                  />
+                  {topUp.length > 0 && (
+                    <button type="button" className="btn btn-gold" disabled={topUpState.status === "working"} onClick={startTopUp}>
+                      {topUpState.status === "working"
+                        ? (topUpState.message ?? u.opening)
+                        : tf(u.topUpButton, { amount: formatINR(extraFor(paidProduct.priceInr, paid.purposes.length, paid.purposes.length + topUp.length, data.tiers)) })}
+                    </button>
+                  )}
+                  {topUpState.status === "error" && (
+                    <p className="fn-error" role="alert">
+                      {topUpState.message}
                     </p>
-                    <ul className="fn-traits">
-                      {mInfo.traits.map((t) => (
-                        <li key={t}>{t}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-
-                {paid.purposes.length < MAX_PURPOSES && topUpState.status !== "done" && (
-                  <div className="fn-topup">
-                    <PurposeAdd
-                      idBase="qo-topup"
-                      title={u.topUpTitle}
-                      text={paid.purposes.length === 1 ? u.topUpText2 : u.topUpText3}
-                      labels={{ second: u.addSecond, third: u.addThird, youChose: u.youChose }}
-                      choices={products.map((p) => ({ slug: p.slug, title: p.title }))}
-                      suggested={[]}
-                      locked={paid.purposes}
-                      selected={topUp}
-                      onChange={setTopUp}
-                      nextPrice={
-                        paid.purposes.length + topUp.length < MAX_PURPOSES
-                          ? extraFor(paidProduct.priceInr, paid.purposes.length + topUp.length, paid.purposes.length + topUp.length + 1, data.tiers)
-                          : null
-                      }
-                    />
-                    {topUp.length > 0 && (
-                      <button type="button" className="btn btn-gold" disabled={topUpState.status === "working"} onClick={startTopUp}>
-                        {topUpState.status === "working"
-                          ? (topUpState.message ?? u.opening)
-                          : tf(u.topUpButton, { amount: formatINR(extraFor(paidProduct.priceInr, paid.purposes.length, paid.purposes.length + topUp.length, data.tiers)) })}
-                      </button>
-                    )}
-                    {topUpState.status === "error" && (
-                      <p className="fn-error" role="alert">
-                        {topUpState.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-                {topUpState.status === "done" && (
-                  <p className="fn-topup-done" role="status">
-                    {topUpState.message}
-                  </p>
-                )}
-
-                <ol className="num-list fn-next">
-                  <li>{f.gift ? tf(u.nextThem, { name: wearer }) : u.nextYou}</li>
-                  <li>{tf(u.nextWhatsApp, { mobile: f.mobile })}</li>
-                  <li>{tf(u.nextDelivery, { dates: win })}</li>
-                </ol>
-                <div className="qo-actions">
-                  <button type="button" className="btn btn-lapis" onClick={finish}>
-                    {q.done}
-                  </button>
+                  )}
                 </div>
-                <p className="small-note">{tf(u.questions, { ref: paid.ref })}</p>
+              )}
+              {topUpState.status === "done" && (
+                <p className="fn-topup-done" role="status">
+                  {topUpState.message}
+                </p>
+              )}
+
+              <ol className="num-list fn-next">
+                <li>{d.gift ? tf(u.nextThem, { name: wearer }) : u.nextYou}</li>
+                <li>{tf(u.nextWhatsApp, { mobile: paid.mobile })}</li>
+                <li>{tf(u.nextDelivery, { dates: win })}</li>
+              </ol>
+              <div className="qo-actions">
+                <button type="button" className="btn btn-lapis" onClick={finish}>
+                  {q.done}
+                </button>
               </div>
-            )}
+              <p className="small-note">{tf(u.questions, { ref: paid.ref })}</p>
+            </div>
           </div>
         )}
       </div>

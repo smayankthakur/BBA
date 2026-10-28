@@ -7,11 +7,7 @@ import { fill } from "@/lib/content/render";
 import RefNote from "./RefNote";
 import { getUI } from "@/lib/server/lang";
 import EditCycler from "./EditCycler";
-import OrderLink from "./order/OrderLink";
-
-const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
-  backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
-});
+import Link from "./LocaleLink";
 
 const sphereStyle = ({ visual: it }: Product): CSSProperties => ({
   backgroundColor: it.sphere,
@@ -20,28 +16,24 @@ const sphereStyle = ({ visual: it }: Product): CSSProperties => ({
 
 /**
  * Hover fan of three photo cards. Cards are rendered in the order 1, 3, 2
- * so the middle card (c2) sits on top, matching the design.
- * Bead-ring illustrations until product photos arrive; add <Image className="ph-img" …/> per card.
+ * so the middle card (c2) sits on top, matching the design. With fewer than
+ * three photos they repeat; with none, no fan is shown.
  */
 function PhotoStack({ it, refNote }: { it: Product; refNote: string }) {
   const photos = it.photos;
+  if (!photos.length) return null;
+  const at = (n: number) => photos[n % photos.length];
   const order = [
-    { cls: "c1", i: 0 },
-    { cls: "c3", i: 1 },
-    { cls: "c2", i: 2 },
+    { cls: "c1", photo: at(1) },
+    { cls: "c3", photo: at(0) },
+    { cls: "c2", photo: at(2) },
   ];
   return (
     <span className="stack" aria-hidden="true">
-      {order.map(({ cls, i }) => (
-        <span key={cls} className={`pc ${cls}`} style={{ backgroundImage: it.visual.cards[i] }}>
-          {photos.length ? (
-            <>
-              <Image src={photos[[1, 2, 0][i]] ?? photos[0]} alt="" fill sizes="150px" className="ph-img" />
-              <RefNote text={refNote} className="is-small" />
-            </>
-          ) : (
-            <span className="ring" style={ringStyle(it.visual.rings[i])} />
-          )}
+      {order.map(({ cls, photo }) => (
+        <span key={cls} className={`pc ${cls}`}>
+          <Image src={photo} alt="" fill sizes="150px" className="ph-img" />
+          <RefNote text={refNote} className="is-small" />
         </span>
       ))}
       <span className="tag">{it.title}</span>
@@ -64,14 +56,14 @@ export default async function IntentionEdit() {
       </div>
       <div className="edit-list">
         {list.map((it) => (
-          <OrderLink key={it.slug} slug={it.slug} className="row" href={`/bracelets/${it.slug}`} aria-label={`${it.title}, ${formatINR(it.priceInr)}`} aria-haspopup="dialog">
+          <Link key={it.slug} className="row" href={`/bracelets/${it.slug}`} aria-label={`${it.title}, ${formatINR(it.priceInr)}`}>
             <PhotoStack it={it} refNote={s.refNote} />
             <span className="sphere" aria-hidden="true" style={sphereStyle(it)} />
             <span className="row-title">{it.title}</span>
             <span className="muted">{it.blurb}</span>
             <span className="price">{formatINR(it.priceInr)}</span>
             <span className="go">{ui.common.choose}</span>
-          </OrderLink>
+          </Link>
         ))}
       </div>
       <EditCycler targetId="edit" />

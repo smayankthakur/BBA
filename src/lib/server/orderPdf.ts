@@ -80,9 +80,9 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
       title: "Wearer (read the numbers for this person)",
       rows: [
         ["Name", wearer],
-        ["Date of birth", `${dobLabel(o.dob_text)} (age ${ageOn(o.dob_text)})`],
+        ["Date of birth", o.dob_text ? `${dobLabel(o.dob_text)} (age ${ageOn(o.dob_text)})` : "Not given yet - ask on WhatsApp"],
         ["Gender", o.wearer_gender === "unspecified" ? "Not given yet - ask on WhatsApp" : cap(o.wearer_gender)],
-        ["Mulank / Bhagyank", `${o.mulank} / ${o.bhagyank}`],
+        ["Mulank / Bhagyank", o.mulank ? `${o.mulank} / ${o.bhagyank}` : "-"],
         ["Wrist size", o.wrist === "unsure" ? "Not sure - confirm with customer" : o.wrist],
         ["Gift", o.is_gift ? "Yes" : "No"],
         ...(o.is_gift ? ([["Gift note (for the card)", o.gift_note || "-"]] as [string, string][]) : []),
@@ -94,9 +94,9 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
         ["Deliver to", o.delivery_name],
         ["Mobile", `+91 ${o.mobile}`],
         ["Email", o.email || "-"],
-        ["Address", [o.address_line1, o.address_line2].filter(Boolean).join(", ")],
+        ["Address", [o.address_line1, o.address_line2].filter(Boolean).join(", ") || "Not given yet - ask on WhatsApp"],
         ["Landmark", o.landmark || "-"],
-        ["City / State / PIN", `${o.city}, ${o.state} ${o.pincode}`],
+        ["City / State / PIN", o.pincode ? `${o.city}, ${o.state} ${o.pincode}` : "-"],
       ],
     },
     {

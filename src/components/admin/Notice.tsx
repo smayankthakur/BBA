@@ -45,6 +45,10 @@ const ERR: Record<string, string> = {
   rate: "Commission must be 0–90% or a rupee amount.",
   amount: "Enter the amount paid (at least ₹1).",
   paidOn: "Choose the date it was paid.",
+  dob: "Check the date of birth (it can't be in the future).",
+  mobile: "Enter a 10-digit Indian mobile number.",
+  pincode: "Enter a 6-digit PIN code.",
+  state: "Choose a state from the list.",
 };
 
 /** Green/red message at the top of an admin screen, from ?msg= or ?err=. */

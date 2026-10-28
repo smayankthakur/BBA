@@ -140,6 +140,7 @@ function seedOnce() {
     if ((n[0]?.n ?? 0) === 0) for (const p of builtIn()) await insertProduct(p);
     await migratePurposes2026();
     await migrateI18n2026();
+    await migratePhotos2026();
   })().catch((e) => {
     seeded = null;
     throw e;
@@ -181,6 +182,17 @@ async function migrateI18n2026() {
   for (const p of builtIn()) {
     if (!p.i18n || !Object.keys(p.i18n).length) continue;
     await sql`update products set i18n = ${JSON.stringify(p.i18n)}::jsonb where kind = ${p.kind} and slug = ${p.slug} and i18n = '{}'::jsonb`;
+  }
+}
+
+/** One-time: purposes added without photos get the free-to-use photos shipped in public/products (28 Oct 2026). */
+async function migratePhotos2026() {
+  await sql`create table if not exists site_migrations (id text primary key, at timestamptz not null default now())`;
+  const claimed = await sql`insert into site_migrations (id) values ('photos-2026-10') on conflict do nothing returning id`;
+  if (!claimed.length) return;
+  for (const slug of ["clarity-and-confidence", "self-healing", "delay-in-marriage", "weight-loss"]) {
+    const photos = productPhotos(slug);
+    if (photos.length) await sql`update products set photos = ${photos}, updated_at = now() where kind = 'bracelet' and slug = ${slug} and cardinality(photos) = 0`;
   }
 }
 

@@ -17,9 +17,10 @@ export const CheckoutSchema = z.object({
   wearer: z.object({
     firstName: text(60),
     lastName: optText(60),
-    day: z.number().int().min(1).max(31),
-    month: z.number().int().min(1).max(12),
-    year: z.number().int().min(1920).max(2100),
+    /** The quick order asks the birth date after payment */
+    day: z.number().int().min(1).max(31).optional(),
+    month: z.number().int().min(1).max(12).optional(),
+    year: z.number().int().min(1920).max(2100).optional(),
     /** The quick order asks this after payment */
     gender: z.enum(["female", "male", "other"]).optional(),
     wrist: z.string().max(20),
@@ -33,6 +34,7 @@ export const CheckoutSchema = z.object({
     mobile: z.string().regex(/^[6-9]\d{9}$/, "Enter a 10-digit Indian mobile number"),
     email: z.string().trim().email().max(120).optional().or(z.literal("")).transform((v) => v || undefined),
   }),
+  /** The quick order asks the address after payment */
   address: z.object({
     line1: text(120),
     line2: optText(120),
@@ -40,7 +42,7 @@ export const CheckoutSchema = z.object({
     city: text(60),
     state: z.enum(INDIAN_STATES),
     pincode: z.string().regex(/^[1-9]\d{5}$/, "Enter a 6-digit PIN code"),
-  }),
+  }).optional(),
   consent: z.literal(true),
   marketing: z.boolean(),
   utm: z.record(z.string().max(100)).optional(),
@@ -56,9 +58,31 @@ export const CheckoutSchema = z.object({
 /** POST /api/order/details: what the customer adds after paying for a quick order. */
 export const DetailsSchema = z.object({
   orderId: z.string().regex(/^order_[A-Za-z0-9]{6,40}$/),
+  isGift: z.boolean().optional(),
+  wearer: z
+    .object({
+      firstName: text(60),
+      lastName: optText(60),
+      day: z.number().int().min(1).max(31),
+      month: z.number().int().min(1).max(12),
+      year: z.number().int().min(1920).max(2100),
+    })
+    .optional(),
   gender: z.enum(["female", "male", "other"]).optional(),
+  wrist: optText(20),
+  deliveryName: optText(80),
+  address: z
+    .object({
+      line1: text(120),
+      line2: optText(120),
+      city: text(60),
+      state: z.enum(INDIAN_STATES),
+      pincode: z.string().regex(/^[1-9]\d{5}$/),
+    })
+    .optional(),
   focus: optText(160),
   note: optText(500),
+  marketing: z.boolean().optional(),
   lang: z.enum(["en", "hi", "hn"]).optional(),
 });
 

@@ -9,3 +9,19 @@ Mapping (Ammit's folder -> site):
   Studies                  -> better-studies/1-3
 No photos were supplied yet for Better married life, 3 in 1 or the gifts, so those use the closest
 photos from the folders above (some appear on more than one page). Replace when Ammit sends them.
+
+Free-to-use stock photos (28 Oct 2026) for the purposes Ammit hasn't photographed yet.
+Unsplash License / Pexels License: free for commercial use, no permission needed, credit appreciated.
+Replace with Ammit's own photos whenever they arrive (Admin -> Bracelets -> the bracelet -> Photos).
+  clarity-and-confidence/1  Rtzn, Unsplash            https://unsplash.com/photos/1W03cI2wfbc
+  clarity-and-confidence/2  petr sidorov, Unsplash    https://unsplash.com/photos/9_7Z__RDau0
+  clarity-and-confidence/3  Alexey Demidov, Unsplash  https://unsplash.com/photos/md87xXz3le4
+  self-healing/1            Maydawin, Pexels          https://www.pexels.com/photo/a-beaded-bracelet-with-amethyst-crystal-10328131/
+  self-healing/2            Alexey Demidov, Unsplash  https://unsplash.com/photos/rGyxBDjrX5w
+  self-healing/3            Alexey Demidov, Unsplash  https://unsplash.com/photos/ssWBiFkJaug
+  delay-in-marriage/1       Alexey Demidov, Unsplash  https://unsplash.com/photos/Lpd_JIshOQM
+  delay-in-marriage/2       Alexey Demidov, Unsplash  https://unsplash.com/photos/gZ6_4zyJMEE
+  delay-in-marriage/3       Alexey Demidov, Unsplash  https://unsplash.com/photos/tHHqFKxZs9w
+  weight-loss/1             Max Ducourneau, Unsplash  https://unsplash.com/photos/WG7zweuT9aw
+  weight-loss/2             Alexey Demidov, Unsplash  https://unsplash.com/photos/cHcaTsM-Isg
+  weight-loss/3             Diano Aballe, Unsplash    https://unsplash.com/photos/80YbFFiWIaQ

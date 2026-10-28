@@ -43,7 +43,10 @@ export async function POST(req: Request) {
   const M = uiFor(d.lang ?? "en").server;
   const product = await getProduct("bracelet", d.bracelet);
   const { day, month, year } = d.wearer;
-  if (!product || !isValidDate(day, month, year)) {
+  const quick = d.source === "quick";
+  const hasDob = day !== undefined && month !== undefined && year !== undefined;
+  // The reading asks everything up front; the quick order asks birth date and address after payment.
+  if (!product || (hasDob ? !isValidDate(day, month, year) : !quick) || (!d.address && !quick)) {
     return NextResponse.json({ error: M.checkDetails }, { status: 400 });
   }
 
@@ -68,10 +71,11 @@ export async function POST(req: Request) {
   const amountPaise = (listInr - discountInr) * 100;
   const partner = await attributionFor(req, amountPaise).catch(() => null);
   const ref = `BBA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-  const dob = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  const m = mulank(day);
-  const b = bhagyank(day, month, year);
-  const addr = [d.address.line1, d.address.line2, d.address.landmark, d.address.city, d.address.state, d.address.pincode]
+  const dob = hasDob ? `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}` : null;
+  const m = hasDob ? mulank(day) : null;
+  const b = hasDob ? bhagyank(day, month, year) : null;
+  const address = d.address ?? { line1: "", line2: undefined, landmark: undefined, city: "", state: "", pincode: "" };
+  const addr = [address.line1, address.line2, address.landmark, address.city, address.state, address.pincode]
     .filter(Boolean)
     .join(", ");
 
@@ -85,15 +89,15 @@ export async function POST(req: Request) {
       [title, couponCode && `coupon ${couponCode} -Rs ${discountInr} (list Rs ${listInr})`, partner && `partner ${partner.code}`].filter(Boolean).join(" · "),
     ),
     wearer: cut(`${d.wearer.firstName} ${d.wearer.lastName ?? ""}`.trim()),
-    dob,
+    dob: dob ?? "after payment",
     gender: d.wearer.gender ?? "not given yet",
-    numbers: `mulank ${m}, bhagyank ${b}`,
+    numbers: m ? `mulank ${m}, bhagyank ${b}` : "after payment",
     wrist: d.wearer.wrist,
     intentions: cut(d.intentions.join(", ")),
     deliver_to: cut(d.contact.deliveryName),
     mobile: d.contact.mobile,
     email: d.contact.email ?? "",
-    address: cut(addr),
+    address: cut(addr || "after payment"),
     gift: d.isGift ? cut(`yes${d.giftNote ? `: ${d.giftNote}` : ""}`) : "no",
     focus: cut(d.focus ?? ""),
     marketing: d.marketing ? "yes" : "no",
@@ -121,12 +125,12 @@ export async function POST(req: Request) {
       delivery_name: d.contact.deliveryName,
       mobile: d.contact.mobile,
       email: d.contact.email ?? null,
-      address_line1: d.address.line1,
-      address_line2: d.address.line2 ?? null,
-      landmark: d.address.landmark ?? null,
-      city: d.address.city,
-      state: d.address.state,
-      pincode: d.address.pincode,
+      address_line1: address.line1,
+      address_line2: address.line2 ?? null,
+      landmark: address.landmark ?? null,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
       marketing_opt_in: d.marketing,
       terms_accepted_at: new Date().toISOString(),
       utm: d.utm ?? {},

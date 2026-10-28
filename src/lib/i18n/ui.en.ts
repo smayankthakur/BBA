@@ -57,7 +57,9 @@ export const UI_EN = {
     askAmmit: "Ask Ammit",
   },
   footer: {
-    cols: { shop: "Shop", numerology: "Ammit", care: "Care" },
+    cols: { shop: "Shop", numerology: "Ammit", care: "Care", purposes: "Bracelets by purpose", help: "Help", contact: "Talk to us" },
+    trust: { made: "Cleansed, energised and made for your birth chart" },
+    whatsappCta: "Chat on WhatsApp",
     links: {
       find: "Find your bracelet",
       purposes: "Shop by purpose",
@@ -300,6 +302,19 @@ export const UI_EN = {
   /** Messages sent back by the checkout server */
   /** One-screen order sheet (quick order) and the after-payment details */
   quick: {
+    yourName: "Your name",
+    prePay: "Just two details now. Right after payment we'll ask for the birth details and address.",
+    forWhom: "Who is the bracelet for?",
+    wearerName: "Wearer's full name",
+    saveDetails: "Save and see my numbers",
+    detailsNeed: "Ammit Ji needs these to design the bracelet and send it. Takes about a minute.",
+    viaWhatsApp: "Easier on WhatsApp? [Send the details there]({url})",
+    waDetails: "Hi, here are the details for my order {ref}:",
+    waShort: "Name: {name}\nMobile: {mobile}",
+    remind: "Order {ref} is paid. Add the birth details and address so Ammit Ji can start.",
+    remindButton: "Add details",
+    remindHide: "Hide",
+    detailsSaved: "Details saved. Ammit Ji will start designing.",
     dialog: "Order your bracelet",
     close: "Close",
     choosePurpose: "Which purpose is the bracelet for?",

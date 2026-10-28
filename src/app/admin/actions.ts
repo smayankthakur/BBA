@@ -34,6 +34,8 @@ import {
 } from "@/lib/server/catalog";
 import { resetContent, saveContent } from "@/lib/server/content";
 import { FULFILMENT, updateOrderAdmin, type Fulfilment } from "@/lib/server/orders";
+import { INDIAN_STATES } from "@/lib/checkoutSchema";
+import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 import { deleteMedia } from "@/lib/server/media";
 import { codeTaken, deleteCoupon, getCoupon, saveCoupon, setCouponActive } from "@/lib/server/coupons";
 import { COUPON_RE, normCode } from "@/lib/coupon-types";
@@ -318,11 +320,55 @@ export async function updateOrderAction(fd: FormData) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) go("/admin/orders", { err: "missing" });
   const f = str(fd, "fulfilment_status", 20) as Fulfilment;
   if (!FULFILMENT.includes(f)) go(`/admin/orders/${id}`, { err: "status" });
+  const back = (err: string) => go(`/admin/orders/${id}`, { err });
+  // Birth date → numbers
+  const dobRaw = str(fd, "wearer_dob", 10);
+  let dob: string | null = null;
+  let m: number | null = null;
+  let b: number | null = null;
+  if (dobRaw) {
+    const [y, mo, d] = dobRaw.split("-").map(Number);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw) || !isValidDate(d, mo, y) || new Date(y, mo - 1, d) > new Date()) back("dob");
+    dob = dobRaw;
+    m = mulank(d);
+    b = bhagyank(d, mo, y);
+  }
+  const mobile = str(fd, "mobile", 10);
+  if (!/^[6-9]\d{9}$/.test(mobile)) back("mobile");
+  const pincode = str(fd, "pincode", 6);
+  if (pincode && !/^[1-9]\d{5}$/.test(pincode)) back("pincode");
+  const state = str(fd, "state", 60);
+  if (state && !(INDIAN_STATES as readonly string[]).includes(state)) back("state");
+  const email = str(fd, "email", 120);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) back("email");
+  const gender = str(fd, "wearer_gender", 20);
+  const first = str(fd, "wearer_first_name", 60);
+  if (!first) back("name");
   await updateOrderAdmin(id, {
     fulfilment_status: f,
     courier: str(fd, "courier", 80) || null,
     tracking_number: str(fd, "tracking_number", 80) || null,
     admin_notes: str(fd, "admin_notes", 3000) || null,
+    wearer_first_name: first,
+    wearer_last_name: str(fd, "wearer_last_name", 60),
+    wearer_dob: dob,
+    mulank: m,
+    bhagyank: b,
+    wearer_gender: gender || "unspecified",
+    wrist: str(fd, "wrist", 20) || "unsure",
+    focus: str(fd, "focus", 160) || null,
+    wearer_note: str(fd, "wearer_note", 500) || null,
+    is_gift: fd.get("is_gift") === "on",
+    gift_note: str(fd, "gift_note", 240) || null,
+    delivery_name: str(fd, "delivery_name", 80) || first,
+    mobile,
+    email: email || null,
+    address_line1: str(fd, "address_line1", 120),
+    address_line2: str(fd, "address_line2", 120) || null,
+    landmark: str(fd, "landmark", 80) || null,
+    city: str(fd, "city", 60),
+    state,
+    pincode,
   });
   await logAction(user.id, "order.update", id);
   go(`/admin/orders/${id}`, { msg: "saved" });

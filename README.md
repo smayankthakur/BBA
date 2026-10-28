@@ -92,18 +92,20 @@ All pages have their own title/description, canonical, hreflang alternates for t
 - At checkout the customer can add a 2nd/3rd purpose. After payment, the confirmation screen offers the same add-on as a top-up payment (`/api/checkout/upgrade`, `order_upgrades` table); the order shows the purposes and any top-ups.
 - The homepage "Made for you" section has the Instagram reel (Settings → reel link) with a cover photo (Pages → Home). Cover photo: Unsplash, Sahil Kumar (`public/reel/CREDITS.txt`).
 
-## Quick order (the main way to buy)
+## Ordering (the main way to buy)
 
-`src/components/order/` — a one-screen order sheet that opens on top of the page:
+`src/components/order/` — an order sheet that opens on top of the page.
 
-- **Opens from:** the homepage purpose rows, "Order this bracelet" on bracelet pages, the header "Order now" / bag icon, the phone sticky bar, and any link with `?order=<purpose>` (e.g. `/?order=love-life` for an Instagram bio; `?coupon=CODE` works too).
-- **One screen:** purpose (change or add a 2nd/3rd with its price shown), WhatsApp number, name, date of birth, wrist size (or "Not sure"), PIN code (fills city and state via `/api/pincode`, India Post's public lookup; falls back to typing), house/street, area. Gift option asks for the delivery name. Under-18 wearers need the guardian tick. Pay → Razorpay.
-- **After payment:** "Help Ammit Ji design your bracelet" asks gender, what they want help with (the bracelet's "for you if" lines) and a note, saved via `/api/order/details`; then the mulank/bhagyank reveal and the add-a-purpose top-up. Skipping is fine: the order shows "Quick order · details not added yet" and the admin page has an "Ask on WhatsApp" link with the questions ready.
-- Staff get the paid-order email straight away and a second "Details added" email when the customer adds them.
-- **Before online payment is switched on** (no `NEXT_PUBLIC_RAZORPAY_KEY_ID`), the same sheet sends the order on WhatsApp (to the Settings phone number) with all the details filled in.
+- **Path:** homepage purpose row → the bracelet's page → "Order this bracelet" → name + WhatsApp number → Pay (Razorpay) → details form. The header "Order now" / bag icon, the phone sticky bar and links with `?order=<purpose>` (e.g. `/?order=love-life`; `?coupon=CODE` works too) open the sheet directly.
+- **Before paying (kept short on purpose):** the bracelet (change it, or add a 2nd/3rd purpose with its price shown), your name, WhatsApp number, coupon. Nothing else.
+- **Right after paying:** "Help Ammit Ji design your bracelet" asks who it's for (me / a gift), the wearer's name and date of birth (guardian tick for under-18s), man/woman, wrist size, delivery address (PIN code fills city and state via `/api/pincode`, India Post's lookup), what they want help with, a note, and the WhatsApp offers opt-in. Saved via `/api/order/details`; then the mulank/bhagyank reveal and the add-a-purpose top-up.
+- **If they close it:** a reminder ("Order BBA-… is paid. Add the birth details and address…") appears at the bottom of every page on that device for 14 days until the details are added. There's also a "send the details on WhatsApp" link.
+- Staff get the paid-order email straight away and a second "Details added" email with the updated sheet.
+- **Before online payment is switched on** (no `NEXT_PUBLIC_RAZORPAY_KEY_ID`), the sheet sends the order on WhatsApp (to the Settings phone number).
 - The intro animation plays on the first visit only (`localStorage` `bba_intro`).
 - The 60-second reading (`/find-your-bracelet`) is still there for visitors who want it.
-- Unpaid orders: the admin order page shows "Follow up on WhatsApp" only if the customer ticked the WhatsApp box.
+
+**Admin → Orders → an order** is one form with every detail: progress (status, courier, tracking, private notes), wearer and reading (name, date of birth → mulank/bhagyank worked out on save, gender, wrist, focus, customer's note, gift), delivery (name, mobile, email, full address), plus payment, consent and source (read-only). Anything the customer sends on WhatsApp can be typed in and saved. A yellow note lists what's still missing with an "Ask on WhatsApp" link that writes the message for you; unpaid orders get "Follow up on WhatsApp" only if the customer opted in.
 
 ## Checkout (Razorpay)
 
@@ -117,7 +119,7 @@ All pages have their own title/description, canonical, hreflang alternates for t
 
 ## Product photos
 
-Drop photos into `public/products/<bracelet-slug>/1.jpg, 2.jpg, 3.jpg` (on wrist, close-up, packaging). They replace the illustrations on the bracelet page and homepage hover cards on the next deploy, and are added to the product's structured data. See `public/products/README.txt`.
+Drop photos into `public/products/<bracelet-slug>/1.jpg, 2.jpg, 3.jpg` (on wrist, close-up, packaging), or upload them in Admin → Bracelets. Every purpose now has photos: Ammit's own for six, and free-to-use Unsplash/Pexels photos for Clarity & Confidence, Self Healing, Delay in Marriage and Weight Loss until his arrive (credits in `public/products/CREDITS.txt`). The bead-ring illustrations are gone; a bracelet with no photos shows the brand emblem.
 
 ## Videos
 

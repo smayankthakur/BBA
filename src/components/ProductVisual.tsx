@@ -1,51 +1,48 @@
-import type { CSSProperties } from "react";
 import Image from "next/image";
 import RefNote from "./RefNote";
 
 type Triplet = [string, string, string];
 
-const ring = ([a, b, c]: Triplet): CSSProperties => ({
-  backgroundImage: `repeating-conic-gradient(${a} 0 15deg,${b} 15deg 30deg,${c} 30deg 45deg)`,
-});
-
 /**
- * Fan of three arched cards. Shows real product photos when they exist
- * (public/products/<slug>/1-3.jpg), otherwise bead-ring illustrations.
+ * Fan of three arched photo cards (public/products/<slug>/1-3.jpg, or the
+ * photos chosen in the admin panel). With fewer than three photos the
+ * available ones repeat; with none, the brand emblem is shown.
  */
 export default function ProductVisual({
-  cards,
-  rings,
   label,
   photosLabel,
   photos = [],
   refNote = "",
 }: {
-  cards: [string, string, string];
-  rings: [Triplet, Triplet, Triplet];
-  /** Accessible name for the illustration, and for the photos when there are some */
+  cards?: [string, string, string];
+  rings?: [Triplet, Triplet, Triplet];
+  /** Accessible name when there are no photos, and for the photos */
   label: string;
   photosLabel?: string;
   photos?: string[];
   refNote?: string;
 }) {
+  if (!photos.length)
+    return (
+      <div className="pv is-empty" role="img" aria-label={label}>
+        <span className="pv-card pv-c2">
+          <Image src="/brand/emblem.png" alt="" width={140} height={155} className="pv-emblem" />
+        </span>
+      </div>
+    );
   // Card order on screen: left (c1), right (c3), front (c2). Photo 1 goes in front.
+  const at = (n: number) => photos[n % photos.length];
   const slots = [
-    { cls: "pv-c1", i: 0, photo: photos[1] },
-    { cls: "pv-c3", i: 1, photo: photos[2] },
-    { cls: "pv-c2", i: 2, photo: photos[0] },
+    { cls: "pv-c1", photo: at(1) },
+    { cls: "pv-c3", photo: at(2) },
+    { cls: "pv-c2", photo: at(0) },
   ];
   return (
-    <div className="pv" role="img" aria-label={photos.length ? (photosLabel ?? label) : label}>
+    <div className="pv" role="img" aria-label={photosLabel ?? label}>
       {slots.map((s) => (
-        <span key={s.cls} className={`pv-card ${s.cls}`} style={{ backgroundImage: cards[s.i] }}>
-          {s.photo ? (
-            <>
-              <Image src={s.photo} alt="" fill sizes="260px" className="pv-photo" />
-              <RefNote text={refNote} />
-            </>
-          ) : (
-            <span className="pv-ring" style={ring(rings[s.i])} />
-          )}
+        <span key={s.cls} className={`pv-card ${s.cls}`}>
+          <Image src={s.photo} alt="" fill sizes="260px" className="pv-photo" />
+          <RefNote text={refNote} />
         </span>
       ))}
     </div>

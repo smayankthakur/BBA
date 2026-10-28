@@ -3,8 +3,26 @@
  * here are merged over ui.hi / ui.hn (same shape as ui.en).
  */
 export const UI_HI_EXTRA = {
+  footer: {
+    cols: { purposes: "उद्देश्य के अनुसार ब्रेसलेट", help: "मदद", contact: "हमसे बात करें" },
+    trust: { made: "शुद्ध, ऊर्जित और आपकी जन्म कुंडली के अनुसार बना" },
+    whatsappCta: "WhatsApp पर बात करें",
+  },
   server: { detailsFailed: "हम यह जानकारी सेव नहीं कर पाए। कृपया इसे हमें WhatsApp पर भेज दें।" },
   quick: {
+    yourName: "आपका नाम",
+    prePay: "अभी बस दो जानकारी। पेमेंट के तुरंत बाद हम जन्म की जानकारी और पता पूछेंगे।",
+    forWhom: "ब्रेसलेट किसके लिए है?",
+    wearerName: "पहनने वाले का पूरा नाम",
+    saveDetails: "सेव करें और मेरे अंक देखें",
+    detailsNeed: "अमित जी को ब्रेसलेट डिज़ाइन करने और भेजने के लिए यह जानकारी चाहिए। लगभग एक मिनट लगेगा।",
+    viaWhatsApp: "WhatsApp पर आसान है? [वहां जानकारी भेजें]({url})",
+    waDetails: "नमस्ते, मेरे ऑर्डर {ref} की जानकारी:",
+    waShort: "नाम: {name}\nमोबाइल: {mobile}",
+    remind: "ऑर्डर {ref} का पेमेंट हो गया है। जन्म की जानकारी और पता जोड़ें ताकि अमित जी काम शुरू कर सकें।",
+    remindButton: "जानकारी जोड़ें",
+    remindHide: "छुपाएं",
+    detailsSaved: "जानकारी सेव हो गई। अमित जी डिज़ाइन शुरू करेंगे।",
     dialog: "अपना ब्रेसलेट ऑर्डर करें",
     close: "बंद करें",
     choosePurpose: "ब्रेसलेट किस उद्देश्य के लिए है?",
@@ -73,8 +91,26 @@ export const UI_HI_EXTRA = {
   numerologyPage: { guidesAria: "गाइड", calculatorAria: "कैलकुलेटर", howAria: "ग्रिड कैसे काम करता है" },
 };
 export const UI_HN_EXTRA = {
+  footer: {
+    cols: { purposes: "Purpose ke hisaab se bracelets", help: "Help", contact: "Humse baat karein" },
+    trust: { made: "Cleansed, energised aur aapke birth chart ke hisaab se bana" },
+    whatsappCta: "WhatsApp par baat karein",
+  },
   server: { detailsFailed: "Hum yeh details save nahi kar paaye. Please humein WhatsApp par bhej dijiye." },
   quick: {
+    yourName: "Aapka naam",
+    prePay: "Abhi bas do details. Payment ke turant baad hum birth details aur address poochenge.",
+    forWhom: "Bracelet kiske liye hai?",
+    wearerName: "Pehenne wale ka poora naam",
+    saveDetails: "Save karein aur mere numbers dekhein",
+    detailsNeed: "Ammit Ji ko bracelet design karne aur bhejne ke liye yeh details chahiye. Lagbhag ek minute lagega.",
+    viaWhatsApp: "WhatsApp par aasaan hai? [Wahan details bhejein]({url})",
+    waDetails: "Namaste, mere order {ref} ki details:",
+    waShort: "Naam: {name}\nMobile: {mobile}",
+    remind: "Order {ref} ka payment ho gaya hai. Birth details aur address jodiye taaki Ammit Ji kaam shuru kar sakein.",
+    remindButton: "Details jodein",
+    remindHide: "Chhupayein",
+    detailsSaved: "Details save ho gayi. Ammit Ji design shuru karenge.",
     dialog: "Apna bracelet order karein",
     close: "Band karein",
     choosePurpose: "Bracelet kis purpose ke liye hai?",

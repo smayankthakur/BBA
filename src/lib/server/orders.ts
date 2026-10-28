@@ -16,10 +16,10 @@ export type OrderRecord = {
   amount_paise: number;
   wearer_first_name: string;
   wearer_last_name: string;
-  wearer_dob: string; // YYYY-MM-DD
+  wearer_dob: string | null; // YYYY-MM-DD (quick orders: after payment)
   wearer_gender: string;
-  mulank: number;
-  bhagyank: number;
+  mulank: number | null;
+  bhagyank: number | null;
   wrist: string;
   intentions: string[];
   focus: string | null;
@@ -152,7 +152,7 @@ export async function markUpgradeFailed(razorpayOrderId: string) {
 }
 
 export type StoredOrder = Omit<OrderRecord, "wearer_dob" | "terms_accepted_at"> & {
-  dob_text: string; // YYYY-MM-DD
+  dob_text: string | null; // YYYY-MM-DD
   terms_accepted_at: string | Date;
   razorpay_payment_id: string | null;
   payment_method: string | null;
@@ -238,13 +238,45 @@ export async function getOrder(id: string) {
   return rows[0] ?? null;
 }
 
-export async function updateOrderAdmin(
-  id: string,
-  f: { fulfilment_status: Fulfilment; courier: string | null; tracking_number: string | null; admin_notes: string | null },
-) {
+export type AdminOrderUpdate = {
+  fulfilment_status: Fulfilment;
+  courier: string | null;
+  tracking_number: string | null;
+  admin_notes: string | null;
+  wearer_first_name: string;
+  wearer_last_name: string;
+  wearer_dob: string | null;
+  mulank: number | null;
+  bhagyank: number | null;
+  wearer_gender: string;
+  wrist: string;
+  focus: string | null;
+  wearer_note: string | null;
+  is_gift: boolean;
+  gift_note: string | null;
+  delivery_name: string;
+  mobile: string;
+  email: string | null;
+  address_line1: string;
+  address_line2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+};
+/** Staff edit of the whole order (everything except payment and consent). */
+export async function updateOrderAdmin(id: string, f: AdminOrderUpdate) {
   await ensureSchema();
   await sql`update orders set fulfilment_status = ${f.fulfilment_status}, courier = ${f.courier},
-    tracking_number = ${f.tracking_number}, admin_notes = ${f.admin_notes}, updated_at = now() where id = ${id}`;
+    tracking_number = ${f.tracking_number}, admin_notes = ${f.admin_notes},
+    wearer_first_name = ${f.wearer_first_name}, wearer_last_name = ${f.wearer_last_name},
+    wearer_dob = ${f.wearer_dob}::date, mulank = ${f.mulank}, bhagyank = ${f.bhagyank},
+    wearer_gender = ${f.wearer_gender}, wrist = ${f.wrist}, focus = ${f.focus}, wearer_note = ${f.wearer_note},
+    is_gift = ${f.is_gift}, gift_note = ${f.gift_note}, delivery_name = ${f.delivery_name}, mobile = ${f.mobile}, email = ${f.email},
+    address_line1 = ${f.address_line1}, address_line2 = ${f.address_line2}, landmark = ${f.landmark},
+    city = ${f.city}, state = ${f.state}, pincode = ${f.pincode},
+    details_at = case when order_source = 'quick' and details_at is null and ${f.wearer_dob}::date is not null and ${f.pincode} <> '' then now() else details_at end,
+    updated_at = now() where id = ${id}`;
 }
 
 export async function orderStats() {
@@ -269,16 +301,47 @@ export async function orderStats() {
  * Only for a paid order that hasn't gone into making yet. Returns the order
  * (for the staff email) or null.
  */
-export async function saveOrderDetails(
-  razorpayOrderId: string,
-  d: { gender?: string; focus?: string; note?: string },
-): Promise<StoredOrder | null> {
+export type OrderDetails = {
+  isGift?: boolean;
+  firstName?: string;
+  lastName?: string;
+  dob?: string;
+  mulank?: number;
+  bhagyank?: number;
+  gender?: string;
+  wrist?: string;
+  deliveryName?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  focus?: string;
+  note?: string;
+  marketing?: boolean;
+};
+export async function saveOrderDetails(razorpayOrderId: string, d: OrderDetails): Promise<StoredOrder | null> {
   if (!dbConfigured()) return null;
   await ensureSchema();
+  const v = <T,>(x: T | undefined) => (x === undefined ? null : x);
   const rows = (await sql`update orders set
-      wearer_gender = coalesce(${d.gender ?? null}, wearer_gender),
-      focus = coalesce(${d.focus ?? null}, focus),
-      wearer_note = coalesce(${d.note ?? null}, wearer_note),
+      is_gift = coalesce(${v(d.isGift)}, is_gift),
+      wearer_first_name = coalesce(${v(d.firstName)}, wearer_first_name),
+      wearer_last_name = coalesce(${v(d.lastName)}, wearer_last_name),
+      wearer_dob = coalesce(${v(d.dob)}::date, wearer_dob),
+      mulank = coalesce(${v(d.mulank)}, mulank),
+      bhagyank = coalesce(${v(d.bhagyank)}, bhagyank),
+      wearer_gender = coalesce(${v(d.gender)}, wearer_gender),
+      wrist = coalesce(${v(d.wrist)}, wrist),
+      delivery_name = coalesce(${v(d.deliveryName)}, delivery_name),
+      address_line1 = coalesce(${v(d.line1)}, address_line1),
+      address_line2 = coalesce(${v(d.line2)}, address_line2),
+      city = coalesce(${v(d.city)}, city),
+      state = coalesce(${v(d.state)}, state),
+      pincode = coalesce(${v(d.pincode)}, pincode),
+      focus = coalesce(${v(d.focus)}, focus),
+      wearer_note = coalesce(${v(d.note)}, wearer_note),
+      marketing_opt_in = coalesce(${v(d.marketing)}, marketing_opt_in),
       details_at = now(), updated_at = now()
     where razorpay_order_id = ${razorpayOrderId} and status = 'paid'
       and fulfilment_status in ('new', 'reading')
