@@ -75,12 +75,12 @@ All pages have their own title/description, canonical, hreflang alternates for t
 ## Languages (English · हिन्दी · Hinglish)
 
 - The switcher sits in the top strip and in the mobile menu, and opens the same page in the other language.
-- **First visit:** a pop-up asks English / हिन्दी / Hinglish (after the homepage intro). The choice is saved in the `bba_lang` cookie (1 year); closing it keeps the language being read. From then on, a plain address (e.g. `/gifts`) opens in the chosen language (`src/proxy.ts`); addresses that already include `/hi` or `/hinglish` open as shared. The switcher links carry `?lang=…`, which updates the choice (works without JavaScript). Mentioned in the privacy policy.
+- **First visit:** a pop-up asks English / हिन्दी / Hinglish (after the homepage intro). The choice is saved in the `bba_lang` cookie (1 year); closing it keeps the language being read. From then on, a plain address (e.g. `/reviews`) opens in the chosen language (`src/proxy.ts`); addresses that already include `/hi` or `/hinglish` open as shared. The switcher links carry `?lang=…`, which updates the choice (works without JavaScript). Mentioned in the privacy policy.
 - `src/proxy.ts` serves English without a prefix (internally `/en/…`) and redirects `/en/…` to the bare address.
 - **Interface text** (buttons, form labels, errors, emails to the customer): `src/lib/i18n/ui.en.ts` (English, the source), `ui.hi.ts`, `ui.hn.ts`, `ui.extra.ts`.
 - **Page text:** built-in translations in `src/lib/i18n/content.hi.ts` / `content.hn.ts`. Edit them in **Admin → Pages → हिन्दी / Hinglish tab**; your edits override the built-in text. The tab shows the English next to each field.
 - **Shared fields** are edited only on the English tab and used by every language: prices, numbers, links, photos, videos, colours, toggles, business details (brand, legal name, address, phone, email, GSTIN, grievance officer).
-- **Product text:** each bracelet/gift has a *Translations* box (Hindi, Hinglish). Empty fields fall back to English.
+- **Product text:** each bracelet has a *Translations* box (Hindi, Hinglish). Empty fields fall back to English.
 - Staff-facing things (order titles, staff PDF, CSV, admin) stay in English.
 - Translated policies start with a line saying the English version prevails.
 - Have a native speaker review the Hindi before launch.
@@ -153,7 +153,6 @@ src/
     MadeForYou.tsx       "made for you" notes + Instagram reel (InstagramReel.tsx)
     LangSwitch.tsx       English · हिन्दी · Hinglish switcher
     NoteFromAmmit.tsx    note card + quote
-    Gifts.tsx            3 arched gift cards
     Testimonials.tsx     customer reviews (grid on desktop, swipe row on mobile)
     CareSection.tsx      "What if my bracelet breaks?" + care list
     SiteFooter.tsx       WhatsApp CTA + footer links
@@ -166,8 +165,8 @@ public/brand/        emblem.png, wordmark.png
 
 - **Ammit's portrait**: in place at `public/ammit/ammit-kukreja.jpg`. Confirm Ammit approves it as his portrait.
 - **Reviews**: three real customer messages from the Instagram "Reviews" highlight are on the site (`TESTIMONIALS` in `src/data/home.ts`), each linked to its source. Ask the client to confirm he's happy to reuse them; reviews claiming health results were deliberately left out.
-- **Product photos**: Ammit's own photos are in `public/products/` (see `CREDITS.txt`). Better married life, 3 in 1 and the gifts borrow the closest photos until he sends dedicated ones.
-- **Approve the copy**: Ammit's note, care instructions, gift blurbs and footer disclaimer were drafted for his review.
+- **Product photos**: Ammit's own photos are in `public/products/` (see `CREDITS.txt`). Better married life and the newer purposes borrow the closest photos until he sends dedicated ones.
+- **Approve the copy**: Ammit's note, care instructions and footer disclaimer were drafted for his review.
 - **Shipping & payments (placeholder decisions by Mayank, 24 Oct)**: free shipping, prepaid only, 5–7 days, refunds started within 7 working days. Confirm with Ammit.
 - **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.
 - **Ammit to confirm:** crystals listed for the new purposes (clarity & confidence, self healing, delay in marriage, weight loss) and the wording on the health / weight-loss pages.
