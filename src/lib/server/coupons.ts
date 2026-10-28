@@ -2,6 +2,9 @@ import "server-only";
 import { dbConfigured, sql } from "./db";
 import { ensureSchema } from "./schema";
 import { COUPON_RE, couponState, discountFor, normCode, type Coupon } from "@/lib/coupon-types";
+import { tf, uiFor } from "@/lib/i18n/ui";
+import { formatINR } from "@/lib/format";
+import type { Lang } from "@/lib/i18n/config";
 
 type Row = {
   id: string;
@@ -111,25 +114,31 @@ export type CouponCheck =
  * takes off. Used both to preview the discount and, again, when the payment
  * is created, so the browser can never set its own price.
  */
-export async function checkCoupon(rawCode: string, product: { slug: string; title: string; priceInr: number }, mobile?: string): Promise<CouponCheck> {
+export async function checkCoupon(
+  rawCode: string,
+  product: { slug: string; title: string; priceInr: number },
+  mobile?: string,
+  lang: Lang = "en",
+): Promise<CouponCheck> {
+  const M = uiFor(lang).server;
   const code = normCode(rawCode);
-  const nope = "That coupon code isn't valid.";
+  const nope = M.couponInvalid;
   if (!COUPON_RE.test(code)) return { ok: false, error: nope };
-  if (!dbConfigured()) return { ok: false, error: "Coupons aren't available right now." };
+  if (!dbConfigured()) return { ok: false, error: M.couponUnavailable };
   const c = (await select({ code }))[0];
   if (!c) return { ok: false, error: nope };
 
   const state = couponState(c);
   if (state === "off") return { ok: false, error: nope };
-  if (state === "scheduled") return { ok: false, error: "That coupon isn't active yet." };
-  if (state === "expired") return { ok: false, error: "That coupon has expired." };
-  if (state === "used-up") return { ok: false, error: "That coupon has been fully used." };
-  if (c.products.length && !c.products.includes(product.slug)) return { ok: false, error: `That coupon doesn't apply to the ${product.title} bracelet.` };
-  if (product.priceInr < c.minOrderInr) return { ok: false, error: `That coupon needs an order of at least ₹${c.minOrderInr.toLocaleString("en-IN")}.` };
+  if (state === "scheduled") return { ok: false, error: M.couponNotYet };
+  if (state === "expired") return { ok: false, error: M.couponExpired };
+  if (state === "used-up") return { ok: false, error: M.couponUsedUp };
+  if (c.products.length && !c.products.includes(product.slug)) return { ok: false, error: tf(M.couponNotFor, { title: product.title }) };
+  if (product.priceInr < c.minOrderInr) return { ok: false, error: tf(M.couponMin, { amount: formatINR(c.minOrderInr) }) };
   if (c.perCustomerLimit != null && mobile) {
     const rows = await sql<{ n: number }>`select count(*) :: int as n from orders
       where coupon_code = ${code} and status = 'paid' and mobile = ${mobile}`;
-    if ((rows[0]?.n ?? 0) >= c.perCustomerLimit) return { ok: false, error: "You've already used this coupon." };
+    if ((rows[0]?.n ?? 0) >= c.perCustomerLimit) return { ok: false, error: M.couponUsed };
   }
   const discountInr = discountFor(c, product.priceInr);
   if (discountInr <= 0) return { ok: false, error: nope };

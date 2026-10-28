@@ -67,6 +67,7 @@ export const DEFAULTS = {
     madeButton: "Find my bracelet",
     madeReelTitle: "How Ammit designs your bracelet",
     madeReelNote: "Plays from Instagram",
+    madeReelCover: "/reel/cover.jpg",
     numberTitle: "Or start with your number",
     numberText:
       "Add the digits of the day you were born until one is left. Born on the 25th? 2 + 5 makes you a 7. Tap your number to see what it means.",
@@ -114,16 +115,6 @@ export const DEFAULTS = {
     notFoundText: "The link may be old, or the page may have moved. Start again from the homepage.",
   },
 
-  bracelets: {
-    eyebrow: "Shop by purpose",
-    title: "A bracelet for what you're asking of life",
-    lede: "Choose your purpose. Every bracelet is newly designed keeping your birth chart and purpose in mind, then cleansed and energised before it's sent. {{price}}, shipping free.",
-    button: "Not sure? Take the 60-second reading",
-    ctaTitle: "Not sure which one?",
-    ctaText: "Take the 60-second reading: we'll work out your numbers and suggest the bracelet that suits them.",
-    seoTitle: "Shop by purpose",
-    seoDescription: "Crystal bracelets for career, love, health, protection, studies, marriage and more, {{price}}. Newly designed for your birth chart by Ammit Kukreja.",
-  },
 
   product: {
     eyebrow: "Purpose bracelet",
@@ -224,7 +215,7 @@ export const DEFAULTS = {
     videoId: "CySF-l3yeBQ",
     workTitle: "What Ammit does",
     work: [
-      { title: "Crystal bracelets", text: "Bracelets for ten purposes, each newly designed for your birth chart.", cta: "Shop by purpose", href: "/bracelets" },
+      { title: "Crystal bracelets", text: "Bracelets for ten purposes, each newly designed for your birth chart.", cta: "Shop by purpose", href: "/#edit" },
       { title: "Numerology consultations", text: "A one-to-one reading of your numbers, with advice on which crystals suit you.", cta: "About consultations", href: "/consultation" },
       { title: "Videos in Hinglish", text: "Short videos on mulank, number combinations and crystal care, on YouTube and Instagram.", cta: "Watch on YouTube", href: "https://www.youtube.com/@braceletbyammit" },
     ],
@@ -353,57 +344,6 @@ export const DEFAULTS = {
     seoDescription: "How to measure your wrist for a Bracelet By Ammit crystal bracelet, with the sizes we make for women and men.",
   },
 
-  numerology: {
-    eyebrow: "Guides",
-    title: "Numerology, made simple",
-    lede: "Short, practical guides to the numbers Ammit reads before he chooses a single crystal.",
-    guides: [
-      { title: "Mulank and bhagyank", text: "What your birth number and destiny number are, and how to work them out.", href: "/numerology/mulank-and-bhagyank" },
-      { title: "Lo Shu grid calculator", text: "Put your date of birth into the 3×3 grid and see which numbers and lines you have.", href: "/numerology/lo-shu-grid" },
-      { title: "Mulank 1 to 9", text: "One page for each number: ruling planet, birth dates and traditional qualities.", href: "/mulank" },
-      { title: "60-second crystal reading", text: "Your numbers, plus the bracelet that suits them.", href: "/find-your-bracelet" },
-    ],
-    guideTitle: "Mulank and bhagyank",
-    guideLede: "The two numbers at the heart of Indian numerology, and the first thing Ammit looks at in your date of birth.",
-    guideBody: `## Mulank: your birth number
-
-Your mulank comes from the **day** you were born. Add its digits until a single number is left.
-
-- Born on the 7th: mulank 7.
-- Born on the 25th: 2 + 5 = 7, so mulank 7.
-- Born on the 29th: 2 + 9 = 11, then 1 + 1 = 2, so mulank 2.
-
-Each mulank is traditionally linked with a ruling planet:
-
-{{planets}}
-
-## Bhagyank: your destiny number
-
-Your bhagyank comes from your **full date of birth**. Add every digit of the day, month and year, then keep adding until a single number is left.
-
-Example: 25-03-1995 → 2 + 5 + 0 + 3 + 1 + 9 + 9 + 5 = 34 → 3 + 4 = **7**.
-
-## Why both matter
-
-Your mulank is often described as how you see yourself and how you act day to day; your bhagyank as the direction your life tends to take. Two people with the same mulank can have different bhagyanks, which is why Ammit reads your whole date of birth, and your name, before choosing crystals.
-
-## Try it
-
-The [60-second reading](/find-your-bracelet) works out both numbers for you, or put your date of birth into the [Lo Shu grid calculator](/numerology/lo-shu-grid) to see which numbers are present and missing.`,
-    loshuEyebrow: "Free calculator",
-    loshuTitle: "Your Lo Shu grid",
-    loshuLede:
-      "The Lo Shu grid places the digits of your date of birth into a 3×3 square. Repeated numbers, missing numbers and complete lines are all part of a reading.",
-    loshuBody: `## How the grid works
-
-Every digit in your date of birth (except 0) goes into its fixed place in the grid: 4, 9, 2 across the top; 3, 5, 7 in the middle; 8, 1, 6 at the bottom. A digit that appears twice is written twice. Empty squares are your missing numbers.
-
-Methods differ between numerologists. Some also add the mulank and bhagyank; the checkbox above lets you see both versions. Ammit reads the whole picture, including your name, before he chooses crystals.`,
-    loshuLinesTitle: "The eight lines",
-    loshuNote: "Want to know what your grid means for you? [Book a consultation](/consultation) with Ammit.",
-    seoTitle: "Numerology guides",
-    seoDescription: "Simple guides to mulank, bhagyank and the Lo Shu grid, with a free calculator and videos by numerologist Ammit Kukreja.",
-  },
 
   funnel: {
     introKicker: "60-second crystal reading",

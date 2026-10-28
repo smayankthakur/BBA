@@ -1,11 +1,11 @@
 import DeliveryEstimate from "./DeliveryEstimate";
 
 /** Free shipping · prepaid · dated delivery, shown next to every price. */
-export type TrustText = { shipping: string; payment: string; minDays: number; maxDays: number };
+export type TrustText = { shipping: string; payment: string; minDays: number; maxDays: number; aria?: string; delivered?: string };
 
 export default function TrustBar({ compact = false, onDark = false, text }: { compact?: boolean; onDark?: boolean; text: TrustText }) {
   return (
-    <ul className={`trust-bar${compact ? " is-compact" : ""}${onDark ? " on-dark" : ""}`} aria-label="Shipping and payment">
+    <ul className={`trust-bar${compact ? " is-compact" : ""}${onDark ? " on-dark" : ""}`} aria-label={text.aria ?? "Shipping and payment"}>
       <li>
         <span className="tb-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -33,7 +33,7 @@ export default function TrustBar({ compact = false, onDark = false, text }: { co
           </svg>
         </span>
         <span>
-          Delivered in <DeliveryEstimate minDays={text.minDays} maxDays={text.maxDays} />
+          {text.delivered ?? "Delivered in"} <DeliveryEstimate minDays={text.minDays} maxDays={text.maxDays} />
         </span>
       </li>
     </ul>

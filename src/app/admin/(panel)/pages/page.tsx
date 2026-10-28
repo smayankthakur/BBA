@@ -29,7 +29,7 @@ export default async function PagesList({
     requireAdmin(),
     contentUpdatedAt(),
   ]);
-  const groups = ["Site", "Pages", "Numerology", "Policies"] as const;
+  const groups = ["Site", "Pages", "Policies"] as const;
   return (
     <>
       <div className="ad-head">

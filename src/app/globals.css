@@ -26,8 +26,8 @@
   --hairline: rgba(5, 14, 143, 0.25);
 
   /* Type (set by next/font in layout.tsx) */
-  --serif: var(--font-cormorant), "Cormorant Garamond", serif;
-  --sans: var(--font-nunito), "Nunito Sans", sans-serif;
+  --serif: var(--font-cormorant), "Cormorant Garamond", var(--font-tiro), serif;
+  --sans: var(--font-nunito), "Nunito Sans", var(--font-mukta), sans-serif;
 
   /* Shared type scale */
   --h2: clamp(40px, 4.4vw, 64px);
@@ -35,6 +35,23 @@
 
 /* Note: no global border-box reset — the design's max-width containers
    (1320/1200/880px) are content-box widths plus their side padding. */
+
+/* Language wrapper (see app/[lang]/layout) must not affect layout. */
+.lang-root {
+  display: contents;
+}
+/* Devanagari needs a little more line height and no letter-spacing. */
+:lang(hi) .h2,
+:lang(hi) h1,
+:lang(hi) h2 {
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+/* Spaced-out small caps labels split Devanagari letters apart; Latin text
+   inside a Hindi page (lang="en") keeps its spacing. */
+.lang-root:lang(hi) *:lang(hi) {
+  letter-spacing: 0 !important;
+}
 
 html {
   scroll-behavior: smooth;
@@ -274,6 +291,65 @@ a:hover {
 .announce a {
   color: var(--gold-text);
   font-weight: 700;
+}
+.announce {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+  min-height: 40px;
+}
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1;
+}
+.lang-switch a,
+.lang-switch span {
+  padding: 6px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.lang-switch a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.85;
+}
+.lang-switch a:hover,
+.lang-switch a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lang-switch span[aria-current] {
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.announce .lang-switch a {
+  color: var(--cream);
+  font-weight: 600;
+}
+.lang-switch.is-bar {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  translate: 0 -50%;
+}
+.lang-switch.is-menu {
+  padding: 8px 20px 0;
+  color: var(--cream);
+}
+@media (max-width: 1100px) {
+  .lang-switch.is-bar {
+    position: static;
+    translate: none;
+  }
+  .announce {
+    flex-wrap: wrap;
+  }
 }
 
 /* ---------- Header ---------- */
@@ -1115,6 +1191,49 @@ a:hover {
 }
 .made .vid {
   max-width: 300px;
+}
+/* Instagram reel: photo cover, then the embed cropped to just the video. */
+.vid-poster.reel-poster {
+  padding: 0;
+  justify-content: flex-end;
+  background-image: none;
+}
+.reel-cover {
+  object-fit: cover;
+}
+.reel-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 8, 67, 0) 35%, rgba(3, 8, 67, 0.78) 100%);
+}
+.vid-poster.reel-poster .vid-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+.reel-caption {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 20px 64px;
+  text-align: center;
+}
+.reel-frame .ref-note {
+  pointer-events: none;
+}
+.vid-frame .reel-iframe {
+  /* Instagram's embed: a 54px header, then the video in a 4:5 box with the 9:16
+     video centred. Widening the frame by 16/9 ÷ 1.25 makes the video fill ours. */
+  position: absolute;
+  top: -54px;
+  left: -21.1%;
+  width: 142.2% !important;
+  height: calc(100% + 54px + 320px) !important;
+  right: auto;
+  bottom: auto;
+  border: 0;
 }
 .made-points {
   list-style: none;

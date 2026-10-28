@@ -1,21 +1,16 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { getBracelets, getGifts } from "@/lib/server/catalog";
+import { HREFLANG, LANGS, lp } from "@/lib/i18n/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [BRACELETS, GIFTS] = await Promise.all([getBracelets(), getGifts()]);
   const paths = [
     "/",
     "/find-your-bracelet",
-    "/bracelets",
     ...BRACELETS.map((b) => `/bracelets/${b.slug}`),
-    "/mulank",
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `/mulank/${n}`),
     "/gifts",
     ...GIFTS.map((g) => `/gifts/${g.slug}`),
-    "/numerology",
-    "/numerology/mulank-and-bhagyank",
-    "/numerology/lo-shu-grid",
     "/size-guide",
     "/privacy",
     "/terms",
@@ -26,9 +21,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/bracelet-care",
     "/reviews",
   ];
-  return paths.map((p) => ({
-    url: `${SITE_URL}${p === "/" ? "/" : p}`,
-    changeFrequency: "weekly",
-    priority: p === "/" ? 1 : p.split("/").length === 2 ? 0.8 : 0.6,
-  }));
+  // Every page in all three languages, each listing the others as alternates.
+  const abs = (path: string) => `${SITE_URL}${path === "/" ? "/" : path}`;
+  return paths.flatMap((p) =>
+    LANGS.map((l) => ({
+      url: abs(lp(l, p)),
+      changeFrequency: "weekly" as const,
+      priority: (p === "/" ? 1 : p.split("/").length === 2 ? 0.8 : 0.6) * (l === "en" ? 1 : 0.9),
+      alternates: { languages: Object.fromEntries(LANGS.map((x) => [HREFLANG[x], abs(lp(x, p))])) },
+    })),
+  );
 }

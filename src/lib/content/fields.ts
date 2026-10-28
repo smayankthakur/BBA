@@ -3,7 +3,7 @@ import type { PageId } from "./defaults";
 /** How each editable value is shown in the admin panel. */
 export type FieldType = "text" | "textarea" | "markdown" | "list" | "number" | "toggle" | "url" | "image" | "color" | "repeater";
 
-export type SubField = { key: string; label: string; type: Exclude<FieldType, "repeater" | "markdown"> };
+export type SubField = { key: string; label: string; type: Exclude<FieldType, "repeater" | "markdown">; shared?: boolean };
 
 export type FieldDef = {
   key: string;
@@ -15,12 +15,14 @@ export type FieldDef = {
   itemLabel?: string;
   /** repeater: items can't be added or removed (e.g. mulank 1–9) */
   fixed?: boolean;
+  /** Same in every language (not translated), e.g. phone numbers or customers' own words */
+  shared?: boolean;
 };
 
 export type PageDef = {
   id: PageId;
   title: string;
-  group: "Site" | "Pages" | "Numerology" | "Policies";
+  group: "Site" | "Pages" | "Policies";
   /** Public page to preview */
   path?: string;
   sections: { title: string; fields: FieldDef[] }[];
@@ -129,9 +131,9 @@ export const PAGES: PageDef[] = [
           t("madeButton", "Button"),
           t("madeReelTitle", "Reel title"),
           t("madeReelNote", "Small line under the reel title"),
+          { key: "madeReelCover", label: "Reel cover photo (shown until the visitor presses play)", type: "image" },
         ],
       },
-      { title: "Mulank picker", fields: [t("numberTitle", "Heading"), ta("numberText", "Text")] },
       {
         title: "Note from Ammit",
         fields: [t("noteTitle", "Heading"), ta("noteBody1", "First paragraph"), ta("noteBody2", "Second paragraph"), ta("noteQuote", "Quote"), t("noteButton", "Button"), t("noteReadMore", "Read more link (homepage)")],
@@ -162,13 +164,6 @@ export const PAGES: PageDef[] = [
       { title: "Trust bar", fields: [t("trustShipping", "Shipping line"), t("trustPayment", "Payment line")] },
       { title: "Page not found", fields: [t("notFoundTitle", "Heading"), ta("notFoundText", "Text")] },
     ],
-  },
-  {
-    id: "bracelets",
-    title: "Shop by intention",
-    group: "Pages",
-    path: "/bracelets",
-    sections: [{ title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro", PH), t("button", "Button"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] }, seo()],
   },
   {
     id: "product",
@@ -274,6 +269,7 @@ export const PAGES: PageDef[] = [
           t("shotsTitle", "Heading on the reviews page"),
           {
             key: "shots",
+            shared: true,
             label: "Screenshots",
             help: "Add this week's screenshots from Instagram reviews or highlights. Newest first. Type what the review says so screen readers and Google can read it.",
             type: "repeater",
@@ -292,6 +288,7 @@ export const PAGES: PageDef[] = [
         fields: [
           {
             key: "items",
+            shared: true,
             label: "Reviews",
             type: "repeater",
             itemLabel: "Review",
@@ -363,27 +360,12 @@ export const PAGES: PageDef[] = [
   },
   {
     id: "mulank",
-    title: "Mulank 1 to 9",
-    group: "Numerology",
-    path: "/mulank",
+    title: "Mulank meanings (60-second reading)",
+    group: "Pages",
+    path: "/find-your-bracelet",
     sections: [
-      { title: "Mulank page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("bornOn", "\"Born on\" label"), t("startTitle", "Section heading"), ta("startText", "Section text"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
       {
-        title: "Each number's page",
-        fields: [
-          t("detailEyebrow", "Small heading", "{planet}, {planetHindi}, {n} are filled in."),
-          t("detailAsk", "First button"),
-          t("detailFind", "Second button"),
-          t("daysTitle", "Birth days heading"),
-          t("daysNote", "Under the days"),
-          t("traitsTitle", "Qualities heading"),
-          t("crystalsTitle", "Crystals heading"),
-          ta("crystalsText", "Crystals text"),
-          t("videoTitle", "Video heading"),
-        ],
-      },
-      {
-        title: "Numbers",
+        title: "Numbers (shown when the reading reveals the customer's mulank)",
         fields: [
           {
             key: "numbers",
@@ -394,35 +376,12 @@ export const PAGES: PageDef[] = [
             fields: [
               { key: "number", label: "Number", type: "number" },
               { key: "planet", label: "Planet", type: "text" },
-              { key: "planetHindi", label: "Planet (Hindi)", type: "text" },
-              { key: "summary", label: "Summary", type: "textarea" },
+              { key: "planetHindi", label: "Planet (second name, shown in brackets)", type: "text" },
               { key: "traits", label: "Qualities (one per line)", type: "list" },
-              { key: "videoId", label: "YouTube video ID", type: "text" },
             ],
           },
         ],
       },
-      seo(),
-    ],
-  },
-  {
-    id: "numerology",
-    title: "Numerology guides",
-    group: "Numerology",
-    path: "/numerology",
-    sections: [
-      {
-        title: "Guides page",
-        fields: [
-          t("eyebrow", "Small heading"),
-          t("title", "Heading"),
-          ta("lede", "Intro"),
-          { key: "guides", label: "Guide cards", type: "repeater", itemLabel: "Guide", fields: [{ key: "title", label: "Title", type: "text" }, { key: "text", label: "Text", type: "textarea" }, { key: "href", label: "Link", type: "url" }] },
-        ],
-      },
-      { title: "Mulank and bhagyank guide", fields: [t("guideTitle", "Heading"), ta("guideLede", "Intro"), md("guideBody", "Article", MD_HELP + " {{planets}} = list of planets.")] },
-      { title: "Lo Shu grid", fields: [t("loshuEyebrow", "Small heading"), t("loshuTitle", "Heading"), ta("loshuLede", "Intro"), md("loshuBody", "Article", MD_HELP), t("loshuLinesTitle", "Lines heading"), md("loshuNote", "Note", MD_HELP)] },
-      seo(),
     ],
   },
   ...(["privacy", "terms", "shipping", "returns"] as const).map(
@@ -437,3 +396,17 @@ export const PAGES: PageDef[] = [
 ];
 
 export const pageDef = (id: string) => PAGES.find((p) => p.id === id);
+
+/* ------------------------------------------------------------------ */
+/* Languages: which values are translated and which are shared          */
+/* ------------------------------------------------------------------ */
+
+const SHARED_TYPES = new Set<FieldType>(["number", "url", "image", "color", "toggle"]);
+const SHARED_KEYS = new Set(["videoId", "href", "link", "slug", "intention", "sourceUrl", "number", "staffEmails"]);
+/** Site settings that are the same in every language. */
+const SHARED_SETTINGS = new Set(["brand", "legalName", "address", "phone", "email", "gstin", "grievanceName", "ammitName", "staffEmails"]);
+
+export function fieldIsShared(page: string, f: FieldDef) {
+  return !!f.shared || SHARED_TYPES.has(f.type) || SHARED_KEYS.has(f.key) || (page === "settings" && SHARED_SETTINGS.has(f.key));
+}
+export const subIsShared = (sf: SubField) => !!sf.shared || SHARED_TYPES.has(sf.type) || SHARED_KEYS.has(sf.key);

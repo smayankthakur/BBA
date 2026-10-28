@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getUI } from "@/lib/server/lang";
+import Link from "./LocaleLink";
 import { getContent, getSite } from "@/lib/server/content";
 
 export default async function CareSection() {
@@ -23,7 +24,7 @@ export default async function CareSection() {
             </Link>
           </div>
         </div>
-        <dl className="care-list" tabIndex={0} aria-label="Bracelet care">
+        <dl className="care-list" tabIndex={0} aria-label={getUI().care.listAria}>
           {care.items.map((c, i) => (
             <div key={i} className="care-item">
               <dt>{c.term}</dt>

@@ -2,6 +2,8 @@ import Image from "next/image";
 import RowAutoScroll from "./RowAutoScroll";
 import { getBracelets } from "@/lib/server/catalog";
 import { OLD_BRACELET_SLUGS } from "@/data/pages";
+import { getUI } from "@/lib/server/lang";
+import { tf } from "@/lib/i18n/ui";
 import { getContent, getSite } from "@/lib/server/content";
 
 export default async function Testimonials() {
@@ -12,6 +14,8 @@ export default async function Testimonials() {
   const shots = (r.shots ?? []).filter((x) => x.image);
   const TESTIMONIALS = r.items.filter((t) => t.quote.trim());
   const LINKS = { instagramReviews: s.instagramReviews };
+  const ui = getUI();
+  const u = ui.reviews;
   const hasReviews = shots.length > 0 || TESTIMONIALS.length > 0;
 
   return (
@@ -22,7 +26,7 @@ export default async function Testimonials() {
             {home.reviewsTitle}
           </h2>
           <p>{home.reviewsLede}</p>
-          {hasReviews && <RowAutoScroll targetId="reviews-list" label="reviews" />}
+          {hasReviews && <RowAutoScroll targetId="reviews-list" label={ui.rows.reviews} />}
         </div>
 
         {!hasReviews && (
@@ -30,25 +34,22 @@ export default async function Testimonials() {
             <span className="review-mark" aria-hidden="true">
               &ldquo;
             </span>
-            <p>
-              Customers share photos and messages about their bracelets with Ammit. You can read them
-              in the Reviews highlight on our Instagram.
-            </p>
+            <p>{u.empty}</p>
             <a className="btn btn-gold" href={LINKS.instagramReviews} target="_blank" rel="noopener noreferrer">
-              Read reviews on Instagram
+              {u.emptyButton}
             </a>
           </div>
         )}
 
         {shots.length > 0 && (
-          <ul id="reviews-list" className="reviews-list is-shots" tabIndex={0} aria-label="Customer reviews from Instagram">
+          <ul id="reviews-list" className="reviews-list is-shots" tabIndex={0} aria-label={u.ariaShots}>
             {shots.map((x, idx) => (
               <li key={idx} className="review-shot">
                 <figure>
                   <div className="review-shot-frame">
                     <Image
                       src={x.image}
-                      alt={x.text ? `Instagram review${x.name ? ` from ${x.name}` : ""}: ${x.text}` : `Instagram review screenshot${x.name ? ` from ${x.name}` : ""}`}
+                      alt={`${x.name ? tf(ui.common.instagramReviewFrom, { name: x.name }) : x.text ? ui.common.instagramReview : ui.common.instagramScreenshot}${x.text ? `: ${x.text}` : ""}`}
                       fill
                       sizes="(max-width: 760px) 70vw, 280px"
                     />
@@ -58,7 +59,7 @@ export default async function Testimonials() {
                       {x.name && <span className="review-name">{x.name}</span>}
                       {x.link && (
                         <a className="review-source" href={x.link} target="_blank" rel="noopener noreferrer">
-                          View on Instagram
+                          {ui.common.viewOnInstagram}
                         </a>
                       )}
                     </figcaption>
@@ -70,7 +71,7 @@ export default async function Testimonials() {
         )}
 
         {shots.length === 0 && TESTIMONIALS.length > 0 && (
-        <ul id="reviews-list" className="reviews-list" tabIndex={0} aria-label="Customer reviews">
+        <ul id="reviews-list" className="reviews-list" tabIndex={0} aria-label={u.aria}>
           {TESTIMONIALS.map((t, idx) => {
             const it = t.intention ? bySlug[t.intention] : undefined;
             return (
@@ -94,12 +95,12 @@ export default async function Testimonials() {
                             backgroundImage: `radial-gradient(circle at 30% 30%,rgba(255,255,255,.9) 0 10%,rgba(255,255,255,0) 40%)`,
                           }}
                         />
-                        Wears: {it.title}
+                        {tf(u.wears, { title: it.title })}
                       </span>
                     )}
                     {t.sourceUrl && (
                       <a className="review-source" href={t.sourceUrl} target="_blank" rel="noopener noreferrer">
-                        {t.sourceLabel || "Source"}
+                        {t.sourceLabel || ui.common.source}
                       </a>
                     )}
                   </figcaption>

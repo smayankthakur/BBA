@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
+import { LangCtx } from "./LangProvider";
+import { UI_EN } from "@/lib/i18n/ui.en";
 
 /**
  * Prev/next arrows for a horizontal, scroll-snapping row, plus gentle
@@ -18,6 +20,7 @@ export default function RowAutoScroll({
   label?: string;
 }) {
   const pausedUntil = useRef(0);
+  const rows = (useContext(LangCtx)?.ui ?? UI_EN).rows;
 
   const step = useCallback(
     (dir: 1 | -1) => {
@@ -82,7 +85,7 @@ export default function RowAutoScroll({
     <div className="row-arrows">
       <button
         type="button"
-        aria-label={`Previous ${label}`}
+        aria-label={rows.previous.replace("{label}", label)}
         aria-controls={targetId}
         onClick={() => {
           pausedUntil.current = Date.now() + 10000;
@@ -93,7 +96,7 @@ export default function RowAutoScroll({
       </button>
       <button
         type="button"
-        aria-label={`Next ${label}`}
+        aria-label={rows.next.replace("{label}", label)}
         aria-controls={targetId}
         onClick={() => {
           pausedUntil.current = Date.now() + 10000;

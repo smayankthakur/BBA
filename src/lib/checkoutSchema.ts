@@ -46,12 +46,15 @@ export const CheckoutSchema = z.object({
   coupon: z.string().trim().max(40).optional(),
   /** Extra purposes in the same bracelet (bracelet slugs), priced on the server. */
   extras: z.array(z.string().max(60)).max(2).optional(),
+  /** Language the customer is using, for messages only */
+  lang: z.enum(["en", "hi", "hn"]).optional(),
 });
 
 export const UpgradeSchema = z.object({
   /** The paid order's Razorpay order id: only the buyer's browser has it. */
   orderId: z.string().regex(/^order_[A-Za-z0-9]{6,40}$/),
   add: z.array(z.string().max(60)).min(1).max(2),
+  lang: z.enum(["en", "hi", "hn"]).optional(),
 });
 
 export type CheckoutInput = z.input<typeof CheckoutSchema>;

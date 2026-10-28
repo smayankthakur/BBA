@@ -1,9 +1,10 @@
-import Link from "next/link";
+import Link from "./LocaleLink";
 import Sphere from "./Sphere";
 import type { Product } from "@/lib/catalog-types";
 import { formatINR } from "@/lib/format";
 
-export default function BraceletCard({ b }: { b: Product }) {
+/** viewLabel: "View bracelet →" in the page language (server pages pass ui.common.viewBracelet). */
+export default function BraceletCard({ b, viewLabel = "View bracelet →" }: { b: Product; viewLabel?: string }) {
   return (
     <Link href={`/bracelets/${b.slug}`} className="b-card">
       <Sphere color={b.visual.sphere} shade={b.visual.sphereShade} gloss={b.visual.sphereGloss} size={64} />
@@ -12,7 +13,7 @@ export default function BraceletCard({ b }: { b: Product }) {
       <span className="b-card-foot">
         <span className="b-card-price">{formatINR(b.priceInr)}</span>
         <span className="b-card-go" aria-hidden="true">
-          View bracelet →
+          {viewLabel}
         </span>
       </span>
     </Link>

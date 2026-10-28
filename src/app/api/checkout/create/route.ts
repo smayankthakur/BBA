@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { langOfRequest } from "@/lib/server/lang";
 import crypto from "node:crypto";
 import { CheckoutSchema } from "@/lib/checkoutSchema";
 import { createOrder, razorpayConfigured, razorpayKeyId } from "@/lib/server/razorpay";
@@ -8,6 +9,7 @@ import { getBracelets, getProduct } from "@/lib/server/catalog";
 import { getContent } from "@/lib/server/content";
 import { attributionFor } from "@/lib/server/partners";
 import { priceFor, type Tiers } from "@/lib/pricing";
+import { uiFor } from "@/lib/i18n/ui";
 import { checkCoupon } from "@/lib/server/coupons";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 
@@ -17,11 +19,12 @@ export const dynamic = "force-dynamic";
 const MAX_BODY = 8 * 1024;
 
 export async function POST(req: Request) {
+  const Q = uiFor(langOfRequest(req)).server;
   if (!razorpayConfigured()) {
-    return NextResponse.json({ error: "Online payment is being switched on. Please try again in a little while." }, { status: 503 });
+    return NextResponse.json({ error: Q.switchingOn }, { status: 503 });
   }
   if (rateLimited(`create:${clientIp(req)}`, 10, 10 * 60_000)) {
-    return NextResponse.json({ error: "Too many attempts. Please wait a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: Q.tooMany }, { status: 429 });
   }
   const raw = await req.text();
   if (raw.length > MAX_BODY) return NextResponse.json({ error: "Request too large." }, { status: 413 });
@@ -34,20 +37,21 @@ export async function POST(req: Request) {
   }
   const parsed = CheckoutSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Please check your details.", fields: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ error: Q.checkDetails, fields: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const d = parsed.data;
+  const M = uiFor(d.lang ?? "en").server;
   const product = await getProduct("bracelet", d.bracelet);
   const { day, month, year } = d.wearer;
   if (!product || !isValidDate(day, month, year)) {
-    return NextResponse.json({ error: "Please check your details." }, { status: 400 });
+    return NextResponse.json({ error: M.checkDetails }, { status: 400 });
   }
 
   // Price is decided here (product, purposes, coupon from the database), never by the browser.
   const [all, settings] = await Promise.all([getBracelets(), getContent("settings")]);
   const extraSlugs = [...new Set(d.extras ?? [])].filter((x) => x !== product.slug);
   const extras = extraSlugs.map((x) => all.find((b) => b.slug === x && b.inList));
-  if (extras.some((x) => !x)) return NextResponse.json({ error: "Please choose your purposes again." }, { status: 400 });
+  if (extras.some((x) => !x)) return NextResponse.json({ error: M.choosePurposes }, { status: 400 });
   const tiers: Tiers = [settings.defaultPrice, settings.price2, settings.price3];
   const listInr = priceFor(product.priceInr, 1 + extras.length, tiers);
   const purposeSlugs = [product.slug, ...extras.map((x) => x!.slug)];
@@ -56,7 +60,7 @@ export async function POST(req: Request) {
   let couponCode: string | null = null;
   let discountInr = 0;
   if (d.coupon) {
-    const c = await checkCoupon(d.coupon, { slug: product.slug, title: product.title, priceInr: listInr }, d.contact.mobile).catch(() => ({ ok: false as const, error: "Couldn't check the coupon. Please try again." }));
+    const c = await checkCoupon(d.coupon, { slug: product.slug, title: product.title, priceInr: listInr }, d.contact.mobile, d.lang).catch(() => ({ ok: false as const, error: M.couponFailed }));
     if (!c.ok) return NextResponse.json({ error: c.error, field: "coupon" }, { status: 400 });
     couponCode = c.code;
     discountInr = c.discountInr;
@@ -139,6 +143,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ orderId: order.id, keyId: razorpayKeyId(), amount: amountPaise, currency: "INR", ref });
   } catch (e) {
     console.error("[checkout] create failed", e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: "We couldn't start the payment. Please try again." }, { status: 502 });
+    return NextResponse.json({ error: M.startFailed }, { status: 502 });
   }
 }

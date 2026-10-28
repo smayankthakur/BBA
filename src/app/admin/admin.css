@@ -867,3 +867,22 @@
     display: none;
   }
 }
+
+/* Language tabs and English reference text in translation editors */
+.ad-tabs button.ad-link-btn {
+  color: var(--ad-accent);
+  font: inherit;
+}
+.ad-tabs button.is-current {
+  color: var(--ad-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.ad-field .ad-en {
+  display: block;
+  padding: 4px 8px;
+  border-left: 2px solid var(--ad-line);
+  color: var(--ad-soft);
+  font-size: 12px;
+  white-space: pre-wrap;
+}

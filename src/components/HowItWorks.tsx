@@ -1,3 +1,4 @@
+import { getUI } from "@/lib/server/lang";
 import { getContent } from "@/lib/server/content";
 
 export default async function HowItWorks({ title }: { title?: string }) {
@@ -8,7 +9,7 @@ export default async function HowItWorks({ title }: { title?: string }) {
         <h2 id="how-title" className="h2">
           {title || c.howTitle}
         </h2>
-        <ol className="how-steps" tabIndex={0} aria-label="Steps">
+        <ol className="how-steps" tabIndex={0} aria-label={getUI().how.steps}>
           {c.howSteps.map((s, i) => (
             <li key={`${i}-${s.title}`}>
               <span className="how-num" aria-hidden="true">

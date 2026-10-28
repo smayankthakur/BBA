@@ -4,7 +4,10 @@ import { BRACELETS, GIFT_DETAILS, OLD_BRACELET_SLUGS } from "@/data/pages";
 import { GIFTS } from "@/data/home";
 import { BRACELET_VIDEOS } from "@/data/videos";
 import { DEFAULTS } from "@/lib/content/defaults";
-import type { Product, ProductKind, ProductStatus, Visual } from "@/lib/catalog-types";
+import { PRODUCT_TEXT_KEYS, type Product, type ProductI18n, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
+import { PRODUCTS_HI } from "@/lib/i18n/products.hi";
+import { PRODUCTS_HN } from "@/lib/i18n/products.hn";
+import { getLang } from "./lang";
 import { dbConfigured, sql } from "./db";
 import { ensureSchema } from "./schema";
 import { productPhotos, versioned } from "./photos";
@@ -22,6 +25,13 @@ function giftPhoto(slug: string) {
   }
   return [];
 }
+
+/** Built-in Hindi/Hinglish wording for a product shipped with the site. */
+const builtInI18n = (kind: ProductKind, slug: string): ProductI18n => {
+  const hi = PRODUCTS_HI[`${kind}:${slug}`];
+  const hn = PRODUCTS_HN[`${kind}:${slug}`];
+  return { ...(hi ? { hi } : {}), ...(hn ? { hn } : {}) } as ProductI18n;
+};
 
 function builtIn(): Product[] {
   const price = DEFAULTS.settings.defaultPrice;
@@ -47,6 +57,7 @@ function builtIn(): Product[] {
     visual: { sphere: b.sphere, sphereShade: b.sphereShade, sphereGloss: b.sphereGloss, cards: b.cards, rings: b.rings },
     seoTitle: null,
     seoDescription: null,
+    i18n: builtInI18n("bracelet", b.slug),
   }));
   const gifts: Product[] = GIFTS.map((g, i) => ({
     id: `builtin-gift-${g.slug}`,
@@ -77,6 +88,7 @@ function builtIn(): Product[] {
     },
     seoTitle: null,
     seoDescription: null,
+    i18n: builtInI18n("gift", g.slug),
   }));
   return [...bracelets, ...gifts];
 }
@@ -89,7 +101,7 @@ type Row = {
   id: string; kind: ProductKind; slug: string; title: string; blurb: string; intro: string[]; list_a: string[]; list_b: string[];
   crystals: string[]; note: string | null; price_inr: number; sort_order: number; status: ProductStatus; in_list: boolean;
   photos: string[]; photo_alt: string | null; visual: Visual; seo_title: string | null; seo_description: string | null;
-  video_id: string | null; video_title: string | null; updated_at: string | Date;
+  video_id: string | null; video_title: string | null; updated_at: string | Date; i18n: ProductI18n | null;
 };
 
 const fromRow = (r: Row): Product => ({
@@ -111,9 +123,11 @@ const fromRow = (r: Row): Product => ({
   photoAlt: r.photo_alt,
   videoId: r.video_id,
   videoTitle: r.video_title,
-  visual: r.visual,
+  // A product saved without colours still gets the default look.
+  visual: r.visual && Array.isArray(r.visual.cards) && Array.isArray(r.visual.rings) ? r.visual : { ...NEW_VISUAL, ...(r.visual ?? {}), cards: NEW_VISUAL.cards, rings: NEW_VISUAL.rings },
   seoTitle: r.seo_title,
   seoDescription: r.seo_description,
+  i18n: r.i18n ?? {},
   updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
 });
 
@@ -125,6 +139,7 @@ function seedOnce() {
     const n = await sql<{ n: number }>`select count(*) :: int as n from products`;
     if ((n[0]?.n ?? 0) === 0) for (const p of builtIn()) await insertProduct(p);
     await migratePurposes2026();
+    await migrateI18n2026();
   })().catch((e) => {
     seeded = null;
     throw e;
@@ -158,13 +173,24 @@ async function migratePurposes2026() {
   await sql`update site_content set data = jsonb_set(data, '{defaultPrice}', '1200') where id = 'settings' and data->>'defaultPrice' = '1199'`;
 }
 
+/** One-time: give the shipped products their built-in Hindi/Hinglish wording. */
+async function migrateI18n2026() {
+  await sql`create table if not exists site_migrations (id text primary key, at timestamptz not null default now())`;
+  const claimed = await sql`insert into site_migrations (id) values ('i18n-2026-10') on conflict do nothing returning id`;
+  if (!claimed.length) return;
+  for (const p of builtIn()) {
+    if (!p.i18n || !Object.keys(p.i18n).length) continue;
+    await sql`update products set i18n = ${JSON.stringify(p.i18n)}::jsonb where kind = ${p.kind} and slug = ${p.slug} and i18n = '{}'::jsonb`;
+  }
+}
+
 async function insertProduct(p: Omit<Product, "id">) {
   const rows = await sql<{ id: string }>`insert into products
     (kind, slug, title, blurb, intro, list_a, list_b, crystals, note, price_inr, sort_order, status, in_list, photos, photo_alt,
-     video_id, video_title, visual, seo_title, seo_description)
+     video_id, video_title, visual, seo_title, seo_description, i18n)
     values (${p.kind}, ${p.slug}, ${p.title}, ${p.blurb}, ${p.intro}, ${p.listA}, ${p.listB}, ${p.crystals}, ${p.note}, ${p.priceInr},
      ${p.sort}, ${p.status}, ${p.inList}, ${p.photos}, ${p.photoAlt}, ${p.videoId}, ${p.videoTitle}, ${JSON.stringify(p.visual)}::jsonb,
-     ${p.seoTitle}, ${p.seoDescription})
+     ${p.seoTitle}, ${p.seoDescription}, ${JSON.stringify(p.i18n ?? {})}::jsonb)
     on conflict (kind, slug) do nothing returning id`;
   return rows[0]?.id ?? null;
 }
@@ -186,14 +212,29 @@ const loadCatalog = cache(async (): Promise<Product[]> => {
 /* Public site                                                          */
 /* ------------------------------------------------------------------ */
 
+/** Product in the page's language: translated wording where it exists, English otherwise. */
+function localized(p: Product): Product {
+  const lang = getLang();
+  if (lang === "en") return p;
+  const t = p.i18n?.[lang];
+  if (!t) return p;
+  const out = { ...p } as Record<string, unknown>;
+  for (const k of PRODUCT_TEXT_KEYS) {
+    const v = t[k];
+    if (Array.isArray(v) ? v.length > 0 : typeof v === "string" && v.trim() !== "") out[k] = v;
+  }
+  return out as Product;
+}
+
 export async function getBracelets() {
-  return (await loadCatalog()).filter((p) => p.kind === "bracelet" && p.status === "published");
+  return (await loadCatalog()).filter((p) => p.kind === "bracelet" && p.status === "published").map(localized);
 }
 export async function getGifts() {
-  return (await loadCatalog()).filter((p) => p.kind === "gift" && p.status === "published");
+  return (await loadCatalog()).filter((p) => p.kind === "gift" && p.status === "published").map(localized);
 }
 export async function getProduct(kind: ProductKind, slug: string) {
-  return (await loadCatalog()).find((p) => p.kind === kind && p.slug === slug && p.status === "published") ?? null;
+  const p = (await loadCatalog()).find((p) => p.kind === kind && p.slug === slug && p.status === "published");
+  return p ? localized(p) : null;
 }
 /** Lowest published bracelet price, for "from ₹…" lines. */
 export async function lowestPrice() {
@@ -241,7 +282,7 @@ export async function updateProduct(id: string, p: Omit<Product, "id">) {
     list_a = ${p.listA}, list_b = ${p.listB}, crystals = ${p.crystals}, note = ${p.note}, price_inr = ${p.priceInr},
     sort_order = ${p.sort}, status = ${p.status}, in_list = ${p.inList}, photos = ${p.photos}, photo_alt = ${p.photoAlt},
     video_id = ${p.videoId}, video_title = ${p.videoTitle}, visual = ${JSON.stringify(p.visual)}::jsonb,
-    seo_title = ${p.seoTitle}, seo_description = ${p.seoDescription}, updated_at = now()
+    seo_title = ${p.seoTitle}, seo_description = ${p.seoDescription}, i18n = ${JSON.stringify(p.i18n ?? {})}::jsonb, updated_at = now()
     where id = ${id}`;
 }
 

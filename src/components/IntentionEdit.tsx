@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
-import Link from "next/link";
+import Link from "./LocaleLink";
 import Image from "next/image";
 import type { Product } from "@/lib/catalog-types";
 import { getBracelets, lowestPrice } from "@/lib/server/catalog";
 import { formatINR, getContent, getSite } from "@/lib/server/content";
 import { fill } from "@/lib/content/render";
 import RefNote from "./RefNote";
+import { getUI } from "@/lib/server/lang";
 import EditCycler from "./EditCycler";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
@@ -51,6 +52,7 @@ function PhotoStack({ it, refNote }: { it: Product; refNote: string }) {
 export default async function IntentionEdit() {
   const [all, c, { s, vars }, low] = await Promise.all([getBracelets(), getContent("home"), getSite(), lowestPrice()]);
   const list = all.filter((b) => b.inList);
+  const ui = getUI();
   return (
     <section id="edit" className="section-wide edit">
       <div className="edit-head">
@@ -68,7 +70,7 @@ export default async function IntentionEdit() {
             <span className="row-title">{it.title}</span>
             <span className="muted">{it.blurb}</span>
             <span className="price">{formatINR(it.priceInr)}</span>
-            <span className="go">Choose</span>
+            <span className="go">{ui.common.choose}</span>
           </Link>
         ))}
       </div>

@@ -1,6 +1,8 @@
-import Link from "next/link";
+import Link from "./LocaleLink";
 import JsonLd from "./JsonLd";
 import { SITE_URL } from "@/lib/site";
+import { getLang, getUI } from "@/lib/server/lang";
+import { lp } from "@/lib/i18n/config";
 
 export type Crumb = { label: string; href?: string };
 
@@ -15,7 +17,9 @@ type Props = {
 
 /** Inner-page header: breadcrumbs (+ BreadcrumbList schema), eyebrow, H1, lede, actions. */
 export default function PageHero({ crumbs, eyebrow, title, lede, children, align = "left" }: Props) {
-  const all: Crumb[] = [{ label: "Home", href: "/" }, ...crumbs];
+  const lang = getLang();
+  const ui = getUI();
+  const all: Crumb[] = [{ label: ui.common.home, href: "/" }, ...crumbs];
   return (
     <header className={`page-hero ${align === "center" ? "is-center" : ""}`}>
       <JsonLd
@@ -26,11 +30,11 @@ export default function PageHero({ crumbs, eyebrow, title, lede, children, align
             "@type": "ListItem",
             position: i + 1,
             name: c.label,
-            ...(c.href ? { item: `${SITE_URL}${c.href === "/" ? "" : c.href}` } : {}),
+            ...(c.href ? { item: `${SITE_URL}${lp(lang, c.href) === "/" ? "" : lp(lang, c.href)}` } : {}),
           })),
         }}
       />
-      <nav aria-label="Breadcrumb" className="crumbs">
+      <nav aria-label={ui.common.breadcrumb} className="crumbs">
         <ol>
           {all.map((c, i) => (
             <li key={c.label}>

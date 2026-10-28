@@ -1,9 +1,9 @@
 /** Original line illustration: thread around a wrist, then laid on a ruler. */
-export default function MeasureIllustration() {
+export default function MeasureIllustration({ text }: { text: { title: string; step1: string; step2: string } }) {
   const ticks = Array.from({ length: 21 }, (_, i) => i);
   return (
     <svg className="measure-svg" viewBox="0 0 520 260" role="img" aria-labelledby="measure-title">
-      <title id="measure-title">Wrap a thread around the wrist bone, mark where it meets, then measure the thread on a ruler in centimetres.</title>
+      <title id="measure-title">{text.title}</title>
       {/* Step 1: wrist with thread */}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M40 70 C 60 60, 120 60, 150 70 L 160 200 C 130 210, 70 210, 50 200 Z" stroke="#2A3170" strokeWidth="2" fill="#FFFFFF" />
@@ -11,7 +11,7 @@ export default function MeasureIllustration() {
         <path d="M58 92 C 80 80, 130 80, 154 92" stroke="#7A3FC0" strokeWidth="5" strokeDasharray="2 8" opacity="0.55" />
         <circle cx="154" cy="92" r="6" fill="#E3C67C" stroke="#B8913D" strokeWidth="2" />
       </g>
-      <text x="100" y="236" textAnchor="middle" fontFamily="var(--sans)" fontSize="15" fontWeight="700" fill="#050E8F">1. Wrap and mark</text>
+      <text x="100" y="236" textAnchor="middle" fontFamily="var(--sans)" fontSize="15" fontWeight="700" fill="#050E8F">{text.step1}</text>
       {/* arrow */}
       <path d="M195 135 H 245 M 235 125 L 247 135 L 235 145" fill="none" stroke="#B8913D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {/* Step 2: thread on ruler */}
@@ -29,7 +29,7 @@ export default function MeasureIllustration() {
         <circle cx="436" cy="104" r="6" fill="#E3C67C" stroke="#B8913D" strokeWidth="2" />
         <path d="M436 112 V 140" stroke="#B8913D" strokeWidth="2" strokeDasharray="3 3" />
       </g>
-      <text x="385" y="236" textAnchor="middle" fontFamily="var(--sans)" fontSize="15" fontWeight="700" fill="#050E8F">2. Measure in cm</text>
+      <text x="385" y="236" textAnchor="middle" fontFamily="var(--sans)" fontSize="15" fontWeight="700" fill="#050E8F">{text.step2}</text>
     </svg>
   );
 }

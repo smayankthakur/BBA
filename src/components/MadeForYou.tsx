@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./LocaleLink";
 import InstagramReel from "./InstagramReel";
 import { getContent, getSite } from "@/lib/server/content";
 
@@ -9,7 +9,7 @@ export default async function MadeForYou() {
     <section id="made-for-you" className="three made" aria-labelledby="made-title">
       <div className="three-inner">
         <div className="made-media">
-          <InstagramReel url={s.reelUrl} title={c.madeReelTitle} note={c.madeReelNote} />
+          <InstagramReel url={s.reelUrl} title={c.madeReelTitle} note={c.madeReelNote} cover={c.madeReelCover} refNote={s.refNote} />
         </div>
         <div className="three-copy">
           <h2 id="made-title" className="h2">

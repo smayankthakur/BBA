@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./LocaleLink";
 import { getContent } from "@/lib/server/content";
 
 type Action = { label: string; href: string; external?: boolean };

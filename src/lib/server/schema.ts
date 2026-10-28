@@ -16,7 +16,7 @@ export function ensureSchema(): Promise<void> {
 }
 
 /** Bump when the statements below change, so existing databases upgrade once. */
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 async function migrate() {
   // Fast path: an up-to-date database needs one query, not dozens.
@@ -227,6 +227,7 @@ async function createAll() {
   )`;
   await sql`alter table products add column if not exists video_id text`;
   await sql`alter table products add column if not exists video_title text`;
+  await sql`alter table products add column if not exists i18n jsonb not null default '{}'::jsonb`;
   await sql`create table if not exists media (
     id uuid primary key default gen_random_uuid(),
     url text not null,

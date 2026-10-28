@@ -1,6 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "./LocaleLink";
 import { HERO_BEADS } from "@/data/home";
+import { getUI } from "@/lib/server/lang";
 import { getContent } from "@/lib/server/content";
 
 const RADIUS = 190; // px from centre to bead
@@ -31,7 +32,7 @@ export default async function Hero() {
       <div className="hero-art">
         <div
           role="img"
-          aria-label="A lapis, moonstone and amethyst bracelet with gold spacers, slowly turning around a BBA medallion"
+          aria-label={getUI().hero.artAria}
           className="bracelet"
         >
           <div aria-hidden="true" className="bracelet-glow" />

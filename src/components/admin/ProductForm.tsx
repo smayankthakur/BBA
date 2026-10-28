@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import MediaPicker from "./MediaPicker";
+import ProductTranslations from "./ProductTranslations";
 import { saveProductAction, productStatusAction } from "@/app/admin/actions";
 import {
   slugify,
@@ -334,6 +335,8 @@ export default function ProductForm({
               </div>
             </div>
           </details>
+
+          <ProductTranslations product={p} kind={kind} />
 
           <details className="ad-box">
             <summary>Search engines (Google)</summary>

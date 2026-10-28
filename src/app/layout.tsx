@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Nunito_Sans } from "next/font/google";
+import { Cormorant_Garamond, Mukta, Nunito_Sans, Tiro_Devanagari_Hindi } from "next/font/google";
 import "./globals.css";
 import { SITE_LIVE, SITE_URL } from "@/lib/site";
-import ConsentBanner from "@/components/ConsentBanner";
-import JsonLd from "@/components/JsonLd";
-import { getSite } from "@/lib/server/content";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -21,54 +18,37 @@ const nunito = Nunito_Sans({
   display: "swap",
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { s } = await getSite();
-  const TITLE = s.seoTitle;
-  const DESCRIPTION = s.seoDescription;
-  return {
-    metadataBase: new URL(SITE_URL),
-    title: { default: TITLE, template: `%s | ${s.brand}` },
-    description: DESCRIPTION,
-    alternates: { canonical: "/" },
-    openGraph: {
-      type: "website",
-      siteName: s.brand,
-      title: TITLE,
-      description: DESCRIPTION,
-      url: "/",
-      locale: "en_IN",
-    },
-    twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
-    // Not indexable until NEXT_PUBLIC_SITE_LIVE=true (see src/lib/site.ts)
-    robots: SITE_LIVE ? { index: true, follow: true } : { index: false, follow: false },
-  };
-}
+// Devanagari for the Hindi pages: only downloaded when Hindi text is on screen.
+const tiro = Tiro_Devanagari_Hindi({
+  subsets: ["devanagari"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-tiro",
+  display: "swap",
+  preload: false,
+});
+const mukta = Mukta({
+  subsets: ["devanagari"],
+  weight: ["400", "600", "700"],
+  variable: "--font-mukta",
+  display: "swap",
+  preload: false,
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  robots: SITE_LIVE ? { index: true, follow: true } : { index: false, follow: false },
+};
 
 export const viewport: Viewport = {
   themeColor: "#050E8F",
 };
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { s } = await getSite();
+/** Shared by every language and the admin panel. Each language sets <html lang> itself. */
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${nunito.variable}`}>
-      <body>
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: s.brand,
-            url: SITE_URL,
-            logo: `${SITE_URL}/brand/emblem.png`,
-            founder: { "@type": "Person", name: s.ammitName, jobTitle: "Numerologist" },
-            telephone: s.phone || undefined,
-            address: s.address ? { "@type": "PostalAddress", streetAddress: s.address, addressCountry: "IN" } : undefined,
-            sameAs: [s.instagram, s.youtube].filter(Boolean),
-          }}
-        />
-        {children}
-        <ConsentBanner />
-      </body>
+    <html lang="en-IN" className={`${cormorant.variable} ${nunito.variable} ${tiro.variable} ${mukta.variable}`} suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }

@@ -87,7 +87,15 @@ const nextConfig: NextConfig = {
     };
     return [
       ...Object.entries(moved).map(([from, to]) => ({ source: `/bracelets/${from}`, destination: `/bracelets/${to}`, permanent: true })),
-      { source: "/bracelets/3-in-1", destination: "/bracelets", permanent: false },
+      // The list of purposes lives on the homepage; numerology pages were removed (client, 28 Oct 2026).
+      ...["", "/hi", "/hinglish"].flatMap((pre) => [
+        { source: `${pre}/bracelets/3-in-1`, destination: `${pre || "/"}#edit`, permanent: false },
+        { source: `${pre}/bracelets`, destination: `${pre || "/"}#edit`, permanent: false },
+        { source: `${pre}/mulank`, destination: pre || "/", permanent: false },
+        { source: `${pre}/mulank/:n`, destination: pre || "/", permanent: false },
+        { source: `${pre}/numerology`, destination: pre || "/", permanent: false },
+        { source: `${pre}/numerology/:path*`, destination: pre || "/", permanent: false },
+      ]),
     ];
   },
   async headers() {

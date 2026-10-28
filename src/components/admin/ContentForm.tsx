@@ -3,7 +3,7 @@
 import { useState } from "react";
 import MediaPicker from "./MediaPicker";
 import { saveContentAction } from "@/app/admin/actions";
-import type { FieldDef, PageDef, SubField } from "@/lib/content/fields";
+import { fieldIsShared, subIsShared, type FieldDef, type PageDef, type SubField } from "@/lib/content/fields";
 
 type Data = Record<string, unknown>;
 type Item = Record<string, unknown>;
@@ -165,18 +165,16 @@ function Scalar({
   }
 }
 
-function Field({
-  f,
-  id,
-  value,
-  onChange,
-}: {
+function Field({ f, id, value, onChange, english }: {
   f: SubField | FieldDef;
   id: string;
   value: unknown;
   onChange: (v: unknown) => void;
+  /** Hindi/Hinglish tab: the English text, as a reference */
+  english?: unknown;
 }) {
   const help = "help" in f ? f.help : undefined;
+  const en = english === undefined ? "" : Array.isArray(english) ? english.join(" · ") : String(english ?? "");
   if (f.type === "toggle")
     return (
       <label className="ad-check" htmlFor={id}>
@@ -190,6 +188,11 @@ function Field({
         {f.label}
       </label>
       <Scalar f={f} id={id} value={value} onChange={onChange} />
+      {en && (
+        <small className="ad-en" lang="en">
+          English: {en.length > 300 ? `${en.slice(0, 300)}…` : en}
+        </small>
+      )}
       {help && <small>{help}</small>}
     </div>
   );
@@ -199,13 +202,16 @@ function Repeater({
   f,
   value,
   onChange,
+  english,
 }: {
   f: FieldDef;
   value: unknown;
   onChange: (v: Item[]) => void;
+  /** Hindi/Hinglish tab: the English list, as a reference; shared sub-fields are hidden */
+  english?: Item[];
 }) {
   const items = (Array.isArray(value) ? value : []) as Item[];
-  const subs = f.fields ?? [];
+  const subs = (f.fields ?? []).filter((sf) => !english || !subIsShared(sf));
   // Which items are expanded (kept in step with moves/removals).
   const [open, setOpen] = useState<boolean[]>(() => items.map(() => false));
   const set = (i: number, k: string, v: unknown) =>
@@ -310,6 +316,7 @@ function Repeater({
                       id={`${f.key}-${i}-${s.key}`}
                       value={it[s.key]}
                       onChange={(v) => set(i, s.key, v)}
+                      english={english ? english[i]?.[s.key] : undefined}
                     />
                   ))}
                 </div>
@@ -357,11 +364,19 @@ export default function ContentForm({
   def,
   initial,
   canSave = true,
+  lang = "en",
+  english,
+  viewHref,
 }: {
   def: PageDef;
   initial: Data;
   canSave?: boolean;
+  /** Language being edited; for hi/hn only the translatable fields are shown */
+  lang?: "en" | "hi" | "hn";
+  english?: Data;
+  viewHref?: string;
 }) {
+  const tr = lang !== "en";
   const [data, setData] = useState<Data>(initial);
   const [dirty, setDirty] = useState(false);
   const set = (k: string, v: unknown) => {
@@ -376,9 +391,13 @@ export default function ContentForm({
       onSubmit={() => setDirty(false)}
     >
       <input type="hidden" name="id" value={def.id} />
+      <input type="hidden" name="lang" value={lang} />
       <input type="hidden" name="data" value={JSON.stringify(data)} />
       <div>
-        {def.sections.map((s, si) => (
+        {def.sections
+          .map((s) => ({ ...s, fields: tr ? s.fields.filter((f) => !fieldIsShared(def.id, f)) : s.fields }))
+          .filter((s) => s.fields.length)
+          .map((s, si) => (
           <details className="ad-box" key={s.title} open={si < 2}>
             <summary>{s.title}</summary>
             <div className="ad-box-body">
@@ -389,6 +408,7 @@ export default function ContentForm({
                     f={f}
                     value={data[f.key]}
                     onChange={(v) => set(f.key, v)}
+                    english={tr ? ((english?.[f.key] as Item[] | undefined) ?? []) : undefined}
                   />
                 ) : (
                   <Field
@@ -397,6 +417,7 @@ export default function ContentForm({
                     id={`f-${f.key}`}
                     value={data[f.key]}
                     onChange={(v) => set(f.key, v)}
+                    english={tr ? english?.[f.key] : undefined}
                   />
                 ),
               )}
@@ -416,10 +437,10 @@ export default function ContentForm({
             >
               Save changes
             </button>
-            {def.path && (
+            {(viewHref ?? def.path) && (
               <a
                 className="ad-btn"
-                href={def.path}
+                href={viewHref ?? def.path}
                 target="_blank"
                 rel="noopener noreferrer"
               >

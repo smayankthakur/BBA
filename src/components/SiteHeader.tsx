@@ -1,27 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Link from "./LocaleLink";
 import Medallion from "./Medallion";
-
-const SHOP_LINKS = [
-  { href: "/bracelets", label: "Intentions" },
-  { href: "/mulank", label: "By number" },
-  { href: "/gifts", label: "Gifts" },
-];
-
-const ABOUT_LINKS = [
-  { href: "/about-ammit", label: "Ammit" },
-  { href: "/consultation", label: "Consultation" },
-];
-
-/** Mobile menu extras below the main sections. */
-const MORE_LINKS = [
-  { href: "/find-your-bracelet", label: "Find my bracelet" },
-  { href: "/bracelet-care", label: "Bracelet care" },
-  { href: "/reviews", label: "Reviews" },
-];
+import LangSwitch from "./LangSwitch";
+import { useLang } from "./LangProvider";
+import { splitPath } from "@/lib/i18n/config";
 
 function BagIcon() {
   return (
@@ -37,7 +22,24 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
+  const { ui } = useLang();
+  const h = ui.header;
+  const SHOP_LINKS = [
+    { href: "/#edit", label: h.nav.purposes },
+    { href: "/gifts", label: h.nav.gifts },
+  ];
+  const ABOUT_LINKS = [
+    { href: "/about-ammit", label: h.nav.ammit },
+    { href: "/consultation", label: h.nav.consultation },
+  ];
+  /** Mobile menu extras below the main sections. */
+  const MORE_LINKS = [
+    { href: "/find-your-bracelet", label: h.more.find },
+    { href: "/bracelet-care", label: h.more.care },
+    { href: "/reviews", label: h.more.reviews },
+  ];
+  // Active link, ignoring the /hi or /hinglish prefix.
+  const pathname = splitPath(usePathname() ?? "/").path;
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   // Brand mark: "Bracelet By Ammit" folds into "BBA", like the intro loader.
@@ -127,7 +129,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
             ref={burgerRef}
             type="button"
             className="burger"
-            aria-label="Open menu"
+            aria-label={h.openMenu}
             aria-expanded={open}
             aria-controls="site-menu"
             onClick={() => setOpen(true)}
@@ -137,7 +139,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
             <span />
           </button>
 
-          <nav aria-label="Shop" className="header-nav desktop-only">
+          <nav aria-label={h.shop} className="header-nav desktop-only">
             {SHOP_LINKS.map((l) => (
               <Link key={l.href} className="navlink" href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                 {l.label}
@@ -145,7 +147,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
             ))}
           </nav>
 
-          <Link href="/" aria-label="Bracelet By Ammit home" className="brand">
+          <Link href="/" aria-label={ui.common.homeAria} className="brand">
             <Medallion width={38} height={42} priority />
             <span className={`brand-anim${folded ? " is-folded" : ""}`} aria-hidden="true">
               <span className="ini">B</span>
@@ -164,12 +166,12 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
               </Link>
             ))}
             <Link className="navlink navlink-order" href="/find-your-bracelet">
-              Order now
+              {h.orderNow}
             </Link>
           </div>
 
           {/* Mobile: order */}
-          <Link className="bag-icon" href="/find-your-bracelet" aria-label="Order a bracelet">
+          <Link className="bag-icon" href="/find-your-bracelet" aria-label={h.orderAria}>
             <BagIcon />
           </Link>
         </header>
@@ -183,7 +185,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
         className={`menu-panel${open ? " is-open" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={h.menu}
         inert={!open}
       >
         <div className="menu-top">
@@ -191,14 +193,15 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
             <Medallion width={30} height={33} />
             <span>Bracelet By Ammit</span>
           </span>
-          <button type="button" className="menu-close" aria-label="Close menu" onClick={() => close()}>
+          <button type="button" className="menu-close" aria-label={h.closeMenu} onClick={() => close()}>
             <span />
             <span />
           </button>
         </div>
 
-        <nav aria-label="Menu" className="menu-nav">
-          <p className="menu-label">Shop</p>
+        <LangSwitch className="is-menu" />
+        <nav aria-label={h.menu} className="menu-nav">
+          <p className="menu-label">{h.shop}</p>
           {SHOP_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -237,10 +240,10 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
 
         <div className="menu-foot">
           <Link className="btn btn-gold" href="/find-your-bracelet" onClick={() => close(false)}>
-            Order a bracelet
+            {ui.common.orderBracelet}
           </Link>
           <Link className="btn btn-ghost-gold" href="/consultation" onClick={() => close(false)}>
-            Ask Ammit
+            {h.askAmmit}
           </Link>
           <div className="menu-social">
             <a href={instagram} target="_blank" rel="noopener noreferrer">

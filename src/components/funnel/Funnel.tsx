@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "../LocaleLink";
+import RichText from "../RichText";
+import { useLang } from "../LangProvider";
+import { tf, type UI } from "@/lib/i18n/ui";
+import { INTL_LOCALE } from "@/lib/i18n/config";
 import Medallion from "../Medallion";
 import Sphere from "../Sphere";
 import ProductVisual from "../ProductVisual";
@@ -39,7 +43,6 @@ export type FunnelData = {
 };
 const MAX_INTENTIONS = 3;
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const THIS_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 1929 }, (_, i) => THIS_YEAR - i);
 
@@ -109,16 +112,16 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-const contactErrors = (c: Contact) => {
+const contactErrors = (c: Contact, m: UI["funnel"]["errors"]) => {
   const e: Partial<Record<keyof Contact, string>> = {};
-  if (!c.deliveryName.trim()) e.deliveryName = "Enter the name for delivery";
-  if (!/^[6-9]\d{9}$/.test(c.mobile.trim())) e.mobile = "Enter a 10-digit mobile number";
-  if (c.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email.trim())) e.email = "Check your email address";
-  if (!c.line1.trim()) e.line1 = "Enter flat / house number and building";
-  if (!c.city.trim()) e.city = "Enter your city";
-  if (!c.state) e.state = "Choose your state";
-  if (!/^[1-9]\d{5}$/.test(c.pincode.trim())) e.pincode = "Enter a 6-digit PIN code";
-  if (!c.consent) e.consent = "Please accept the terms to continue";
+  if (!c.deliveryName.trim()) e.deliveryName = m.deliveryName;
+  if (!/^[6-9]\d{9}$/.test(c.mobile.trim())) e.mobile = m.mobile;
+  if (c.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email.trim())) e.email = m.email;
+  if (!c.line1.trim()) e.line1 = m.line1;
+  if (!c.city.trim()) e.city = m.city;
+  if (!c.state) e.state = m.state;
+  if (!/^[1-9]\d{5}$/.test(c.pincode.trim())) e.pincode = m.pincode;
+  if (!c.consent) e.consent = m.consent;
   return e;
 };
 
@@ -169,7 +172,9 @@ function PurposeAdd({
   title,
   text,
   idBase,
+  labels,
 }: {
+  labels: { second: string; third: string; youChose: string };
   choices: { slug: string; title: string }[];
   suggested: string[];
   selected: string[];
@@ -193,7 +198,7 @@ function PurposeAdd({
           <>
             {" "}
             <b>
-              {locked.length + selected.length === 1 ? "2nd purpose" : "3rd purpose"}: +{formatINR(nextPrice)}
+              {locked.length + selected.length === 1 ? labels.second : labels.third}: +{formatINR(nextPrice)}
             </b>
           </>
         )}
@@ -214,7 +219,7 @@ function PurposeAdd({
                 <span aria-hidden="true">{on ? "✓" : "+"}</span>
                 <span className="t">
                   {c.title}
-                  {suggested.includes(c.slug) && !on && <small>You chose this</small>}
+                  {suggested.includes(c.slug) && !on && <small>{labels.youChose}</small>}
                 </span>
               </button>
             </li>
@@ -231,10 +236,14 @@ function PurposeAdd({
 
 export default function Funnel({ data }: { data: FunnelData }) {
   const { copy, trust } = data;
+  const { ui, lang } = useLang();
+  const u = ui.funnel;
+  const MONTHS = ui.common.months;
+  const addLabels = { second: u.addSecond, third: u.addThird, youChose: u.youChose };
   const INTENTION_CHOICES = useMemo(() => data.products.filter((b) => b.inList), [data.products]);
   const MULANK = data.mulank;
   const braceletBySlug = useCallback((slug: string) => data.products.find((b) => b.slug === slug), [data.products]);
-  const win = () => deliveryWindow(trust.minDays, trust.maxDays);
+  const win = () => deliveryWindow(trust.minDays, trust.maxDays, new Date(), INTL_LOCALE[lang]);
   const [i, setI] = useState(0);
   const [a, setA] = useState<Answers>(EMPTY);
   const [co, setCo] = useState<Contact>(EMPTY_CONTACT);
@@ -339,14 +348,14 @@ export default function Funnel({ data }: { data: FunnelData }) {
       if (!rec) return;
       const code = raw.trim().toUpperCase();
       if (!code) {
-        setCouponMsg({ error: "Enter a coupon code." });
+        setCouponMsg({ error: u.couponEmpty });
         return;
       }
       setCouponMsg({ busy: true });
       const res = await fetch("/api/checkout/coupon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, bracelet: rec.slug, extras, mobile: /^[6-9]\d{9}$/.test(co.mobile.trim()) ? co.mobile.trim() : "" }),
+        body: JSON.stringify({ lang, code, bracelet: rec.slug, extras, mobile: /^[6-9]\d{9}$/.test(co.mobile.trim()) ? co.mobile.trim() : "" }),
       }).catch(() => null);
       const data = res ? await res.json().catch(() => ({})) : {};
       if (res?.ok && data.ok) {
@@ -356,7 +365,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
         track("apply_coupon", { coupon: data.code, bracelet: rec.slug });
       } else {
         setCoupon(null);
-        setCouponMsg({ error: data.error ?? "Couldn't check the coupon. Please try again." });
+        setCouponMsg({ error: data.error ?? u.couponFailed });
       }
     },
     [rec, co.mobile, extras],
@@ -408,13 +417,13 @@ export default function Funnel({ data }: { data: FunnelData }) {
       <header className="fn-top">
         <div className="fn-top-row">
           {i > 0 && step !== "result" && step !== "confirmed" ? (
-            <button type="button" className="fn-back" onClick={back} aria-label="Previous question">
+            <button type="button" className="fn-back" onClick={back} aria-label={u.prevQuestion}>
               ←
             </button>
           ) : (
             <span className="fn-back-spacer" />
           )}
-          <Link href="/" className="fn-brand" aria-label="Bracelet By Ammit home">
+          <Link href="/" className="fn-brand" aria-label={ui.common.homeAria}>
             <Medallion width={26} height={29} />
             <span>Bracelet By Ammit</span>
           </Link>
@@ -425,7 +434,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
         <div
           className="fn-progress"
           role="progressbar"
-          aria-label="Quiz progress"
+          aria-label={u.progress}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progress * 100)}
@@ -446,15 +455,15 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 {copy.introTitle}
               </h1>
               <p className="fn-sub">{copy.introText}</p>
-              <p className="fn-label">Who is the bracelet for?</p>
+              <p className="fn-label">{u.whoLabel}</p>
               <div className="fn-tiles cols-2">
                 <Tile selected={a.who === "me"} onClick={() => pick("who", "me")}>
                   <Glyph>◎</Glyph>
-                  <span className="fn-tile-title">For me</span>
+                  <span className="fn-tile-title">{u.forMe}</span>
                 </Tile>
                 <Tile selected={a.who === "gift"} onClick={() => pick("who", "gift")}>
                   <Glyph>❖</Glyph>
-                  <span className="fn-tile-title">A gift for someone</span>
+                  <span className="fn-tile-title">{u.forGift}</span>
                 </Tile>
               </div>
               <p className="fn-fine">{copy.introFine}</p>
@@ -471,15 +480,15 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <div className="fn-tiles cols-3">
                 <Tile selected={a.gender === "female"} onClick={() => pick("gender", "female")}>
                   <Glyph>♀</Glyph>
-                  <span className="fn-tile-title">Woman</span>
+                  <span className="fn-tile-title">{u.woman}</span>
                 </Tile>
                 <Tile selected={a.gender === "male"} onClick={() => pick("gender", "male")}>
                   <Glyph>♂</Glyph>
-                  <span className="fn-tile-title">Man</span>
+                  <span className="fn-tile-title">{u.man}</span>
                 </Tile>
                 <Tile selected={a.gender === "other"} onClick={() => pick("gender", "other")}>
                   <Glyph>◇</Glyph>
-                  <span className="fn-tile-title">Prefer not to say</span>
+                  <span className="fn-tile-title">{u.preferNot}</span>
                 </Tile>
               </div>
             </>
@@ -491,7 +500,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
                 {t(copy.intentionTitle, copy.intentionTitleGift)}
               </h1>
-              <p className="fn-sub">Pick up to {MAX_INTENTIONS}, most important first.</p>
+              <p className="fn-sub">{tf(u.pickUpTo, { n: MAX_INTENTIONS })}</p>
               <div className="fn-tiles is-list">
                 {INTENTION_CHOICES.map((b) => {
                   const pos = a.intentions.indexOf(b.slug);
@@ -526,7 +535,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               </div>
               <div className="fn-actions">
                 <button type="button" className="btn btn-lapis" disabled={!a.intentions.length} onClick={next}>
-                  Continue
+                  {ui.common.continue}
                 </button>
               </div>
             </>
@@ -536,11 +545,11 @@ export default function Funnel({ data }: { data: FunnelData }) {
           {step === "focus" && primaryDetail && (
             <>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("Which of these sounds most like you?", "Which of these sounds most like them?")}
+                {t(u.focusTitle, u.focusTitleGift)}
               </h1>
-              <p className="fn-sub">About {primaryDetail.title.toLowerCase()}.</p>
+              <p className="fn-sub">{tf(u.focusAbout, { title: lang === "en" ? primaryDetail.title.toLowerCase() : primaryDetail.title })}</p>
               <div className="fn-tiles is-list">
-                {[...primaryDetail.listA, "Something else"].map((f) => (
+                {[...primaryDetail.listA, u.somethingElse].map((f) => (
                   <Tile key={f} selected={a.focus === f} onClick={() => pick("focus", f)}>
                     <span className="fn-tile-title is-plain">{f}</span>
                   </Tile>
@@ -561,7 +570,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={data.review.image}
-                    alt={data.review.quote ? `Instagram review: ${data.review.quote}` : "Instagram review screenshot"}
+                    alt={data.review.quote ? `${ui.common.instagramReview}: ${data.review.quote}` : ui.common.instagramScreenshot}
                     loading="lazy"
                   />
                   {data.review.sourceUrl && (
@@ -587,7 +596,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       <>
                         {" · "}
                         <a href={data.review.sourceUrl} target="_blank" rel="noopener noreferrer">
-                          {data.review.sourceLabel || "Source"}
+                          {data.review.sourceLabel || ui.common.source}
                         </a>
                       </>
                     )}
@@ -596,7 +605,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               )}
               <div className="fn-actions">
                 <button type="button" className="btn btn-lapis" onClick={next}>
-                  Continue
+                  {ui.common.continue}
                 </button>
               </div>
             </>
@@ -617,7 +626,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <p className="fn-sub">{copy.nameText}</p>
               <div className="fn-fields cols-2">
                 <label className="fn-field">
-                  <span>First name</span>
+                  <span>{u.firstName}</span>
                   <input
                     value={a.firstName}
                     onChange={(e) => setA((s) => ({ ...s, firstName: e.target.value }))}
@@ -627,7 +636,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   />
                 </label>
                 <label className="fn-field">
-                  <span>Last name</span>
+                  <span>{u.lastName}</span>
                   <input
                     value={a.lastName}
                     onChange={(e) => setA((s) => ({ ...s, lastName: e.target.value }))}
@@ -638,7 +647,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               </div>
               <div className="fn-actions">
                 <button type="submit" className="btn btn-lapis" disabled={!a.firstName.trim()}>
-                  Continue
+                  {ui.common.continue}
                 </button>
               </div>
             </form>
@@ -654,14 +663,14 @@ export default function Funnel({ data }: { data: FunnelData }) {
               }}
             >
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                {t("When were you born?", `When was ${a.firstName.trim() || "the wearer"} born?`)}
+                {t(u.dobTitle, tf(u.dobTitleGift, { name: a.firstName.trim() || u.theWearer }))}
               </h1>
               <p className="fn-sub">{copy.dobText}</p>
               <div className="fn-fields cols-dob">
                 <label className="fn-field">
-                  <span>Day</span>
+                  <span>{ui.common.day}</span>
                   <select value={a.day ?? ""} onChange={(e) => setA((s) => ({ ...s, day: Number(e.target.value) || undefined }))} required>
-                    <option value="">Day</option>
+                    <option value="">{ui.common.day}</option>
                     {Array.from({ length: 31 }, (_, d) => (
                       <option key={d + 1} value={d + 1}>
                         {d + 1}
@@ -670,9 +679,9 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   </select>
                 </label>
                 <label className="fn-field">
-                  <span>Month</span>
+                  <span>{ui.common.month}</span>
                   <select value={a.month ?? ""} onChange={(e) => setA((s) => ({ ...s, month: Number(e.target.value) || undefined }))} required>
-                    <option value="">Month</option>
+                    <option value="">{ui.common.month}</option>
                     {MONTHS.map((mo, idx) => (
                       <option key={mo} value={idx + 1}>
                         {mo}
@@ -681,9 +690,9 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   </select>
                 </label>
                 <label className="fn-field">
-                  <span>Year</span>
+                  <span>{ui.common.year}</span>
                   <select value={a.year ?? ""} onChange={(e) => setA((s) => ({ ...s, year: Number(e.target.value) || undefined }))} required>
-                    <option value="">Year</option>
+                    <option value="">{ui.common.year}</option>
                     {YEARS.map((y) => (
                       <option key={y} value={y}>
                         {y}
@@ -694,18 +703,18 @@ export default function Funnel({ data }: { data: FunnelData }) {
               </div>
               {a.day && a.month && a.year && !dobValid && (
                 <p className="fn-error" role="alert">
-                  That date doesn&apos;t exist. Please check the day and month.
+                  {ui.common.badDate}
                 </p>
               )}
               {minor && (
                 <label className="fn-check">
                   <input type="checkbox" checked={a.guardian} onChange={(e) => setA((s) => ({ ...s, guardian: e.target.checked }))} />
-                  <span>The wearer is under 18. I&apos;m their parent or guardian and I&apos;m placing this order for them.</span>
+                  <span>{u.minor}</span>
                 </label>
               )}
               <div className="fn-actions">
                 <button type="submit" className="btn btn-lapis" disabled={!dobValid || (minor && !a.guardian)}>
-                  Show my numbers
+                  {u.showNumbers}
                 </button>
               </div>
             </form>
@@ -715,25 +724,28 @@ export default function Funnel({ data }: { data: FunnelData }) {
           {step === "reveal" && mInfo && (
             <>
               <p className="fn-kicker">
-                <span aria-hidden="true">◆</span> {t("Your numbers", `${a.firstName.trim() || "Their"}'s numbers`)}
+                <span aria-hidden="true">◆</span> {t(u.yourNumbers, a.firstName.trim() ? tf(u.theirNumbers, { name: a.firstName.trim() }) : u.theirNumbersNoName)}
               </p>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title">
-                Mulank {m}, ruled by {mInfo.planet}
+                {tf(u.revealTitle, { m, planet: mInfo.planet })}
               </h1>
               <div className="fn-medals" aria-hidden="true">
                 <span className="fn-medal">
                   <b>{m}</b>
-                  <small>Mulank</small>
+                  <small>{u.mulank}</small>
                 </span>
                 <span className="fn-medal is-alt">
                   <b>{bh}</b>
-                  <small>Bhagyank</small>
+                  <small>{u.bhagyank}</small>
                 </span>
               </div>
               <p className="fn-sub">
-                Born on the {a.day}
-                {a.day === 1 || a.day === 21 || a.day === 31 ? "st" : a.day === 2 || a.day === 22 ? "nd" : a.day === 3 || a.day === 23 ? "rd" : "th"}, so the
-                mulank is {m} ({mInfo.planet}{mInfo.planetHindi !== mInfo.planet ? `, ${mInfo.planetHindi}` : ""}). Adding every digit of the full date gives a bhagyank of {bh}.
+                {tf(u.revealText, {
+                  day: a.day,
+                  m,
+                  b: bh,
+                  planet: `${mInfo.planet}${mInfo.planetHindi && mInfo.planetHindi !== mInfo.planet ? `, ${mInfo.planetHindi}` : ""}`,
+                })}
               </p>
               <ul className="fn-traits">
                 {mInfo.traits.map((tr) => (
@@ -742,7 +754,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               </ul>
               <div className="fn-actions">
                 <button type="button" className="btn btn-lapis" onClick={next}>
-                  Continue
+                  {ui.common.continue}
                 </button>
               </div>
             </>
@@ -757,7 +769,8 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <p className="fn-sub">{copy.wristText}</p>
               <div className="fn-tiles cols-3">
                 {wristChoices.map((w) => {
-                  const [label, cm] = w.split("-");
+                  const [label0, cm] = w.split("-");
+                  const label = u.wristLabels[label0] ?? label0;
                   return (
                     <Tile key={w} selected={a.wrist === w} onClick={() => pick("wrist", w)}>
                       <span className="fn-tile-big">{cm}</span>
@@ -767,11 +780,11 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 })}
               </div>
               <button type="button" className="fn-link" onClick={() => pick("wrist", "unsure")}>
-                Not sure? Skip, and the team will confirm on WhatsApp
+                {u.wristSkip}
               </button>
-              <a className="fn-link" href="/size-guide" target="_blank" rel="noopener noreferrer">
-                How to measure (opens the size guide)
-              </a>
+              <Link className="fn-link" href="/size-guide" target="_blank" rel="noopener noreferrer">
+                {u.wristHow}
+              </Link>
             </>
           )}
 
@@ -785,7 +798,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 <Medallion width={58} height={64} />
               </div>
               <ul className="fn-checks" aria-live="polite">
-                {[`Mulank ${m} worked out`, `Bhagyank ${bh} worked out`, "Intentions matched", "Crystals shortlisted"].map((c, n) => (
+                {u.checks.map((c) => tf(c, { m, b: bh })).map((c, n) => (
                   <li key={c} className={checks > n ? "is-done" : ""}>
                     {c}
                   </li>
@@ -798,35 +811,40 @@ export default function Funnel({ data }: { data: FunnelData }) {
           {step === "result" && rec && mInfo && (
             <div className="fn-result">
               <p className="fn-kicker">
-                <span aria-hidden="true">◆</span> {gift ? `For ${a.firstName.trim()}` : `${a.firstName.trim()}, your match`}
+                <span aria-hidden="true">◆</span> {gift ? tf(u.forName, { name: a.firstName.trim() }) : tf(u.yourMatch, { name: a.firstName.trim() })}
               </p>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title is-hero">
                 {rec.title}
               </h1>
               <div className="fn-result-visual">
-                <ProductVisual cards={rec.visual.cards} rings={rec.visual.rings} label={`Illustration of the ${rec.title} bracelet`} photos={rec.photos} refNote={data.refNote} />
+                <ProductVisual
+                  cards={rec.visual.cards}
+                  rings={rec.visual.rings}
+                  label={tf(ui.common.illustrationOf, { title: rec.title })}
+                  photosLabel={tf(ui.common.photosOf, { title: rec.title })}
+                  photos={rec.photos}
+                  refNote={data.refNote}
+                />
               </div>
               <ul className="fn-chips">
-                <li>
-                  Mulank {m} · {mInfo.planet}
-                </li>
-                <li>Bhagyank {bh}</li>
-                {a.focus && a.focus !== "Something else" && <li>{a.focus}</li>}
+                <li>{tf(u.chipMulank, { m, planet: mInfo.planet })}</li>
+                <li>{tf(u.chipBhagyank, { b: bh })}</li>
+                {a.focus && a.focus !== u.somethingElse && <li>{a.focus}</li>}
               </ul>
               <p className="fn-sub">
                 {rec.blurb}
               </p>
               <div className="fn-crystals">
-                <p className="fn-label">Crystals often used</p>
+                <p className="fn-label">{u.crystalsLabel}</p>
                 <ul className="chip-list">
                   {rec.crystals.map((c) => (
                     <li key={c}>{c}</li>
                   ))}
                 </ul>
-                <p className="small-note">Ammit confirms the final stones after reading the full name and date of birth.</p>
+                <p className="small-note">{u.crystalsNote}</p>
               </div>
               <p className="fn-price">
-                {formatINR(rec.priceInr)} <span>read for your numbers · strung by hand</span>
+                {formatINR(rec.priceInr)} <span>{u.priceNote}</span>
               </p>
               <TrustBar compact text={trust} />
               <div className="fn-actions is-stack">
@@ -838,7 +856,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     goTo(STEPS.indexOf("checkout"));
                   }}
                 >
-                  Confirm my order
+                  {u.confirm}
                 </button>
               </div>
               <ol className="num-list fn-next">
@@ -847,26 +865,10 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 ))}
               </ol>
               <p className="small-note">
-                By ordering you agree to our{" "}
-                <a href="/terms" target="_blank" rel="noopener noreferrer">
-                  terms
-                </a>{" "}
-                and{" "}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                  privacy policy
-                </a>
-                . See also{" "}
-                <a href="/shipping" target="_blank" rel="noopener noreferrer">
-                  shipping
-                </a>{" "}
-                and{" "}
-                <a href="/returns" target="_blank" rel="noopener noreferrer">
-                  returns
-                </a>
-                .
+                <RichText text={u.agree} newTab />
               </p>
               <div className="fn-result-links">
-                <Link href={`/bracelets/${rec.slug}`}>About this bracelet</Link>
+                <Link href={`/bracelets/${rec.slug}`}>{u.aboutBracelet}</Link>
                 <button
                   type="button"
                   className="fn-link"
@@ -875,7 +877,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     goTo(0);
                   }}
                 >
-                  Start again
+                  {u.startAgain}
                 </button>
               </div>
             </div>
@@ -888,7 +890,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
               noValidate
               onSubmit={async (e) => {
                 e.preventDefault();
-                const errs = contactErrors(co);
+                const errs = contactErrors(co, u.errors);
                 if (Object.keys(errs).length) {
                   setShowErrors(true);
                   return;
@@ -900,6 +902,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                      lang,
                       bracelet: rec.slug,
                       wearer: {
                         firstName: a.firstName.trim(),
@@ -936,11 +939,11 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       setCoupon(null);
                       setCouponMsg({ error: data.error });
                     }
-                    setPayState({ status: "error", message: data.error ?? "Something went wrong. Please try again." });
+                    setPayState({ status: "error", message: data.error ?? u.payGeneric });
                     return;
                   }
                   if (!(await loadRazorpay()) || !window.Razorpay) {
-                    setPayState({ status: "error", message: "The payment window couldn't load. Check your connection and try again." });
+                    setPayState({ status: "error", message: u.payLoad });
                     return;
                   }
                   const rzp = new window.Razorpay({
@@ -949,16 +952,16 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     amount: data.amount,
                     currency: data.currency,
                     name: "Bracelet By Ammit",
-                    description: `${[rec.title, ...extras.map((x) => braceletBySlug(x)?.title ?? x)].join(" + ")} bracelet`,
+                    description: tf(u.rzpDescription, { title: [rec.title, ...extras.map((x) => braceletBySlug(x)?.title ?? x)].join(" + ") }),
                     image: `${window.location.origin}/brand/emblem.png`,
                     prefill: { name: co.deliveryName, email: co.email.trim() || undefined, contact: `+91${co.mobile.trim()}` },
                     notes: { ref: data.ref },
                     theme: { color: "#050E8F" },
                     modal: {
-                      ondismiss: () => setPayState({ status: "error", message: "Payment wasn't completed. You can try again." }),
+                      ondismiss: () => setPayState({ status: "error", message: u.payDismissed }),
                     },
                     handler: async (r: RzpResponse) => {
-                      setPayState({ status: "working", message: "Confirming your payment…" });
+                      setPayState({ status: "working", message: u.confirming });
                       const v = await fetch("/api/checkout/verify", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -975,17 +978,17 @@ export default function Funnel({ data }: { data: FunnelData }) {
                       } else {
                         setPayState({
                           status: "error",
-                          message: vd.error ?? `We couldn't confirm the payment. If money was taken, contact us (details at the bottom of the page) with reference ${data.ref}.`,
+                          message: vd.error ?? tf(u.payUnconfirmed, { ref: data.ref }),
                         });
                       }
                     },
                   });
                   rzp.on("payment.failed", (r) =>
-                    setPayState({ status: "error", message: r.error?.description ?? "Payment failed. Please try again." }),
+                    setPayState({ status: "error", message: r.error?.description ?? u.payFailed }),
                   );
                   rzp.open();
                 } catch {
-                  setPayState({ status: "error", message: "Something went wrong. Please try again." });
+                  setPayState({ status: "error", message: u.payGeneric });
                 }
               }}
             >
@@ -993,12 +996,12 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 {copy.checkoutTitle}
               </h1>
 
-              <div className="fn-summary" aria-label="Order summary">
+              <div className="fn-summary" aria-label={u.summary}>
                 <div className="fn-summary-row">
                   <span>
                     <b>{rec.title}</b>
                     <small>
-                      For {a.firstName.trim()} · Mulank {m} · Bhagyank {bh}
+                      {tf(u.summaryFor, { name: a.firstName.trim(), m, b: bh })}
                       {a.wrist && a.wrist !== "unsure" ? ` · ${a.wrist}` : ""}
                     </small>
                   </span>
@@ -1008,7 +1011,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                   <div className="fn-summary-row is-extra" key={x}>
                     <span>
                       + {braceletBySlug(x)?.title ?? x}
-                      <small>{n === 0 ? "2nd purpose, same bracelet" : "3rd purpose, same bracelet"}</small>
+                      <small>{n === 0 ? u.second : u.third}</small>
                     </span>
                     <span>+{formatINR(extraFor(rec.priceInr, 1 + n, 2 + n, tiers))}</span>
                   </div>
@@ -1016,7 +1019,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 {coupon && (
                   <div className="fn-summary-row is-discount">
                     <span>
-                      Coupon <b className="fn-coupon-code">{coupon.code}</b>{" "}
+                      {u.coupon} <b className="fn-coupon-code">{coupon.code}</b>{" "}
                       <button
                         type="button"
                         className="fn-link"
@@ -1026,25 +1029,25 @@ export default function Funnel({ data }: { data: FunnelData }) {
                           appliedCode.current = "";
                         }}
                       >
-                        Remove
+                        {u.remove}
                       </button>
                     </span>
                     <span>−{formatINR(coupon.discountInr)}</span>
                   </div>
                 )}
                 <div className="fn-summary-row">
-                  <span>Shipping</span>
-                  <span>Free</span>
+                  <span>{u.shipping}</span>
+                  <span>{u.free}</span>
                 </div>
                 <div className="fn-summary-row is-total">
-                  <span>Total</span>
+                  <span>{u.total}</span>
                   <span>{formatINR(total)}</span>
                 </div>
                 {!coupon &&
                   (couponOpen ? (
                     <div className="fn-coupon">
                       <label className="sr-only" htmlFor="fn-coupon-input">
-                        Coupon code
+                        {u.couponLabel}
                       </label>
                       <input
                         id="fn-coupon-input"
@@ -1059,7 +1062,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                             applyCoupon(couponInput);
                           }
                         }}
-                        placeholder="Coupon code"
+                        placeholder={u.couponPlaceholder}
                         autoComplete="off"
                         autoCapitalize="characters"
                         spellCheck={false}
@@ -1067,7 +1070,7 @@ export default function Funnel({ data }: { data: FunnelData }) {
                         aria-describedby={couponMsg?.error ? "fn-coupon-err" : undefined}
                       />
                       <button type="button" className="btn btn-line" onClick={() => applyCoupon(couponInput)} disabled={!!couponMsg?.busy}>
-                        {couponMsg?.busy ? "Checking…" : "Apply"}
+                        {couponMsg?.busy ? u.checking : u.apply}
                       </button>
                       {couponMsg?.error && (
                         <em className="fn-err" id="fn-coupon-err" role="alert">
@@ -1077,16 +1080,17 @@ export default function Funnel({ data }: { data: FunnelData }) {
                     </div>
                   ) : (
                     <button type="button" className="fn-link fn-coupon-open" onClick={() => setCouponOpen(true)}>
-                      Have a coupon code?
+                      {u.haveCoupon}
                     </button>
                   ))}
-                <p className="fn-summary-eta">Estimated delivery: {win()}</p>
+                <p className="fn-summary-eta">{tf(u.eta, { dates: win() })}</p>
               </div>
 
               <PurposeAdd
                 idBase="fn-add"
-                title={gift ? "Add another purpose to their bracelet" : "Add another purpose to the same bracelet"}
-                text="Ammit can design one bracelet for up to 3 purposes, balancing the crystals for all of them."
+                title={gift ? u.addTitleGift : u.addTitle}
+                text={u.addText}
+                labels={addLabels}
                 choices={INTENTION_CHOICES.map((b) => ({ slug: b.slug, title: b.title }))}
                 suggested={a.intentions.filter((x) => x !== rec.slug)}
                 locked={[rec.slug]}
@@ -1096,70 +1100,70 @@ export default function Funnel({ data }: { data: FunnelData }) {
               />
 
               <fieldset className="fn-fieldset">
-                <legend>Contact</legend>
+                <legend>{u.contact}</legend>
                 <div className="fn-fields cols-2">
                   <label className="fn-field">
-                    <span>Full name for delivery</span>
-                    <input value={co.deliveryName} onChange={(e) => setCo({ ...co, deliveryName: e.target.value })} autoComplete="name" maxLength={80} aria-invalid={showErrors && !!contactErrors(co).deliveryName} />
-                    {showErrors && contactErrors(co).deliveryName && <em className="fn-err">{contactErrors(co).deliveryName}</em>}
+                    <span>{u.deliveryName}</span>
+                    <input value={co.deliveryName} onChange={(e) => setCo({ ...co, deliveryName: e.target.value })} autoComplete="name" maxLength={80} aria-invalid={showErrors && !!contactErrors(co, u.errors).deliveryName} />
+                    {showErrors && contactErrors(co, u.errors).deliveryName && <em className="fn-err">{contactErrors(co, u.errors).deliveryName}</em>}
                   </label>
                   <label className="fn-field">
-                    <span>Mobile number (for WhatsApp updates)</span>
-                    <input value={co.mobile} onChange={(e) => setCo({ ...co, mobile: e.target.value.replace(/[^\d]/g, "").slice(0, 10) })} inputMode="numeric" autoComplete="tel-national" placeholder="10 digits" aria-invalid={showErrors && !!contactErrors(co).mobile} />
-                    {showErrors && contactErrors(co).mobile && <em className="fn-err">{contactErrors(co).mobile}</em>}
+                    <span>{u.mobile}</span>
+                    <input value={co.mobile} onChange={(e) => setCo({ ...co, mobile: e.target.value.replace(/[^\d]/g, "").slice(0, 10) })} inputMode="numeric" autoComplete="tel-national" placeholder={u.mobilePlaceholder} aria-invalid={showErrors && !!contactErrors(co, u.errors).mobile} />
+                    {showErrors && contactErrors(co, u.errors).mobile && <em className="fn-err">{contactErrors(co, u.errors).mobile}</em>}
                   </label>
                 </div>
                 <label className="fn-field">
-                  <span>Email (optional, for your receipt)</span>
-                  <input type="email" value={co.email} onChange={(e) => setCo({ ...co, email: e.target.value })} autoComplete="email" maxLength={120} aria-invalid={showErrors && !!contactErrors(co).email} />
-                  {showErrors && contactErrors(co).email && <em className="fn-err">{contactErrors(co).email}</em>}
+                  <span>{u.email}</span>
+                  <input type="email" value={co.email} onChange={(e) => setCo({ ...co, email: e.target.value })} autoComplete="email" maxLength={120} aria-invalid={showErrors && !!contactErrors(co, u.errors).email} />
+                  {showErrors && contactErrors(co, u.errors).email && <em className="fn-err">{contactErrors(co, u.errors).email}</em>}
                 </label>
               </fieldset>
 
               <fieldset className="fn-fieldset">
-                <legend>Delivery address</legend>
+                <legend>{u.address}</legend>
                 <label className="fn-field">
-                  <span>Flat / house no. and building</span>
-                  <input value={co.line1} onChange={(e) => setCo({ ...co, line1: e.target.value })} autoComplete="address-line1" maxLength={120} aria-invalid={showErrors && !!contactErrors(co).line1} />
-                  {showErrors && contactErrors(co).line1 && <em className="fn-err">{contactErrors(co).line1}</em>}
+                  <span>{u.line1}</span>
+                  <input value={co.line1} onChange={(e) => setCo({ ...co, line1: e.target.value })} autoComplete="address-line1" maxLength={120} aria-invalid={showErrors && !!contactErrors(co, u.errors).line1} />
+                  {showErrors && contactErrors(co, u.errors).line1 && <em className="fn-err">{contactErrors(co, u.errors).line1}</em>}
                 </label>
                 <label className="fn-field">
-                  <span>Street and area (optional)</span>
+                  <span>{u.line2}</span>
                   <input value={co.line2} onChange={(e) => setCo({ ...co, line2: e.target.value })} autoComplete="address-line2" maxLength={120} />
                 </label>
                 <label className="fn-field">
-                  <span>Landmark (optional)</span>
+                  <span>{u.landmark}</span>
                   <input value={co.landmark} onChange={(e) => setCo({ ...co, landmark: e.target.value })} maxLength={80} />
                 </label>
                 <div className="fn-fields cols-3-addr">
                   <label className="fn-field">
-                    <span>City</span>
-                    <input value={co.city} onChange={(e) => setCo({ ...co, city: e.target.value })} autoComplete="address-level2" maxLength={60} aria-invalid={showErrors && !!contactErrors(co).city} />
-                    {showErrors && contactErrors(co).city && <em className="fn-err">{contactErrors(co).city}</em>}
+                    <span>{u.city}</span>
+                    <input value={co.city} onChange={(e) => setCo({ ...co, city: e.target.value })} autoComplete="address-level2" maxLength={60} aria-invalid={showErrors && !!contactErrors(co, u.errors).city} />
+                    {showErrors && contactErrors(co, u.errors).city && <em className="fn-err">{contactErrors(co, u.errors).city}</em>}
                   </label>
                   <label className="fn-field">
-                    <span>State</span>
-                    <select value={co.state} onChange={(e) => setCo({ ...co, state: e.target.value })} autoComplete="address-level1" aria-invalid={showErrors && !!contactErrors(co).state}>
-                      <option value="">Choose</option>
+                    <span>{u.state}</span>
+                    <select value={co.state} onChange={(e) => setCo({ ...co, state: e.target.value })} autoComplete="address-level1" aria-invalid={showErrors && !!contactErrors(co, u.errors).state}>
+                      <option value="">{u.chooseState}</option>
                       {INDIAN_STATES.map((st) => (
                         <option key={st} value={st}>
                           {st}
                         </option>
                       ))}
                     </select>
-                    {showErrors && contactErrors(co).state && <em className="fn-err">{contactErrors(co).state}</em>}
+                    {showErrors && contactErrors(co, u.errors).state && <em className="fn-err">{contactErrors(co, u.errors).state}</em>}
                   </label>
                   <label className="fn-field">
-                    <span>PIN code</span>
-                    <input value={co.pincode} onChange={(e) => setCo({ ...co, pincode: e.target.value.replace(/[^\d]/g, "").slice(0, 6) })} inputMode="numeric" autoComplete="postal-code" aria-invalid={showErrors && !!contactErrors(co).pincode} />
-                    {showErrors && contactErrors(co).pincode && <em className="fn-err">{contactErrors(co).pincode}</em>}
+                    <span>{u.pincode}</span>
+                    <input value={co.pincode} onChange={(e) => setCo({ ...co, pincode: e.target.value.replace(/[^\d]/g, "").slice(0, 6) })} inputMode="numeric" autoComplete="postal-code" aria-invalid={showErrors && !!contactErrors(co, u.errors).pincode} />
+                    {showErrors && contactErrors(co, u.errors).pincode && <em className="fn-err">{contactErrors(co, u.errors).pincode}</em>}
                   </label>
                 </div>
               </fieldset>
 
               {gift && (
                 <label className="fn-field">
-                  <span>Gift note (optional, written on a card)</span>
+                  <span>{u.giftNote}</span>
                   <textarea rows={2} value={co.giftNote} onChange={(e) => setCo({ ...co, giftNote: e.target.value })} maxLength={240} />
                 </label>
               )}
@@ -1167,29 +1171,13 @@ export default function Funnel({ data }: { data: FunnelData }) {
               <label className="fn-check">
                 <input type="checkbox" checked={co.consent} onChange={(e) => setCo({ ...co, consent: e.target.checked })} />
                 <span>
-                  I agree to the{" "}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer">
-                    terms
-                  </a>
-                  ,{" "}
-                  <a href="/shipping" target="_blank" rel="noopener noreferrer">
-                    shipping
-                  </a>{" "}
-                  and{" "}
-                  <a href="/returns" target="_blank" rel="noopener noreferrer">
-                    returns
-                  </a>{" "}
-                  policies, and to my details being used to make and deliver this order as described in the{" "}
-                  <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                    privacy policy
-                  </a>
-                  .
+                  <RichText text={u.consent} newTab />
                 </span>
               </label>
-              {showErrors && contactErrors(co).consent && <em className="fn-err">{contactErrors(co).consent}</em>}
+              {showErrors && contactErrors(co, u.errors).consent && <em className="fn-err">{contactErrors(co, u.errors).consent}</em>}
               <label className="fn-check is-light">
                 <input type="checkbox" checked={co.marketing} onChange={(e) => setCo({ ...co, marketing: e.target.checked })} />
-                <span>Send me crystal care reminders and offers on WhatsApp (optional).</span>
+                <span>{u.marketing}</span>
               </label>
 
               {payState.status === "error" && (
@@ -1199,11 +1187,11 @@ export default function Funnel({ data }: { data: FunnelData }) {
               )}
               <div className="fn-actions is-stack">
                 <button type="submit" className="btn btn-lapis" disabled={payState.status === "working"}>
-                  {payState.status === "working" ? payState.message ?? "Opening secure payment…" : `Pay ${formatINR(total)} securely`}
+                  {payState.status === "working" ? payState.message ?? u.opening : tf(u.pay, { amount: formatINR(total) })}
                 </button>
               </div>
               <TrustBar compact text={trust} />
-              <p className="small-note">Payments are processed by Razorpay. We never see or store your card or UPI details.</p>
+              <p className="small-note">{u.razorpayNote}</p>
             </form>
           )}
 
@@ -1211,10 +1199,10 @@ export default function Funnel({ data }: { data: FunnelData }) {
           {step === "confirmed" && rec && (
             <div className="fn-result">
               <p className="fn-kicker">
-                <span aria-hidden="true">◆</span> Order {orderRef}
+                <span aria-hidden="true">◆</span> {tf(u.order, { ref: orderRef })}
               </p>
               <h1 ref={headingRef} tabIndex={-1} className="fn-title is-hero">
-                Thank you{a.firstName.trim() && !gift ? `, ${a.firstName.trim()}` : ""}
+                {a.firstName.trim() && !gift ? tf(u.thankYouName, { name: a.firstName.trim() }) : u.thankYou}
               </h1>
               <p className="fn-sub">
                 {fill(copy.confirmedText, { title: rec.title, ref: orderRef })}
@@ -1223,8 +1211,9 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 <div className="fn-topup">
                   <PurposeAdd
                     idBase="fn-topup"
-                    title="Before Ammit starts: add another purpose?"
-                    text={`Your bracelet hasn't been designed yet, so Ammit can still build ${paidPurposes.length === 1 ? "a 2nd purpose" : "a 3rd purpose"} into it.`}
+                    title={u.topUpTitle}
+                    text={paidPurposes.length === 1 ? u.topUpText2 : u.topUpText3}
+                    labels={addLabels}
                     choices={INTENTION_CHOICES.map((b) => ({ slug: b.slug, title: b.title }))}
                     suggested={a.intentions.filter((x) => !paidPurposes.includes(x))}
                     locked={paidPurposes}
@@ -1247,11 +1236,11 @@ export default function Funnel({ data }: { data: FunnelData }) {
                           const res = await fetch("/api/checkout/upgrade", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ orderId: mainRzpOrder, add: topUp }),
+                            body: JSON.stringify({ lang, orderId: mainRzpOrder, add: topUp }),
                           });
                           const d = await res.json().catch(() => ({}));
-                          if (!res.ok) return setTopUpState({ status: "error", message: d.error ?? "Something went wrong. Please try again." });
-                          if (!(await loadRazorpay()) || !window.Razorpay) return setTopUpState({ status: "error", message: "The payment window couldn't load. Please try again." });
+                          if (!res.ok) return setTopUpState({ status: "error", message: d.error ?? u.payGeneric });
+                          if (!(await loadRazorpay()) || !window.Razorpay) return setTopUpState({ status: "error", message: u.payLoad });
                           const added = topUp.map((x) => braceletBySlug(x)?.title ?? x);
                           const rzp = new window.Razorpay({
                             key: d.keyId,
@@ -1259,14 +1248,14 @@ export default function Funnel({ data }: { data: FunnelData }) {
                             amount: d.amount,
                             currency: d.currency,
                             name: "Bracelet By Ammit",
-                            description: `Add ${added.join(" + ")} to order ${d.ref}`,
+                            description: tf(u.rzpTopUp, { title: added.join(" + "), ref: d.ref }),
                             image: `${window.location.origin}/brand/emblem.png`,
                             prefill: d.prefill,
                             notes: { ref: d.ref },
                             theme: { color: "#050E8F" },
                             modal: { ondismiss: () => setTopUpState({ status: "idle" }) },
                             handler: async (r: RzpResponse) => {
-                              setTopUpState({ status: "working", message: "Confirming your payment…" });
+                              setTopUpState({ status: "working", message: u.confirming });
                               const v = await fetch("/api/checkout/verify", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
@@ -1275,23 +1264,23 @@ export default function Funnel({ data }: { data: FunnelData }) {
                               if (v?.ok) {
                                 setPaidPurposes((p) => [...p, ...topUp]);
                                 setTopUp([]);
-                                setTopUpState({ status: "done", message: `Added ${added.join(" and ")}. Ammit will design your bracelet for all of them.` });
+                                setTopUpState({ status: "done", message: tf(u.topUpDone, { titles: added.join(u.and) }) });
                                 track("purchase", { transaction_id: `${d.ref}-up`, value: d.amount / 100, currency: "INR", upgrade: 1 }, "Purchase");
                               } else {
-                                setTopUpState({ status: "error", message: `We couldn't confirm the payment. If money was taken, contact us with reference ${d.ref}.` });
+                                setTopUpState({ status: "error", message: tf(u.topUpUnconfirmed, { ref: d.ref }) });
                               }
                             },
                           });
-                          rzp.on("payment.failed", (r) => setTopUpState({ status: "error", message: r.error?.description ?? "Payment failed. Please try again." }));
+                          rzp.on("payment.failed", (r) => setTopUpState({ status: "error", message: r.error?.description ?? u.payFailed }));
                           rzp.open();
                         } catch {
-                          setTopUpState({ status: "error", message: "Something went wrong. Please try again." });
+                          setTopUpState({ status: "error", message: u.payGeneric });
                         }
                       }}
                     >
                       {topUpState.status === "working"
-                        ? topUpState.message ?? "Opening secure payment…"
-                        : `Add for ${formatINR(extraFor(rec.priceInr, paidPurposes.length, paidPurposes.length + topUp.length, tiers))}`}
+                        ? topUpState.message ?? u.opening
+                        : tf(u.topUpButton, { amount: formatINR(extraFor(rec.priceInr, paidPurposes.length, paidPurposes.length + topUp.length, tiers)) })}
                     </button>
                   )}
                   {topUpState.status === "error" && (
@@ -1307,16 +1296,16 @@ export default function Funnel({ data }: { data: FunnelData }) {
                 </p>
               )}
               <ol className="num-list fn-next">
-                <li>Ammit reads {gift ? `${a.firstName.trim()}'s` : "your"} full name and date of birth and chooses the crystals.</li>
-                <li>We&apos;ll message you on WhatsApp at +91 {co.mobile} with any questions and your tracking details.</li>
-                <li>Free delivery, estimated {win()}.</li>
+                <li>{gift ? tf(u.nextThem, { name: a.firstName.trim() }) : u.nextYou}</li>
+                <li>{tf(u.nextWhatsApp, { mobile: co.mobile })}</li>
+                <li>{tf(u.nextDelivery, { dates: win() })}</li>
               </ol>
               <div className="fn-actions is-stack">
                 <Link className="btn btn-lapis" href="/">
-                  Back to the home page
+                  {u.backHome}
                 </Link>
               </div>
-              <p className="small-note">Questions about your order? Mention {orderRef} when you contact us.</p>
+              <p className="small-note">{tf(u.questions, { ref: orderRef })}</p>
             </div>
           )}
         </div>

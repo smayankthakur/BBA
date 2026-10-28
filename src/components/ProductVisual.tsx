@@ -16,12 +16,15 @@ export default function ProductVisual({
   cards,
   rings,
   label,
+  photosLabel,
   photos = [],
   refNote = "",
 }: {
   cards: [string, string, string];
   rings: [Triplet, Triplet, Triplet];
+  /** Accessible name for the illustration, and for the photos when there are some */
   label: string;
+  photosLabel?: string;
   photos?: string[];
   refNote?: string;
 }) {
@@ -32,7 +35,7 @@ export default function ProductVisual({
     { cls: "pv-c2", i: 2, photo: photos[0] },
   ];
   return (
-    <div className="pv" role="img" aria-label={photos.length ? label.replace("Illustration of", "Photos of") : label}>
+    <div className="pv" role="img" aria-label={photos.length ? (photosLabel ?? label) : label}>
       {slots.map((s) => (
         <span key={s.cls} className={`pv-card ${s.cls}`} style={{ backgroundImage: cards[s.i] }}>
           {s.photo ? (

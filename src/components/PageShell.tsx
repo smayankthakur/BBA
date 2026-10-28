@@ -2,6 +2,7 @@ import AnnouncementBar from "./AnnouncementBar";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import { getSite } from "@/lib/server/content";
+import { getUI } from "@/lib/server/lang";
 
 /** Wrapper for every inner page: announcement, sticky header, main, footer. */
 export default async function PageShell({ children }: { children: React.ReactNode }) {
@@ -9,7 +10,7 @@ export default async function PageShell({ children }: { children: React.ReactNod
   return (
     <div className="page">
       <a className="skip-link" href="#main">
-        Skip to content
+        {getUI().common.skip}
       </a>
       <AnnouncementBar />
       <SiteHeader instagram={s.instagram} youtube={s.youtube} />

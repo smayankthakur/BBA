@@ -1,45 +1,42 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "./LocaleLink";
 import Medallion from "./Medallion";
 import CookieSettingsLink from "./CookieSettingsLink";
 import { CREDIT } from "@/data/home";
 import { formatINR, getContent, getSite } from "@/lib/server/content";
+import { getUI } from "@/lib/server/lang";
+import { tf, type UI } from "@/lib/i18n/ui";
 
 const EXT = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 type FooterLink = { label: string; href: string; external?: boolean };
 
-const COLUMNS: { title: string; links: FooterLink[] }[] = [
+const columns = (f: UI["footer"]): { title: string; links: FooterLink[] }[] => [
   {
-    title: "Shop",
+    title: f.cols.shop,
     links: [
-      { label: "Find your bracelet", href: "/find-your-bracelet" },
-      { label: "Shop by purpose", href: "/bracelets" },
-      { label: "Gifts", href: "/gifts" },
+      { label: f.links.find, href: "/find-your-bracelet" },
+      { label: f.links.purposes, href: "/#edit" },
+      { label: f.links.gifts, href: "/gifts" },
     ],
   },
   {
-    title: "Numerology",
+    title: f.cols.numerology,
     links: [
-      { label: "Find your mulank", href: "/mulank" },
-      { label: "Lo Shu grid calculator", href: "/numerology/lo-shu-grid" },
-      { label: "Numerology guides", href: "/numerology" },
-      { label: "Book a consultation", href: "/consultation" },
-      { label: "About Ammit", href: "/about-ammit" },
+      { label: f.links.consultation, href: "/consultation" },
+      { label: f.links.about, href: "/about-ammit" },
     ],
   },
   {
-    title: "Care",
+    title: f.cols.care,
     links: [
-      { label: "Bracelet care", href: "/bracelet-care" },
-      { label: "If it breaks", href: "/bracelet-care" },
-      { label: "Customer reviews", href: "/reviews" },
-      { label: "Size guide", href: "/size-guide" },
+      { label: f.links.care, href: "/bracelet-care" },
+      { label: f.links.breaks, href: "/bracelet-care" },
+      { label: f.links.reviews, href: "/reviews" },
+      { label: f.links.size, href: "/size-guide" },
     ],
   },
 ];
-
-
 
 /** Simple line icons for the social links (shown as round buttons on phones). */
 function SocialIcon({ kind }: { kind: "ig" | "yt" | "wa" }) {
@@ -110,6 +107,9 @@ function Rule() {
 export default async function SiteFooter() {
   const year = new Date().getFullYear();
   const [{ s: site }, c] = await Promise.all([getSite(), getContent("shared")]);
+  const ui = getUI();
+  const f = ui.footer;
+  const COLUMNS = columns(f);
   const LINKS = { instagram: site.instagram, youtube: site.youtube, whatsapp: site.whatsapp };
   const BUSINESS = {
     brand: site.brand,
@@ -159,11 +159,8 @@ export default async function SiteFooter() {
           <div className="ft-brand">
             <Image src="/brand/wordmark.png" alt="Bracelet By Ammit" width={120} height={56} />
             <p className="ft-tagline">{c.footerTagline}</p>
-            <p className="ft-promise">
-              {PRICE} <span aria-hidden="true">·</span> read for your birth date <span aria-hidden="true">·</span> strung by
-              hand
-            </p>
-            <ul className="ft-social" aria-label="Bracelet By Ammit elsewhere">
+            <p className="ft-promise">{tf(f.promise, { price: PRICE })}</p>
+            <ul className="ft-social" aria-label={f.elsewhere}>
               {SOCIAL.map((s) => (
                 <li key={s.label}>
                   <a href={s.href} {...EXT} aria-label={s.label}>
@@ -176,7 +173,7 @@ export default async function SiteFooter() {
           </div>
 
           {COLUMNS.map((col) => (
-            <nav key={col.title} className="ft-col" aria-label={`Footer: ${col.title}`}>
+            <nav key={col.title} className="ft-col" aria-label={tf(f.footerNav, { title: col.title })}>
               <h3>{col.title}</h3>
               <ul>
                 {col.links.map((l) => (
@@ -197,7 +194,7 @@ export default async function SiteFooter() {
                 <span>{col.title}</span>
                 <i aria-hidden="true" />
               </summary>
-              <nav aria-label={`Footer: ${col.title}`}>
+              <nav aria-label={tf(f.footerNav, { title: col.title })}>
                 <ul>
                   {col.links.map((l) => (
                     <li key={l.label}>
@@ -213,23 +210,23 @@ export default async function SiteFooter() {
         <Rule />
 
         {/* Business details (Consumer Protection (E-Commerce) Rules) */}
-        <dl className="ft-biz" aria-label="Business details">
+        <dl className="ft-biz" aria-label={f.business}>
           <div>
-            <dt>Business</dt>
+            <dt>{f.dt.business}</dt>
             <dd>{BUSINESS.legalName || BUSINESS.brand}</dd>
           </div>
           <div>
-            <dt>Founder</dt>
+            <dt>{f.dt.founder}</dt>
             <dd>{BUSINESS.founder}</dd>
           </div>
           {BUSINESS.address && (
             <div>
-              <dt>Address</dt>
+              <dt>{f.dt.address}</dt>
               <dd>{BUSINESS.address}</dd>
             </div>
           )}
           <div>
-            <dt>Contact</dt>
+            <dt>{f.dt.contact}</dt>
             <dd>
               <a href={LINKS.whatsapp} {...EXT}>
                 WhatsApp
@@ -249,33 +246,33 @@ export default async function SiteFooter() {
             </dd>
           </div>
           <div>
-            <dt>Grievance officer</dt>
+            <dt>{f.dt.grievance}</dt>
             <dd>
               {BUSINESS.grievanceOfficer.name}, {BUSINESS.grievanceOfficer.designation}
             </dd>
           </div>
           {BUSINESS.gstin && (
             <div>
-              <dt>GSTIN</dt>
+              <dt>{f.dt.gstin}</dt>
               <dd>{BUSINESS.gstin}</dd>
             </div>
           )}
         </dl>
         <p className="ft-disclaimer">{site.disclaimer}</p>
-        <nav className="ft-policies" aria-label="Policies">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
-          <Link href="/shipping">Shipping</Link>
-          <Link href="/returns">Returns &amp; restringing</Link>
+        <nav className="ft-policies" aria-label={f.policies}>
+          <Link href="/privacy">{f.policy.privacy}</Link>
+          <Link href="/terms">{f.policy.terms}</Link>
+          <Link href="/shipping">{f.policy.shipping}</Link>
+          <Link href="/returns">{f.policy.returns}</Link>
           <CookieSettingsLink />
         </nav>
       </div>
 
       <div className="ft-bar">
         <div className="ft-bar-inner">
-          <p>© {year} {site.brand}. All rights reserved.</p>
+          <p>{tf(f.rights, { year, brand: site.brand })}</p>
           <p className="ft-credit">
-            Designed by{" "}
+            {f.designedBy}{" "}
             <a href={CREDIT.href} {...EXT}>
               {CREDIT.label}
             </a>

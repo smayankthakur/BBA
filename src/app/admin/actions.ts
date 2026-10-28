@@ -40,7 +40,7 @@ import { COUPON_RE, normCode } from "@/lib/coupon-types";
 import { PARTNER_CODE_RE, addPayout, codeInUse, deletePartner, deletePayout, getPartner, savePartner } from "@/lib/server/partners";
 import { pageDef } from "@/lib/content/fields";
 import type { PageId } from "@/lib/content/defaults";
-import { SLUG_RE, type Product, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
+import { PRODUCT_TEXT_KEYS, SLUG_RE, type Product, type ProductI18n, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
 import { safeHref } from "@/lib/content/render";
 
 const str = (fd: FormData, k: string, max = 300) => String(fd.get(k) ?? "").trim().slice(0, max);
@@ -158,6 +158,32 @@ function cleanPhotos(raw: unknown): string[] {
     .slice(0, 12);
 }
 
+/** Hindi/Hinglish product wording from the form: known fields only, trimmed and length-limited. */
+function cleanI18n(raw: FormDataEntryValue | null): ProductI18n {
+  let v: unknown;
+  try {
+    v = JSON.parse(String(raw ?? "{}"));
+  } catch {
+    return {};
+  }
+  const out: ProductI18n = {};
+  const LIM: Record<string, number> = { title: 120, blurb: 400, note: 600, photoAlt: 200, videoTitle: 120, seoTitle: 120, seoDescription: 300 };
+  for (const l of ["hi", "hn"] as const) {
+    const t = (v && typeof v === "object" ? (v as Record<string, unknown>)[l] : null) as Record<string, unknown> | null;
+    if (!t || typeof t !== "object") continue;
+    const o: Record<string, unknown> = {};
+    for (const k of PRODUCT_TEXT_KEYS) {
+      const x = t[k];
+      if (Array.isArray(x)) {
+        const arr = x.map((y) => String(y).trim().slice(0, k === "intro" ? 1500 : 600)).filter(Boolean).slice(0, k === "intro" ? 8 : 30);
+        if (arr.length) o[k] = arr;
+      } else if (typeof x === "string" && x.trim()) o[k] = x.trim().slice(0, LIM[k] ?? 300);
+    }
+    if (Object.keys(o).length) out[l] = o;
+  }
+  return out;
+}
+
 export async function saveProductAction(fd: FormData) {
   const user = await requireAdmin("editor");
   const id = str(fd, "id", 40);
@@ -214,6 +240,7 @@ export async function saveProductAction(fd: FormData) {
     visual: cleanVisual(visualRaw, existing?.visual ?? NEW_VISUAL),
     seoTitle: str(fd, "seoTitle", 120) || null,
     seoDescription: str(fd, "seoDescription", 300) || null,
+    i18n: cleanI18n(fd.get("i18n")),
   };
 
   let savedId = id;
@@ -252,29 +279,33 @@ export async function productStatusAction(fd: FormData) {
 export async function saveContentAction(fd: FormData) {
   const user = await requireAdmin("editor");
   const id = str(fd, "id", 40) as PageId;
+  const lang = (["hi", "hn"].includes(str(fd, "lang", 4)) ? str(fd, "lang", 4) : "en") as "en" | "hi" | "hn";
+  const back = (q: Record<string, string>) => go(`/admin/pages/${id}`, lang === "en" ? q : { ...q, lang });
   if (!pageDef(id)) go("/admin/pages", { err: "missing" });
   if (id === "settings") await requireAdmin("admin");
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(String(fd.get("data") ?? "{}"));
   } catch {
-    go(`/admin/pages/${id}`, { err: "data" });
+    back({ err: "data" });
   }
-  await saveContent(id, data!, user.id);
-  await logAction(user.id, "content.save", id);
+  await saveContent(id, data!, user.id, lang);
+  await logAction(user.id, "content.save", lang === "en" ? id : `${id}@${lang}`);
   refreshSite();
-  go(`/admin/pages/${id}`, { msg: "saved" });
+  back({ msg: "saved" });
 }
 
 export async function resetContentAction(fd: FormData) {
   const user = await requireAdmin("admin");
   const id = str(fd, "id", 40) as PageId;
+  const lang = (["hi", "hn"].includes(str(fd, "lang", 4)) ? str(fd, "lang", 4) : "en") as "en" | "hi" | "hn";
+  const back = (q: Record<string, string>) => go(`/admin/pages/${id}`, lang === "en" ? q : { ...q, lang });
   if (!pageDef(id)) go("/admin/pages", { err: "missing" });
-  if (fd.get("confirm") !== "yes") go(`/admin/pages/${id}`, { err: "confirm" });
-  await resetContent(id);
-  await logAction(user.id, "content.reset", id);
+  if (fd.get("confirm") !== "yes") back({ err: "confirm" });
+  await resetContent(id, lang);
+  await logAction(user.id, "content.reset", lang === "en" ? id : `${id}@${lang}`);
   refreshSite();
-  go(`/admin/pages/${id}`, { msg: "reset" });
+  back({ msg: "reset" });
 }
 
 /* ------------------------------------------------------------------ */

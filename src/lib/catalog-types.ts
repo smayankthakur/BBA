@@ -44,8 +44,15 @@ export type Product = {
   visual: Visual;
   seoTitle: string | null;
   seoDescription: string | null;
+  /** Hindi / Hinglish wording; anything missing falls back to English */
+  i18n?: ProductI18n;
   updatedAt?: string;
 };
+
+export const PRODUCT_TEXT_KEYS = ["title", "blurb", "intro", "listA", "listB", "crystals", "note", "photoAlt", "videoTitle", "seoTitle", "seoDescription"] as const;
+export type ProductTextKey = (typeof PRODUCT_TEXT_KEYS)[number];
+export type ProductText = Partial<Pick<Product, ProductTextKey>>;
+export type ProductI18n = Partial<Record<"hi" | "hn", ProductText>>;
 
 /** What the 60-second reading needs to know about each bracelet. */
 export type FunnelProduct = Pick<Product, "slug" | "title" | "blurb" | "crystals" | "priceInr" | "photos" | "inList" | "visual">;

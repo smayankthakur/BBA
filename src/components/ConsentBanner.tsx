@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Link from "./LocaleLink";
+import { useLang } from "./LangProvider";
 import { ANALYTICS_ENABLED, loadAnalytics, readConsent, saveConsent, type Consent } from "@/lib/analytics";
 
 export const OPEN_CONSENT_EVENT = "bba:open-consent";
@@ -13,6 +14,7 @@ export const OPEN_CONSENT_EVENT = "bba:open-consent";
  */
 export default function ConsentBanner() {
   const [open, setOpen] = useState(false);
+  const t = useLang().ui.consent;
   const isAdmin = usePathname()?.startsWith("/admin") ?? false;
 
   useEffect(() => {
@@ -36,18 +38,17 @@ export default function ConsentBanner() {
   return (
     <div className="consent" role="dialog" aria-modal="false" aria-labelledby="consent-title">
       <p id="consent-title" className="consent-title">
-        Cookies, only if you say yes
+        {t.title}
       </p>
       <p className="consent-text">
-        We&apos;d like to use analytics cookies to see which pages help people find their bracelet. Nothing is
-        tracked unless you accept. <Link href="/privacy">Privacy policy</Link>
+        {t.text} <Link href="/privacy">{t.privacy}</Link>
       </p>
       <div className="consent-actions">
         <button type="button" className="btn btn-line" onClick={() => choose("rejected")}>
-          Reject
+          {t.reject}
         </button>
         <button type="button" className="btn btn-lapis" onClick={() => choose("accepted")}>
-          Accept
+          {t.accept}
         </button>
       </div>
     </div>

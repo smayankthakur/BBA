@@ -9,7 +9,10 @@ export default function GiftVisual({
   className = "arch",
   sizes = "(max-width: 760px) 80vw, 320px",
   priority = false,
+  label,
 }: {
+  /** Accessible name of the illustration (no photo yet) */
+  label?: string;
   gift: Product;
   refNote: string;
   className?: string;
@@ -28,7 +31,7 @@ export default function GiftVisual({
     );
   }
   return (
-    <div role="img" aria-label={`Illustration of the ${gift.title} bracelet`} className={className} style={{ backgroundImage: v.gradient ?? v.cards[0] }}>
+    <div role="img" aria-label={label ?? `Illustration of the ${gift.title} bracelet`} className={className} style={{ backgroundImage: v.gradient ?? v.cards[0] }}>
       <span
         className="gift-ring"
         style={{

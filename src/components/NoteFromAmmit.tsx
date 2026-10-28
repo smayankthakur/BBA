@@ -1,10 +1,13 @@
+import { getUI } from "@/lib/server/lang";
+import { tf } from "@/lib/i18n/ui";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "./LocaleLink";
 import { getContent, getSite } from "@/lib/server/content";
 
 export default async function NoteFromAmmit({ compact = false }: { compact?: boolean }) {
   const [c, { s }] = await Promise.all([getContent("home"), getSite()]);
   const photo = s.ammitPhoto;
+  const ui = getUI();
   return (
     <section id="note" className={`note${compact ? " is-compact" : ""}`}>
       <div className="note-card">
@@ -13,7 +16,7 @@ export default async function NoteFromAmmit({ compact = false }: { compact?: boo
             {photo ? (
               <Image src={photo} alt={s.ammitPhotoAlt} fill sizes="(max-width: 760px) 70vw, 280px" className="note-img" />
             ) : (
-              <div className="note-photo-fallback" role="img" aria-label="Bracelet By Ammit medallion">
+              <div className="note-photo-fallback" role="img" aria-label={ui.note.medallion}>
                 <Image src="/brand/emblem.png" alt="" width={150} height={166} />
               </div>
             )}
@@ -35,7 +38,7 @@ export default async function NoteFromAmmit({ compact = false }: { compact?: boo
           )}
           {c.noteQuote && <p className="note-quote">&ldquo;{c.noteQuote}&rdquo;</p>}
           <div className="note-foot">
-            <span className="signature" aria-label={`Signed, ${s.ammitName}`}>
+            <span className="signature" aria-label={tf(ui.note.signed, { name: s.ammitName })}>
               {s.ammitName}
             </span>
             <a className="btn btn-line" href={s.youtube} target="_blank" rel="noopener noreferrer">

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Medallion from "./Medallion";
 import type { Video } from "@/data/videos";
+import { useContext } from "react";
+import { LangCtx } from "./LangProvider";
+import { UI_EN } from "@/lib/i18n/ui.en";
 
 /**
  * Click-to-play YouTube Short. Nothing loads from YouTube until the visitor
@@ -10,6 +13,7 @@ import type { Video } from "@/data/videos";
  */
 export default function VideoEmbed({ video, caption }: { video: Video; caption?: string }) {
   const [play, setPlay] = useState(false);
+  const c = (useContext(LangCtx)?.ui ?? UI_EN).common;
   return (
     <figure className="vid">
       <div className="vid-frame">
@@ -22,13 +26,13 @@ export default function VideoEmbed({ video, caption }: { video: Video; caption?:
             loading="lazy"
           />
         ) : (
-          <button type="button" className="vid-poster" onClick={() => setPlay(true)} aria-label={`Play video: ${video.title}`}>
+          <button type="button" className="vid-poster" onClick={() => setPlay(true)} aria-label={c.playVideo.replace("{title}", video.title)}>
             <Medallion width={40} height={44} />
             <span className="vid-title">{video.title}</span>
             <span className="vid-play" aria-hidden="true">
               ▶
             </span>
-            <span className="vid-note">Ammit explains · plays from YouTube</span>
+            <span className="vid-note">{c.fromYouTube}</span>
           </button>
         )}
       </div>
