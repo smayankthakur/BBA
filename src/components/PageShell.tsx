@@ -1,4 +1,5 @@
 import AnnouncementBar from "./AnnouncementBar";
+import { headerPurposes } from "@/lib/server/catalog";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import { getSite } from "@/lib/server/content";
@@ -14,7 +15,7 @@ export default async function PageShell({ children }: { children: React.ReactNod
         {getUI().common.skip}
       </a>
       <AnnouncementBar />
-      <SiteHeader instagram={s.instagram} youtube={s.youtube} />
+      <SiteHeader instagram={s.instagram} youtube={s.youtube} purposes={await headerPurposes()} />
       <main id="main">{children}</main>
       <SiteFooter />
       <QuickOrderMount />

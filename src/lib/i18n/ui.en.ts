@@ -55,6 +55,9 @@ export const UI_EN = {
     closeMenu: "Close menu",
     menu: "Menu",
     askAmmit: "Ask Ammit",
+    allPurposes: "See all on the homepage",
+    purposesMenu: "Bracelets by purpose",
+    from: "from {price}",
   },
   footer: {
     cols: { shop: "Shop", numerology: "Ammit", care: "Care", purposes: "Bracelets by purpose", help: "Help", contact: "Talk to us" },

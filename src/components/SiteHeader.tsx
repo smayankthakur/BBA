@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "./LocaleLink";
 import Medallion from "./Medallion";
@@ -18,26 +19,68 @@ function BagIcon() {
   );
 }
 
-export default function SiteHeader({ instagram, youtube }: { instagram: string; youtube: string }) {
+export type HeaderPurpose = { slug: string; title: string; photo: string | null };
+
+function ChevronIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+      <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export default function SiteHeader({ instagram, youtube, purposes = [] }: { instagram: string; youtube: string; purposes?: HeaderPurpose[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const { ui } = useLang();
   const h = ui.header;
-  const SHOP_LINKS = [
-    { href: "/#edit", label: h.nav.purposes },
+  /** Desktop: left of the logo (after the Purposes menu) */
+  const LEFT_LINKS = [
+    { href: "/reviews", label: h.more.reviews },
+    { href: "/bracelet-care", label: h.more.care },
   ];
   const ABOUT_LINKS = [
     { href: "/about-ammit", label: h.nav.ammit },
     { href: "/consultation", label: h.nav.consultation },
   ];
-  /** Mobile menu extras below the main sections. */
+  /** Mobile menu: everything else */
   const MORE_LINKS = [
+    { href: "/about-ammit", label: h.nav.ammit },
+    { href: "/consultation", label: h.nav.consultation },
     { href: "/find-your-bracelet", label: h.more.find },
-    { href: "/bracelet-care", label: h.more.care },
     { href: "/reviews", label: h.more.reviews },
+    { href: "/bracelet-care", label: h.more.care },
   ];
+  // Desktop "Purposes" dropdown
+  const [dd, setDd] = useState(false);
+  const ddRef = useRef<HTMLDivElement>(null);
+  const ddTimer = useRef<number | undefined>(undefined);
+  const hoverOpen = () => {
+    window.clearTimeout(ddTimer.current);
+    ddTimer.current = window.setTimeout(() => setDd(true), 120);
+  };
+  const hoverClose = () => {
+    window.clearTimeout(ddTimer.current);
+    ddTimer.current = window.setTimeout(() => setDd(false), 220);
+  };
+  useEffect(() => {
+    if (!dd) return;
+    const onDown = (e: MouseEvent) => !ddRef.current?.contains(e.target as Node) && setDd(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDd(false);
+        ddRef.current?.querySelector<HTMLButtonElement>(".nav-dd-btn")?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [dd]);
   // Active link, ignoring the /hi or /hinglish prefix.
   const pathname = splitPath(usePathname() ?? "/").path;
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -140,7 +183,46 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
           </button>
 
           <nav aria-label={h.shop} className="header-nav desktop-only">
-            {SHOP_LINKS.map((l) => (
+            {purposes.length > 0 ? (
+              <div
+                className={`nav-dd${dd ? " is-open" : ""}`}
+                ref={ddRef}
+                onMouseEnter={hoverOpen}
+                onMouseLeave={hoverClose}
+                onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setDd(false)}
+              >
+                <button
+                  type="button"
+                  className={`navlink nav-dd-btn${pathname.startsWith("/bracelets/") ? " is-active" : ""}`}
+                  aria-expanded={dd}
+                  aria-controls="nav-purposes"
+                  onClick={() => setDd((v) => !v)}
+                >
+                  {h.nav.purposes} <ChevronIcon />
+                </button>
+                <div className="nav-dd-panel" id="nav-purposes" hidden={!dd}>
+                  <p className="nav-dd-title">{h.purposesMenu}</p>
+                  <ul>
+                    {purposes.map((p) => (
+                      <li key={p.slug}>
+                        <Link href={`/bracelets/${p.slug}`} onClick={() => setDd(false)} aria-current={pathname === `/bracelets/${p.slug}` ? "page" : undefined}>
+                          <span className="nav-dd-img">{p.photo && <Image src={p.photo} alt="" fill sizes="44px" />}</span>
+                          <span>{p.title}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link className="nav-dd-all" href="/#edit" onClick={() => setDd(false)}>
+                    {h.allPurposes} →
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <Link className="navlink" href="/#edit">
+                {h.nav.purposes}
+              </Link>
+            )}
+            {LEFT_LINKS.map((l) => (
               <Link key={l.href} className="navlink" href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                 {l.label}
               </Link>
@@ -165,7 +247,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
                 {l.label}
               </Link>
             ))}
-            <OrderLink className="navlink navlink-order" href="/find-your-bracelet" aria-haspopup="dialog">
+            <OrderLink className="btn btn-lapis nav-order" href="/find-your-bracelet" aria-haspopup="dialog">
               {h.orderNow}
             </OrderLink>
           </div>
@@ -201,30 +283,24 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
 
         <LangSwitch className="is-menu" />
         <nav aria-label={h.menu} className="menu-nav">
-          <p className="menu-label">{h.shop}</p>
-          {SHOP_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="menu-link"
-              onClick={() => close(false)}
-              aria-current={isActive(l.href) ? "page" : undefined}
-            >
-              {l.label}
+          <p className="menu-label">{h.purposesMenu}</p>
+          {purposes.length > 0 ? (
+            <ul className="menu-purposes">
+              {purposes.map((p) => (
+                <li key={p.slug}>
+                  <Link href={`/bracelets/${p.slug}`} onClick={() => close(false)} aria-current={pathname === `/bracelets/${p.slug}` ? "page" : undefined}>
+                    <span className="menu-purpose-img">{p.photo && <Image src={p.photo} alt="" fill sizes="40px" />}</span>
+                    <span>{p.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Link href="/#edit" className="menu-link" onClick={() => close(false)}>
+              {h.nav.purposes}
             </Link>
-          ))}
+          )}
           <p className="menu-label">Bracelet By Ammit</p>
-          {ABOUT_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="menu-link"
-              onClick={() => close(false)}
-              aria-current={isActive(l.href) ? "page" : undefined}
-            >
-              {l.label}
-            </Link>
-          ))}
           {MORE_LINKS.map((l) => (
             <Link
               key={l.href}

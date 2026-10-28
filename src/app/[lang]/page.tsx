@@ -1,4 +1,5 @@
 import { getLang, getUI, pageLang } from "@/lib/server/lang";
+import { headerPurposes } from "@/lib/server/catalog";
 import { alternatesFor } from "@/lib/i18n/config";
 import { tf } from "@/lib/i18n/ui";
 import Loader from "@/components/Loader";
@@ -50,7 +51,7 @@ export default async function HomePage({ params }: Params) {
         {getUI().common.skip}
       </a>
       <AnnouncementBar />
-      <SiteHeader instagram={s.instagram} youtube={s.youtube} />
+      <SiteHeader instagram={s.instagram} youtube={s.youtube} purposes={await headerPurposes()} />
       <main id="main">
         <Hero />
         <IntentionEdit />

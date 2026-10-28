@@ -319,3 +319,8 @@ export const NEW_VISUAL: Visual = {
   gradient: "linear-gradient(170deg,#E6DAF6,#DCE0EE)",
   beads: ["#7A3FC0", "#E3C67C", "#EDEFF5"],
 };
+
+/** The purposes for the header menu (title, link, first photo), in the page language. */
+export async function headerPurposes() {
+  return (await getBracelets()).filter((b) => b.inList).map((b) => ({ slug: b.slug, title: b.title, photo: b.photos[0] ?? null }));
+}

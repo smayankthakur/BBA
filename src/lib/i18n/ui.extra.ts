@@ -3,6 +3,7 @@
  * here are merged over ui.hi / ui.hn (same shape as ui.en).
  */
 export const UI_HI_EXTRA = {
+  header: { allPurposes: "होमपेज पर सभी देखें", purposesMenu: "उद्देश्य के अनुसार ब्रेसलेट", from: "{price} से" },
   footer: {
     cols: { purposes: "उद्देश्य के अनुसार ब्रेसलेट", help: "मदद", contact: "हमसे बात करें" },
     trust: { made: "शुद्ध, ऊर्जित और आपकी जन्म कुंडली के अनुसार बना" },
@@ -91,6 +92,7 @@ export const UI_HI_EXTRA = {
   numerologyPage: { guidesAria: "गाइड", calculatorAria: "कैलकुलेटर", howAria: "ग्रिड कैसे काम करता है" },
 };
 export const UI_HN_EXTRA = {
+  header: { allPurposes: "Homepage par sab dekhein", purposesMenu: "Purpose ke hisaab se bracelets", from: "{price} se" },
   footer: {
     cols: { purposes: "Purpose ke hisaab se bracelets", help: "Help", contact: "Humse baat karein" },
     trust: { made: "Cleansed, energised aur aapke birth chart ke hisaab se bana" },

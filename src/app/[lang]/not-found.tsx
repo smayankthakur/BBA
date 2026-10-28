@@ -1,4 +1,5 @@
 import Link from "@/components/LocaleLink";
+import { headerPurposes } from "@/lib/server/catalog";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -18,7 +19,7 @@ export default async function NotFound() {
         {ui.common.skip}
       </a>
       <AnnouncementBar />
-      <SiteHeader instagram={s.instagram} youtube={s.youtube} />
+      <SiteHeader instagram={s.instagram} youtube={s.youtube} purposes={await headerPurposes()} />
       <main id="main" className="nf">
         <p className="nf-code" aria-hidden="true">
           404
