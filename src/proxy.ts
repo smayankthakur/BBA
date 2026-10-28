@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { LANG_COOKIE, LANG_COOKIE_MAX_AGE, isLang, lp, splitPath } from "@/lib/i18n/config";
 
 /**
  * Runs before every page request.
@@ -6,6 +7,11 @@ import { NextResponse, type NextRequest } from "next/server";
  *   sent through /p/CODE so the visit is credited, then back to the page.
  * - Languages: /hi/… and /hinglish/… are served as they are; every other
  *   page is English and is served from the /en/… pages without showing /en.
+ * - ?lang=en|hi|hn (the language switcher and the first-visit chooser)
+ *   remembers the choice in a cookie and opens the page in that language.
+ * - A visitor who chose Hindi or Hinglish and opens a plain (English) address
+ *   is sent to the same page in their language. Addresses that already say
+ *   /hi or /hinglish are shown as asked (a shared link stays as shared).
  */
 export function proxy(req: NextRequest) {
   const url = req.nextUrl;
@@ -18,6 +24,25 @@ export function proxy(req: NextRequest) {
   }
 
   const path = url.pathname;
+  const pick = url.searchParams.get("lang");
+  if (isLang(pick)) {
+    const to = new URL(url);
+    to.searchParams.delete("lang");
+    to.pathname = lp(pick, splitPath(path).path);
+    const res = NextResponse.redirect(to, 303);
+    res.cookies.set(LANG_COOKIE, pick, { path: "/", maxAge: LANG_COOKIE_MAX_AGE, sameSite: "lax" });
+    return res;
+  }
+  const chosen = req.cookies.get(LANG_COOKIE)?.value;
+  const isEnglishPath = !(path === "/hi" || path.startsWith("/hi/") || path === "/hinglish" || path.startsWith("/hinglish/") || path === "/en" || path.startsWith("/en/"));
+  if (isEnglishPath && (chosen === "hi" || chosen === "hn") && req.method === "GET") {
+    const to = new URL(url);
+    to.pathname = lp(chosen, path);
+    const res = NextResponse.redirect(to, 307);
+    res.headers.set("Vary", "Cookie");
+    res.headers.set("Cache-Control", "private, no-store");
+    return res;
+  }
   if (path === "/en" || path.startsWith("/en/")) {
     const clean = new URL(url);
     clean.pathname = path.slice(3) || "/";

@@ -11,6 +11,7 @@ export const UI_EN = {
     continue: "Continue",
     back: "Back",
     close: "Close",
+    langNote: "You can change the language any time at the top of the page.",
     previous: "Previous",
     next: "Next",
     day: "Day",

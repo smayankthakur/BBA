@@ -76,6 +76,7 @@ All pages have their own title/description, canonical, hreflang alternates for t
 ## Languages (English · हिन्दी · Hinglish)
 
 - The switcher sits in the top strip and in the mobile menu, and opens the same page in the other language.
+- **First visit:** a pop-up asks English / हिन्दी / Hinglish (after the homepage intro). The choice is saved in the `bba_lang` cookie (1 year); closing it keeps the language being read. From then on, a plain address (e.g. `/gifts`) opens in the chosen language (`src/proxy.ts`); addresses that already include `/hi` or `/hinglish` open as shared. The switcher links carry `?lang=…`, which updates the choice (works without JavaScript). Mentioned in the privacy policy.
 - `src/proxy.ts` serves English without a prefix (internally `/en/…`) and redirects `/en/…` to the bare address.
 - **Interface text** (buttons, form labels, errors, emails to the customer): `src/lib/i18n/ui.en.ts` (English, the source), `ui.hi.ts`, `ui.hn.ts`, `ui.extra.ts`.
 - **Page text:** built-in translations in `src/lib/i18n/content.hi.ts` / `content.hn.ts`. Edit them in **Admin → Pages → हिन्दी / Hinglish tab**; your edits override the built-in text. The tab shows the English next to each field.

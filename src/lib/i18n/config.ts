@@ -57,3 +57,15 @@ export function alternatesFor(lang: Lang, path: string) {
     },
   };
 }
+
+/** Cookie that remembers the visitor's chosen language (en | hi | hn), one year. */
+export const LANG_COOKIE = "bba_lang";
+export const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+/**
+ * Link that switches language: the page in that language plus ?lang=…, which
+ * the proxy turns into the remembered choice (works without JavaScript).
+ */
+export const switchHref = (lang: Lang, path: string) => {
+  const [p, hash = ""] = path.split("#");
+  return `${lp(lang, p || "/")}?lang=${lang}${hash ? `#${hash}` : ""}`;
+};

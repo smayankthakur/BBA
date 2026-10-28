@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SITE_LIVE, SITE_URL } from "@/lib/site";
 import ConsentBanner from "@/components/ConsentBanner";
+import LangChooser from "@/components/LangChooser";
 import JsonLd from "@/components/JsonLd";
 import { LangProvider } from "@/components/LangProvider";
 import { getSite } from "@/lib/server/content";
@@ -55,6 +56,7 @@ export default async function LangLayout({ children, params }: P & { children: R
           }}
         />
         {children}
+        <LangChooser />
         <ConsentBanner />
       </div>
     </LangProvider>

@@ -394,6 +394,8 @@ The website itself does not ask you to log in and does not set advertising cooki
 
 If you arrive through a link shared by one of our partners (an address with /p/ or ?ref= in it), we store a small cookie for 30 days that says which partner sent you, and a random visitor number so a visit is counted only once a day. If you order in that time, the partner's code is saved with your order so we can pay them their commission. Partners don't see your name, contact details or birth details.
 
+When you choose a language (English, Hindi or Hinglish), we store a small cookie for one year that remembers it, so every page opens in that language. It holds only the language.
+
 ### When you take the 60-second reading
 
 Your answers (including the wearer's name and date of birth) are processed inside your browser to work out the mulank and bhagyank. They are not sent to us or stored unless you continue to checkout and place an order.
