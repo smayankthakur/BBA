@@ -95,6 +95,9 @@ const nextConfig: NextConfig = {
         { source: `${pre}/mulank/:n`, destination: pre || "/", permanent: false },
         { source: `${pre}/numerology`, destination: pre || "/", permanent: false },
         { source: `${pre}/numerology/:path*`, destination: pre || "/", permanent: false },
+        // Gift pages removed (client, 28 Oct 2026): gifting is a tick box in the order form.
+        { source: `${pre}/gifts`, destination: `${pre || "/"}#edit`, permanent: false },
+        { source: `${pre}/gifts/:slug`, destination: `${pre || "/"}#edit`, permanent: false },
       ]),
     ];
   },

@@ -27,7 +27,6 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
   const h = ui.header;
   const SHOP_LINKS = [
     { href: "/#edit", label: h.nav.purposes },
-    { href: "/gifts", label: h.nav.gifts },
   ];
   const ABOUT_LINKS = [
     { href: "/about-ammit", label: h.nav.ammit },

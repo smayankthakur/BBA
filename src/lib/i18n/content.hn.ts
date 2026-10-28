@@ -43,8 +43,6 @@ export const CONTENT_HN: Record<string, Record<string, unknown>> = {
     "noteQuote": "Har bracelet style ke liye nahi hota. Right crystal, right direction.",
     "noteButton": "YouTube par Ammit Ji ko dekhiye",
     "noteReadMore": "Ammit Ji ki story padhiye →",
-    "giftsTitle": "Aise gifts jinka kuch matlab ho",
-    "giftsLede": "Unki birth date bhejiye, hum bracelet unke liye banayenge, sirf occasion ke liye nahi.",
     "reviewsTitle": "Unhi ke shabdon mein",
     "reviewsLede": "Un logon se jo Ammit Ji ka chuna hua bracelet pehnte hain.",
     "reviewsMore": "Instagram par aur reviews padhiye",
@@ -124,23 +122,6 @@ export const CONTENT_HN: Record<string, Record<string, unknown>> = {
         "a": "Nahi. Crystal aur numerology ki guidance traditional belief hai. Please apne doctor ya adviser ki guidance follow karte rahiye."
       }
     ]
-  },
-  "gifts": {
-    "eyebrow": "Gifting",
-    "title": "Aise gifts jinka kuch matlab ho",
-    "lede": "Unki birth date bhejiye, hum bracelet unke liye banayenge, sirf occasion ke liye nahi. {{price}} per bracelet.",
-    "howTitle": "Gift kaise banta hai",
-    "ctaTitle": "Unki date of birth aapke paas hai?",
-    "ctaText": "Pehenne wale ke baare mein kuch sawaalon ke jawaab dijiye, hum unke numbers ke hisaab se sahi bracelet suggest karenge.",
-    "ctaButton": "Gift order karein",
-    "detailEyebrow": "Gift",
-    "priceNote": "per bracelet · pehenne wale ki date of birth ke hisaab se",
-    "orderButton": "Yeh gift order karein",
-    "sendTitle": "Humein kya bhejein",
-    "ideasTitle": "Gift ideas",
-    "othersLabel": "Doosre gifts",
-    "seoTitle": "Aise gifts jinka kuch matlab ho",
-    "seoDescription": "Rakhi, mummy ke liye ya anniversary par crystal bracelet gifts, har ek pehenne wale ki date of birth ke hisaab se. {{price}} per bracelet."
   },
   "consultation": {
     "eyebrow": "Personal consultation",

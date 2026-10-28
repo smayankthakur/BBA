@@ -17,7 +17,6 @@ const columns = (f: UI["footer"]): { title: string; links: FooterLink[] }[] => [
     links: [
       { label: f.links.find, href: "/find-your-bracelet" },
       { label: f.links.purposes, href: "/#edit" },
-      { label: f.links.gifts, href: "/gifts" },
     ],
   },
   {

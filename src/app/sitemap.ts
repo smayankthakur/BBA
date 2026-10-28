@@ -1,16 +1,14 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
-import { getBracelets, getGifts } from "@/lib/server/catalog";
+import { getBracelets } from "@/lib/server/catalog";
 import { HREFLANG, LANGS, lp } from "@/lib/i18n/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [BRACELETS, GIFTS] = await Promise.all([getBracelets(), getGifts()]);
+  const BRACELETS = await getBracelets();
   const paths = [
     "/",
     "/find-your-bracelet",
     ...BRACELETS.map((b) => `/bracelets/${b.slug}`),
-    "/gifts",
-    ...GIFTS.map((g) => `/gifts/${g.slug}`),
     "/size-guide",
     "/privacy",
     "/terms",

@@ -8,7 +8,6 @@ import Hero from "@/components/Hero";
 import IntentionEdit from "@/components/IntentionEdit";
 import MadeForYou from "@/components/MadeForYou";
 import NoteFromAmmit from "@/components/NoteFromAmmit";
-import Gifts from "@/components/Gifts";
 import Testimonials from "@/components/Testimonials";
 import CareSection from "@/components/CareSection";
 import SiteFooter from "@/components/SiteFooter";
@@ -57,7 +56,6 @@ export default async function HomePage({ params }: Params) {
         <IntentionEdit />
         <MadeForYou />
         <NoteFromAmmit compact />
-        <Gifts />
         <Testimonials />
         <CareSection />
       </main>

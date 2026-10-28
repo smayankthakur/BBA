@@ -138,7 +138,6 @@ export const PAGES: PageDef[] = [
         title: "Note from Ammit",
         fields: [t("noteTitle", "Heading"), ta("noteBody1", "First paragraph"), ta("noteBody2", "Second paragraph"), ta("noteQuote", "Quote"), t("noteButton", "Button"), t("noteReadMore", "Read more link (homepage)")],
       },
-      { title: "Gifts", fields: [t("giftsTitle", "Heading"), ta("giftsLede", "Intro")] },
       { title: "Reviews", fields: [t("reviewsTitle", "Heading"), ta("reviewsLede", "Intro"), t("reviewsMore", "Instagram button")] },
       { title: "Care", fields: [t("careTitle", "Heading"), ta("careText", "Text"), t("careWatch", "Video button"), t("careGuide", "Guide button")] },
       seo(),
@@ -194,17 +193,6 @@ export const PAGES: PageDef[] = [
           { key: "faqs", label: "Questions", type: "repeater", itemLabel: "Question", fields: [{ key: "q", label: "Question ({title} = bracelet name)", type: "text" }, { key: "a", label: "Answer", type: "textarea" }] },
         ],
       },
-    ],
-  },
-  {
-    id: "gifts",
-    title: "Gifts",
-    group: "Pages",
-    path: "/gifts",
-    sections: [
-      { title: "Gifts page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro", PH), t("howTitle", "Steps heading"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text"), t("ctaButton", "Bottom band button")] },
-      { title: "Each gift page", fields: [t("detailEyebrow", "Small heading"), t("priceNote", "Next to the price"), t("orderButton", "Order button"), t("sendTitle", "\"What to send\" heading"), t("ideasTitle", "Ideas heading"), t("othersLabel", "Other gifts label")] },
-      seo(),
     ],
   },
   {

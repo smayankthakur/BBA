@@ -36,8 +36,7 @@ export default async function PagesList({
         <h1>Pages</h1>
       </div>
       <p className="ad-sub">
-        Edit the words on every page. Products are edited under Bracelets and
-        Gifts.
+        Edit the words on every page. Bracelets are edited under Bracelets.
       </p>
       <Notice sp={sp} />
       <div className="ad-table-wrap">

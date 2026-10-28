@@ -154,12 +154,6 @@ export default async function Dashboard({
                 published
               </li>
               <li>
-                <Link href="/admin/products?kind=gift">
-                  {count("gift")} gifts
-                </Link>{" "}
-                published
-              </li>
-              <li>
                 <Link href="/admin/pages">Edit page text</Link>
               </li>
               <li>
@@ -172,9 +166,6 @@ export default async function Dashboard({
                 href="/admin/products/new?kind=bracelet"
               >
                 Add a bracelet
-              </Link>
-              <Link className="ad-btn" href="/admin/products/new?kind=gift">
-                Add a gift
               </Link>
             </div>
           </div>

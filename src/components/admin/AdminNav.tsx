@@ -63,12 +63,6 @@ export default function AdminNav({
       icon: I.box,
       match: (p) => p.startsWith("/admin/products") && !isGift,
     },
-    {
-      href: "/admin/products?kind=gift",
-      label: "Gifts",
-      icon: I.gift,
-      match: (p) => p.startsWith("/admin/products") && isGift,
-    },
     { href: "/admin/coupons", label: "Coupons", icon: I.tag, min: "admin" },
     { href: "/admin/partners", label: "Partners", icon: I.hand, min: "admin" },
     { href: "/admin/media", label: "Media", icon: I.img },

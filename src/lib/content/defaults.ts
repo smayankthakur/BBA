@@ -79,8 +79,6 @@ export const DEFAULTS = {
     noteQuote: "Har bracelet style ke liye nahi hota. Right crystal, right direction.",
     noteButton: "Watch Ammit on YouTube",
     noteReadMore: "Read Ammit's story →",
-    giftsTitle: "Gifts that mean something",
-    giftsLede: "Send their birth date and we'll make it for them, not just for the occasion.",
     reviewsTitle: "In their own words",
     reviewsLede: "From people wearing a bracelet Ammit chose for them.",
     reviewsMore: "Read more reviews on Instagram",
@@ -154,23 +152,6 @@ export const DEFAULTS = {
     othersTitle: "Other purposes",
   },
 
-  gifts: {
-    eyebrow: "Gifting",
-    title: "Gifts that mean something",
-    lede: "Send their birth date and we'll make it for them, not just for the occasion. {{price}} per bracelet.",
-    howTitle: "How a gift is made",
-    ctaTitle: "Have their date of birth ready?",
-    ctaText: "Answer a few questions about the wearer and we'll suggest the bracelet that suits their numbers.",
-    ctaButton: "Order a gift",
-    detailEyebrow: "Gift",
-    priceNote: "per bracelet · read for the wearer",
-    orderButton: "Order this gift",
-    sendTitle: "What to send us",
-    ideasTitle: "Gift ideas",
-    othersLabel: "Other gifts",
-    seoTitle: "Gifts that mean something",
-    seoDescription: "Crystal bracelet gifts for Rakhi, your mother or an anniversary, each read for the wearer's date of birth. {{price}} per bracelet.",
-  },
 
   mulank: {
     eyebrow: "By number",

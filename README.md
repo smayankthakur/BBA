@@ -59,7 +59,6 @@ Every public page exists in three languages: English at `/…`, Hindi at `/hi/�
 | `/` | Homepage (purposes list at `/#edit`) |
 | `/find-your-bracelet` | 60-second reading → recommended bracelet → checkout |
 | `/bracelets/career-and-finance` · `love-life` · `clarity-and-confidence` · `health` · `buri-nazar` · `self-healing` · `married-life` · `studies` · `delay-in-marriage` · `weight-loss` | The 10 purpose bracelets (₹1,200, Product schema) |
-| `/gifts` · `/gifts/rakhi` · `/gifts/for-your-mother` · `/gifts/anniversary` | Gifts |
 | `/about-ammit` | About Ammit Kukreja (Person schema) |
 | `/consultation` | Numerology consultation |
 | `/bracelet-care` | Care guide |
@@ -69,7 +68,7 @@ Every public page exists in three languages: English at `/…`, Hindi at `/hi/�
 | `/p/CODE` | Partner link: remembers the partner, then opens the homepage (or `?to=/path`) |
 | `/tools/reading-card` | **Staff only** (noindex): print the reading card for an order |
 
-**Removed (Oct 2026, client request):** `/mulank`, `/mulank/1–9`, `/numerology`, the Lo Shu grid calculator, `/bracelets` (shop by intention) and `/bracelets/3-in-1`. Old addresses redirect permanently: the numerology pages to the homepage, `/bracelets` and the 3-in-1 to the purposes list (`/#edit`), and the old bracelet slugs (e.g. `/bracelets/love-and-relationships`) to the new ones (`next.config.ts`).
+**Removed (Oct 2026, client request):** `/mulank`, `/mulank/1–9`, `/numerology`, the Lo Shu grid calculator, `/bracelets` (shop by intention), `/bracelets/3-in-1`, and the gift pages and homepage gift section (`/gifts`, `/gifts/…`; gifting is the "It's a gift" tick in the order form). `/gifts` redirects to the purposes list. Old addresses redirect permanently: the numerology pages to the homepage, `/bracelets` and the 3-in-1 to the purposes list (`/#edit`), and the old bracelet slugs (e.g. `/bracelets/love-and-relationships`) to the new ones (`next.config.ts`).
 
 All pages have their own title/description, canonical, hreflang alternates for the three languages, breadcrumbs, and are listed in `sitemap.xml`.
 
