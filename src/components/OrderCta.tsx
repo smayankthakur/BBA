@@ -1,10 +1,16 @@
 import Link from "./LocaleLink";
+import OrderLink from "./order/OrderLink";
 import { getContent } from "@/lib/server/content";
 
-type Action = { label: string; href: string; external?: boolean };
+/** order: opens the order sheet for that purpose ("" = choose a purpose) */
+type Action = { label: string; href: string; external?: boolean; order?: string };
 
 const btn = (a: Action, cls: string) =>
-  a.external ? (
+  a.order !== undefined ? (
+    <OrderLink className={cls} href={a.href} slug={a.order || undefined} aria-haspopup="dialog">
+      {a.label}
+    </OrderLink>
+  ) : a.external ? (
     <a className={cls} href={a.href} target="_blank" rel="noopener noreferrer">
       {a.label}
     </a>

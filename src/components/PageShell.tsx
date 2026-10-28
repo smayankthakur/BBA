@@ -3,6 +3,7 @@ import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 import { getSite } from "@/lib/server/content";
 import { getUI } from "@/lib/server/lang";
+import QuickOrderMount from "./order/QuickOrderMount";
 
 /** Wrapper for every inner page: announcement, sticky header, main, footer. */
 export default async function PageShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export default async function PageShell({ children }: { children: React.ReactNod
       <SiteHeader instagram={s.instagram} youtube={s.youtube} />
       <main id="main">{children}</main>
       <SiteFooter />
+      <QuickOrderMount />
     </div>
   );
 }

@@ -46,6 +46,10 @@ export type OrderRecord = {
   partner_kind?: string | null;
   partner_rate?: number | null;
   commission_paise?: number;
+  /** "quick" orders add gender/focus/note after payment */
+  order_source?: string;
+  details_at?: string | Date | null;
+  wearer_note?: string | null;
 };
 
 export async function insertOrder(o: OrderRecord) {
@@ -57,7 +61,7 @@ export async function insertOrder(o: OrderRecord) {
       intentions, focus, is_gift, gift_note, delivery_name, mobile, email,
       address_line1, address_line2, landmark, city, state, pincode,
       marketing_opt_in, terms_accepted_at, utm, razorpay_order_id, coupon_code, discount_paise,
-      purposes, partner_code, partner_kind, partner_rate, commission_paise
+      purposes, partner_code, partner_kind, partner_rate, commission_paise, order_source
     ) values (
       ${o.ref}, ${o.status}, ${o.bracelet_slug}, ${o.bracelet_title}, ${o.amount_paise},
       ${o.wearer_first_name}, ${o.wearer_last_name}, ${o.wearer_dob}, ${o.wearer_gender}, ${o.mulank}, ${o.bhagyank}, ${o.wrist},
@@ -65,7 +69,7 @@ export async function insertOrder(o: OrderRecord) {
       ${o.address_line1}, ${o.address_line2}, ${o.landmark}, ${o.city}, ${o.state}, ${o.pincode},
       ${o.marketing_opt_in}, ${o.terms_accepted_at}, ${JSON.stringify(o.utm)}::jsonb, ${o.razorpay_order_id},
       ${o.coupon_code ?? null}, ${o.discount_paise ?? 0},
-      ${o.purposes ?? [o.bracelet_slug]}, ${o.partner_code ?? null}, ${o.partner_kind ?? null}, ${o.partner_rate ?? null}, ${o.commission_paise ?? 0}
+      ${o.purposes ?? [o.bracelet_slug]}, ${o.partner_code ?? null}, ${o.partner_kind ?? null}, ${o.partner_rate ?? null}, ${o.commission_paise ?? 0}, ${o.order_source ?? "reading"}
     ) on conflict (razorpay_order_id) do nothing`;
 }
 
@@ -256,4 +260,29 @@ export async function orderStats() {
       count(*) filter (where status = 'paid' and fulfilment_status in ('new', 'reading', 'making')) :: int as to_ship
     from orders`;
   return rows[0];
+}
+
+/* ---------------- Quick order: details added after payment ---------------- */
+
+/**
+ * Saves what the customer adds after paying (gender, focus, a note for Ammit).
+ * Only for a paid order that hasn't gone into making yet. Returns the order
+ * (for the staff email) or null.
+ */
+export async function saveOrderDetails(
+  razorpayOrderId: string,
+  d: { gender?: string; focus?: string; note?: string },
+): Promise<StoredOrder | null> {
+  if (!dbConfigured()) return null;
+  await ensureSchema();
+  const rows = (await sql`update orders set
+      wearer_gender = coalesce(${d.gender ?? null}, wearer_gender),
+      focus = coalesce(${d.focus ?? null}, focus),
+      wearer_note = coalesce(${d.note ?? null}, wearer_note),
+      details_at = now(), updated_at = now()
+    where razorpay_order_id = ${razorpayOrderId} and status = 'paid'
+      and fulfilment_status in ('new', 'reading')
+      and paid_at > now() - interval '14 days'
+    returning *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text`) as StoredOrder[];
+  return rows[0] ?? null;
 }

@@ -12,6 +12,10 @@ import Gifts from "@/components/Gifts";
 import Testimonials from "@/components/Testimonials";
 import CareSection from "@/components/CareSection";
 import SiteFooter from "@/components/SiteFooter";
+import QuickOrderMount from "@/components/order/QuickOrderMount";
+import StickyOrder from "@/components/order/StickyOrder";
+import { lowestPrice } from "@/lib/server/catalog";
+import { formatINR } from "@/lib/format";
 import type { Metadata } from "next";
 import { getContent, getSite } from "@/lib/server/content";
 
@@ -32,7 +36,17 @@ export default async function HomePage({ params }: Params) {
   const SHOW_LOADER = s.showLoader;
   return (
     <div className={`page${SHOW_LOADER ? " withload" : ""}`}>
-      {SHOW_LOADER && <Loader />}
+      {SHOW_LOADER && (
+        <>
+          {/* First visit only: later visits skip straight to the page. */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `try{if(localStorage.getItem("bba_intro"))document.documentElement.classList.add("intro-seen");else localStorage.setItem("bba_intro","1")}catch(e){}`,
+            }}
+          />
+          <Loader />
+        </>
+      )}
       <a className="skip-link" href="#main">
         {getUI().common.skip}
       </a>
@@ -48,6 +62,8 @@ export default async function HomePage({ params }: Params) {
         <CareSection />
       </main>
       <SiteFooter />
+      <StickyOrder label={tf(getUI().quick.sticky, { amount: formatINR(await lowestPrice()) })} href="/find-your-bracelet" />
+      <QuickOrderMount />
     </div>
   );
 }

@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     ),
     wearer: cut(`${d.wearer.firstName} ${d.wearer.lastName ?? ""}`.trim()),
     dob,
-    gender: d.wearer.gender,
+    gender: d.wearer.gender ?? "not given yet",
     numbers: `mulank ${m}, bhagyank ${b}`,
     wrist: d.wearer.wrist,
     intentions: cut(d.intentions.join(", ")),
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       wearer_first_name: d.wearer.firstName,
       wearer_last_name: d.wearer.lastName ?? "",
       wearer_dob: dob,
-      wearer_gender: d.wearer.gender,
+      wearer_gender: d.wearer.gender ?? "unspecified",
       mulank: m,
       bhagyank: b,
       wrist: d.wearer.wrist,
@@ -138,6 +138,7 @@ export async function POST(req: Request) {
       partner_kind: partner?.kind ?? null,
       partner_rate: partner?.rate ?? null,
       commission_paise: partner?.commissionPaise ?? 0,
+      order_source: d.source ?? "reading",
     }).catch((e) => console.error("[checkout] db insert failed", e instanceof Error ? e.message : e));
 
     return NextResponse.json({ orderId: order.id, keyId: razorpayKeyId(), amount: amountPaise, currency: "INR", ref });

@@ -93,6 +93,19 @@ All pages have their own title/description, canonical, hreflang alternates for t
 - At checkout the customer can add a 2nd/3rd purpose. After payment, the confirmation screen offers the same add-on as a top-up payment (`/api/checkout/upgrade`, `order_upgrades` table); the order shows the purposes and any top-ups.
 - The homepage "Made for you" section has the Instagram reel (Settings → reel link) with a cover photo (Pages → Home). Cover photo: Unsplash, Sahil Kumar (`public/reel/CREDITS.txt`).
 
+## Quick order (the main way to buy)
+
+`src/components/order/` — a one-screen order sheet that opens on top of the page:
+
+- **Opens from:** the homepage purpose rows, "Order this bracelet" on bracelet pages, the header "Order now" / bag icon, the phone sticky bar, and any link with `?order=<purpose>` (e.g. `/?order=love-life` for an Instagram bio; `?coupon=CODE` works too).
+- **One screen:** purpose (change or add a 2nd/3rd with its price shown), WhatsApp number, name, date of birth, wrist size (or "Not sure"), PIN code (fills city and state via `/api/pincode`, India Post's public lookup; falls back to typing), house/street, area. Gift option asks for the delivery name. Under-18 wearers need the guardian tick. Pay → Razorpay.
+- **After payment:** "Help Ammit Ji design your bracelet" asks gender, what they want help with (the bracelet's "for you if" lines) and a note, saved via `/api/order/details`; then the mulank/bhagyank reveal and the add-a-purpose top-up. Skipping is fine: the order shows "Quick order · details not added yet" and the admin page has an "Ask on WhatsApp" link with the questions ready.
+- Staff get the paid-order email straight away and a second "Details added" email when the customer adds them.
+- **Before online payment is switched on** (no `NEXT_PUBLIC_RAZORPAY_KEY_ID`), the same sheet sends the order on WhatsApp (to the Settings phone number) with all the details filled in.
+- The intro animation plays on the first visit only (`localStorage` `bba_intro`).
+- The 60-second reading (`/find-your-bracelet`) is still there for visitors who want it.
+- Unpaid orders: the admin order page shows "Follow up on WhatsApp" only if the customer ticked the WhatsApp box.
+
 ## Checkout (Razorpay)
 
 - Funnel result → **Delivery and payment** step (contact, address, consent, optional WhatsApp marketing opt-in) → Razorpay Checkout → **Order confirmed** with reference `BBA-XXXXXXXX`.

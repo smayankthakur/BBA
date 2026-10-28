@@ -47,6 +47,16 @@ export default async function OrderPage({
   if (!o) notFound();
   const utm = Object.entries(o.utm ?? {}).filter(([, v]) => v);
   const ups = await upgradesFor(o.id);
+  const name = o.wearer_first_name || o.delivery_name;
+  const quickPending = o.status === "paid" && o.order_source === "quick" && !o.details_at;
+  // Staff messages on WhatsApp (opens WhatsApp with the text ready; staff press send).
+  const wa = (text: string) => `https://wa.me/91${o.mobile}?text=${encodeURIComponent(text)}`;
+  const askDetails = wa(
+    `Hi ${name}, thank you for your order ${o.ref} with Bracelet By Ammit! So Ammit Ji can design your ${o.bracelet_title} bracelet, could you tell us:\n1. Is the bracelet for a man or a woman?\n2. What would you most like help with?${o.wrist === "unsure" ? "\n3. Your wrist size (or a photo of a thread around your wrist next to a ruler)" : ""}`,
+  );
+  const followUp = wa(
+    `Hi ${name}, this is Bracelet By Ammit. You started an order for the ${o.bracelet_title} bracelet but the payment didn't go through. Can we help you finish it? Reply here if you have any questions.`,
+  );
 
   return (
     <>
@@ -65,6 +75,26 @@ export default async function OrderPage({
         </span>
       </p>
       <Notice sp={sp} />
+      {quickPending && (
+        <p className="ad-help">
+          Quick order: the customer hasn&apos;t added gender and what they want help with.{" "}
+          <a href={askDetails} target="_blank" rel="noopener noreferrer">
+            Ask on WhatsApp ↗
+          </a>
+        </p>
+      )}
+      {o.status !== "paid" && (
+        <p className="ad-help">
+          Not paid yet.{" "}
+          {o.marketing_opt_in ? (
+            <a href={followUp} target="_blank" rel="noopener noreferrer">
+              Follow up on WhatsApp ↗
+            </a>
+          ) : (
+            "The customer didn't agree to WhatsApp messages, so don't follow up."
+          )}
+        </p>
+      )}
 
       <div className="ad-edit">
         <div>
@@ -77,12 +107,16 @@ export default async function OrderPage({
                   v={`${o.wearer_first_name} ${o.wearer_last_name}`}
                 />
                 <Row k="Date of birth" v={dob(o.dob_text)} />
-                <Row k="Gender" v={o.wearer_gender} />
+                <Row k="Gender" v={o.wearer_gender === "unspecified" ? "Not given yet" : o.wearer_gender} />
                 <Row k="Mulank" v={o.mulank} />
                 <Row k="Bhagyank" v={o.bhagyank} />
                 <Row k="Wrist size" v={o.wrist} />
                 <Row k="Intentions" v={(o.intentions ?? []).join(", ")} />
-                <Row k="Focus / note" v={o.focus} />
+                <Row k="Focus" v={o.focus} />
+                <Row k="Note from customer" v={o.wearer_note} />
+                {o.order_source === "quick" && (
+                  <Row k="Order type" v={o.details_at ? `Quick order · details added ${fmt(o.details_at)}` : "Quick order · details not added yet"} />
+                )}
               </dl>
             </div>
           </section>

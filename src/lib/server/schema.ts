@@ -16,7 +16,7 @@ export function ensureSchema(): Promise<void> {
 }
 
 /** Bump when the statements below change, so existing databases upgrade once. */
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 async function migrate() {
   // Fast path: an up-to-date database needs one query, not dozens.
@@ -95,6 +95,11 @@ async function createAll() {
     created_at timestamptz not null default now(),
     paid_at timestamptz
   )`;
+
+  // Quick order (Oct 2026): reading details can be added after payment
+  await sql`alter table orders add column if not exists order_source text not null default 'reading'`;
+  await sql`alter table orders add column if not exists details_at timestamptz`;
+  await sql`alter table orders add column if not exists wearer_note text`;
 
   // Partner programme
   await sql`alter table orders add column if not exists partner_code text`;

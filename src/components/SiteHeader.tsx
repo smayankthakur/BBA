@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "./LocaleLink";
 import Medallion from "./Medallion";
 import LangSwitch from "./LangSwitch";
+import OrderLink from "./order/OrderLink";
 import { useLang } from "./LangProvider";
 import { splitPath } from "@/lib/i18n/config";
 
@@ -51,7 +52,7 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
       setFolded(true);
       return;
     }
-    const delay = document.querySelector(".withload") ? 3900 : 700;
+    const delay = (document.querySelector(".withload") && !document.documentElement.classList.contains("intro-seen")) ? 3900 : 700;
     const t = window.setTimeout(() => setFolded(true), delay);
     return () => window.clearTimeout(t);
   }, []);
@@ -165,15 +166,15 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
                 {l.label}
               </Link>
             ))}
-            <Link className="navlink navlink-order" href="/find-your-bracelet">
+            <OrderLink className="navlink navlink-order" href="/find-your-bracelet" aria-haspopup="dialog">
               {h.orderNow}
-            </Link>
+            </OrderLink>
           </div>
 
           {/* Mobile: order */}
-          <Link className="bag-icon" href="/find-your-bracelet" aria-label={h.orderAria}>
+          <OrderLink className="bag-icon" href="/find-your-bracelet" aria-label={h.orderAria} aria-haspopup="dialog">
             <BagIcon />
-          </Link>
+          </OrderLink>
         </header>
       </div>
 
@@ -239,9 +240,9 @@ export default function SiteHeader({ instagram, youtube }: { instagram: string; 
         </nav>
 
         <div className="menu-foot">
-          <Link className="btn btn-gold" href="/find-your-bracelet" onClick={() => close(false)}>
+          <OrderLink className="btn btn-gold" href="/find-your-bracelet" onClick={() => close(false)} aria-haspopup="dialog">
             {ui.common.orderBracelet}
-          </Link>
+          </OrderLink>
           <Link className="btn btn-ghost-gold" href="/consultation" onClick={() => close(false)}>
             {h.askAmmit}
           </Link>

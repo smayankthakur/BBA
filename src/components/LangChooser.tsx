@@ -43,7 +43,7 @@ export default function LangChooser() {
     if (path.startsWith("/tools") || hasChosenLang()) return;
     // On the homepage, wait for the intro animation to finish.
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const delay = !reduced && document.querySelector(".withload") ? 3700 : 400;
+    const delay = !reduced && (document.querySelector(".withload") && !document.documentElement.classList.contains("intro-seen")) ? 3700 : 400;
     const t = window.setTimeout(() => setOpen(true), delay);
     return () => window.clearTimeout(t);
   }, [path]);

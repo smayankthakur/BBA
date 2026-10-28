@@ -49,15 +49,26 @@ export async function notifyStaffOfPaidOrder(razorpayOrderId: string) {
   }
 }
 
+/**
+ * Quick orders: the customer adds gender / focus / a note after paying. If the
+ * paid-order email already went out, send the updated sheet.
+ */
+export async function notifyStaffOfDetails(order: StoredOrder & { staff_notified_at?: string | Date | null }) {
+  if (!order.staff_notified_at || !(await staffEmailConfigured())) return;
+  await sendOrderEmail(order, { update: true });
+}
+
 /** Builds the PDF and sends the email. Throws if the email provider rejects it. */
-export async function sendOrderEmail(order: StoredOrder) {
+export async function sendOrderEmail(order: StoredOrder, opts: { update?: boolean } = {}) {
   {
+    const pending = order.order_source === "quick" && !order.details_at;
     const pdf = await buildOrderPdf(order);
     const sections = orderSections(order);
     const html = `<div style="font-family:Arial,sans-serif;color:#1f2550;max-width:620px">
 <p style="color:#B8913D;font-size:12px;letter-spacing:.08em;margin:0 0 4px">STAFF ONLY - CONFIDENTIAL</p>
-<h2 style="color:#050E8F;margin:0 0 4px">New paid order ${esc(order.ref)}</h2>
+<h2 style="color:#050E8F;margin:0 0 4px">${opts.update ? "Reading details added" : "New paid order"} ${esc(order.ref)}</h2>
 <p style="margin:0 0 16px">${esc(order.bracelet_title)} for ${esc(`${order.wearer_first_name} ${order.wearer_last_name}`.trim())}. The full order sheet is attached as a PDF.</p>
+${pending ? `<p style="margin:0 0 16px;padding:10px 12px;background:#fff6dc;border-left:3px solid #B8913D">Quick order: the customer can add gender, what they want help with and a note right after paying. If they do, you'll get a second email with the updated sheet. If not, ask on WhatsApp.</p>` : ""}
 ${sections
   .map(
     (s) => `<h3 style="color:#B8913D;font-size:13px;margin:18px 0 6px;text-transform:uppercase">${esc(s.title)}</h3>
@@ -75,7 +86,7 @@ ${sections
       body: JSON.stringify({
         from: FROM,
         to: await recipients(),
-        subject: `New order ${order.ref}: ${order.bracelet_title} for ${order.wearer_first_name}`,
+        subject: `${opts.update ? "Details added" : "New order"} ${order.ref}: ${order.bracelet_title} for ${order.wearer_first_name}`,
         html,
         attachments: [{ filename: `BBA-order-${order.ref}.pdf`, content: Buffer.from(pdf).toString("base64") }],
       }),

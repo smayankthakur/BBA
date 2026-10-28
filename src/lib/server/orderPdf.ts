@@ -71,7 +71,9 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
       rows: [
         ["Purposes in this bracelet", `${o.bracelet_title} (${(o.purposes?.length || 1)} of 3)`],
         ["Intentions chosen", o.intentions?.length ? o.intentions.map(intentionName).join(", ") : "-"],
-        ["What they want help with", o.focus || "-"],
+        ["What they want help with", o.focus || (o.order_source === "quick" && !o.details_at ? "Not given yet - ask on WhatsApp" : "-")],
+        ...(o.wearer_note ? ([["Note from the customer", o.wearer_note]] as [string, string][]) : []),
+        ...(o.order_source === "quick" ? ([["Order type", o.details_at ? "Quick order (details added after payment)" : "Quick order (details not added yet)"]] as [string, string][]) : []),
       ],
     },
     {
@@ -79,7 +81,7 @@ export function orderSections(o: StoredOrder): { title: string; rows: [string, s
       rows: [
         ["Name", wearer],
         ["Date of birth", `${dobLabel(o.dob_text)} (age ${ageOn(o.dob_text)})`],
-        ["Gender", cap(o.wearer_gender)],
+        ["Gender", o.wearer_gender === "unspecified" ? "Not given yet - ask on WhatsApp" : cap(o.wearer_gender)],
         ["Mulank / Bhagyank", `${o.mulank} / ${o.bhagyank}`],
         ["Wrist size", o.wrist === "unsure" ? "Not sure - confirm with customer" : o.wrist],
         ["Gift", o.is_gift ? "Yes" : "No"],

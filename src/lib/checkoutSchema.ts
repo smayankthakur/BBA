@@ -20,7 +20,8 @@ export const CheckoutSchema = z.object({
     day: z.number().int().min(1).max(31),
     month: z.number().int().min(1).max(12),
     year: z.number().int().min(1920).max(2100),
-    gender: z.enum(["female", "male", "other"]),
+    /** The quick order asks this after payment */
+    gender: z.enum(["female", "male", "other"]).optional(),
     wrist: z.string().max(20),
   }),
   intentions: z.array(z.string().max(60)).max(3),
@@ -47,6 +48,17 @@ export const CheckoutSchema = z.object({
   /** Extra purposes in the same bracelet (bracelet slugs), priced on the server. */
   extras: z.array(z.string().max(60)).max(2).optional(),
   /** Language the customer is using, for messages only */
+  lang: z.enum(["en", "hi", "hn"]).optional(),
+  /** "quick" = one-screen order; reading details follow after payment */
+  source: z.enum(["quick", "reading"]).optional(),
+});
+
+/** POST /api/order/details: what the customer adds after paying for a quick order. */
+export const DetailsSchema = z.object({
+  orderId: z.string().regex(/^order_[A-Za-z0-9]{6,40}$/),
+  gender: z.enum(["female", "male", "other"]).optional(),
+  focus: optText(160),
+  note: optText(500),
   lang: z.enum(["en", "hi", "hn"]).optional(),
 });
 

@@ -4,6 +4,8 @@ import { tf } from "@/lib/i18n/ui";
 import type { Metadata } from "next";
 import Link from "@/components/LocaleLink";
 import { notFound } from "next/navigation";
+import OrderLink from "@/components/order/OrderLink";
+import StickyOrder from "@/components/order/StickyOrder";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import ProductVisual from "@/components/ProductVisual";
@@ -102,9 +104,9 @@ export default async function BraceletPage({ params }: Params) {
           </p>
           <SiteTrustBar />
           <div className="btn-row">
-            <Link className="btn btn-lapis" href={`/find-your-bracelet?intention=${b.slug}`}>
+            <OrderLink className="btn btn-lapis" slug={b.slug} href={`/bracelets/${b.slug}?order=${b.slug}`} aria-haspopup="dialog">
               {c.orderButton}
-            </Link>
+            </OrderLink>
             <Link className="btn btn-line" href="/consultation">
               {c.askButton}
             </Link>
@@ -199,9 +201,10 @@ export default async function BraceletPage({ params }: Params) {
       )}
 
       <OrderCta
-        primary={{ label: c.orderButton, href: `/find-your-bracelet?intention=${b.slug}` }}
+        primary={{ label: c.orderButton, href: `/bracelets/${b.slug}?order=${b.slug}`, order: b.slug }}
         secondary={{ label: ui.common.reviewsLink, href: "/reviews" }}
       />
+      <StickyOrder slug={b.slug} label={tf(ui.quick.sticky, { amount: formatINR(b.priceInr) })} sub={b.title} href={`/bracelets/${b.slug}?order=${b.slug}`} />
     </PageShell>
   );
 }

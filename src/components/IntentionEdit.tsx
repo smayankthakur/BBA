@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import Link from "./LocaleLink";
 import Image from "next/image";
 import type { Product } from "@/lib/catalog-types";
 import { getBracelets, lowestPrice } from "@/lib/server/catalog";
@@ -8,6 +7,7 @@ import { fill } from "@/lib/content/render";
 import RefNote from "./RefNote";
 import { getUI } from "@/lib/server/lang";
 import EditCycler from "./EditCycler";
+import OrderLink from "./order/OrderLink";
 
 const ringStyle = ([a, b, c]: [string, string, string]): CSSProperties => ({
   backgroundImage: `repeating-conic-gradient(${a} 0 20deg,${b} 20deg 40deg,${c} 40deg 60deg)`,
@@ -64,14 +64,14 @@ export default async function IntentionEdit() {
       </div>
       <div className="edit-list">
         {list.map((it) => (
-          <Link key={it.slug} className="row" href={`/bracelets/${it.slug}`} aria-label={`${it.title}, ${formatINR(it.priceInr)}`}>
+          <OrderLink key={it.slug} slug={it.slug} className="row" href={`/bracelets/${it.slug}`} aria-label={`${it.title}, ${formatINR(it.priceInr)}`} aria-haspopup="dialog">
             <PhotoStack it={it} refNote={s.refNote} />
             <span className="sphere" aria-hidden="true" style={sphereStyle(it)} />
             <span className="row-title">{it.title}</span>
             <span className="muted">{it.blurb}</span>
             <span className="price">{formatINR(it.priceInr)}</span>
             <span className="go">{ui.common.choose}</span>
-          </Link>
+          </OrderLink>
         ))}
       </div>
       <EditCycler targetId="edit" />
