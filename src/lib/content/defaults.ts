@@ -408,7 +408,7 @@ We do not sell your data. We only send you offers if you've agreed to receive th
 - our order database provider, which stores order details securely for us;
 - our email provider, which sends order details to our own team (never to anyone else);
 - Meta (WhatsApp), if you message us or we message you about your order;
-- our shipping platform (Shiprocket) and its courier partners, who need your name, phone number and address to deliver and to send you tracking updates;
+- our shipping partner Prozo (ProShip) and the courier companies it uses (or Shiprocket, if we book through it), who need your name, phone number and address to deliver and to send you tracking updates;
 - our WhatsApp messaging service (such as Interakt or AiSensy), which sends your order updates (payment received, a reminder to add the wearer's details, and your tracking link) to your WhatsApp number;
 - Google and Meta, only if you accept analytics cookies (see above);
 - Vercel, which hosts this website;

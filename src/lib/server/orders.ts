@@ -257,6 +257,7 @@ export type AdminOrderUpdate = {
   fulfilment_status: Fulfilment;
   courier: string | null;
   tracking_number: string | null;
+  tracking_url: string | null;
   admin_notes: string | null;
   wearer_first_name: string;
   wearer_last_name: string;
@@ -306,7 +307,7 @@ async function stampStatus(ids: string[], f: string) {
 export async function updateOrderAdmin(id: string, f: AdminOrderUpdate) {
   await ensureSchema();
   await sql`update orders set fulfilment_status = ${f.fulfilment_status}, courier = ${f.courier},
-    tracking_number = ${f.tracking_number}, admin_notes = ${f.admin_notes},
+    tracking_number = ${f.tracking_number}, tracking_url = ${f.tracking_url}, admin_notes = ${f.admin_notes},
     wearer_first_name = ${f.wearer_first_name}, wearer_last_name = ${f.wearer_last_name},
     wearer_dob = ${f.wearer_dob}::date, mulank = ${f.mulank}, bhagyank = ${f.bhagyank},
     wearer_gender = ${f.wearer_gender}, wrist = ${f.wrist}, focus = ${f.focus}, wearer_note = ${f.wearer_note},

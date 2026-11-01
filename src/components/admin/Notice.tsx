@@ -55,6 +55,8 @@ const ERR: Record<string, string> = {
   ship: "The shipment couldn't be booked.",
   shipOff: "No shipping service is connected yet. See Connections.",
   shipNeeds: "Fill in the order's delivery details first.",
+  awb: "Type the courier and the AWB (tracking) number from ProShip: letters, numbers or dashes.",
+  trackLink: "The tracking link must be a full https:// address. Copy it from ProShip, or leave it empty.",
   wa: "The WhatsApp message couldn't be sent.",
   waOff: "Automatic WhatsApp isn't connected yet. See Connections.",
   pick: "Tick at least one order.",

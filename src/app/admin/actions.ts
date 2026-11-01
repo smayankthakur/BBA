@@ -41,7 +41,7 @@ import {
 import { PREVIEW_COOKIE, resetContent, saveContent, savePreviewDraft } from "@/lib/server/content";
 import { lp } from "@/lib/i18n/config";
 import { FULFILMENT, getOrder, saveReading, setOrdersStatus, updateOrderAdmin, type Fulfilment } from "@/lib/server/orders";
-import { bookShipment, activeProvider, providerById, shipBlockers } from "@/lib/server/shipping";
+import { bookShipment, activeProvider, providerById, shipBlockers, saveManualShipment } from "@/lib/server/shipping";
 import { autoWhatsApp, sendWhatsApp, whatsappProvider, type WaKind } from "@/lib/server/whatsapp";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
@@ -466,6 +466,7 @@ export async function updateOrderAction(fd: FormData) {
     fulfilment_status: f,
     courier: str(fd, "courier", 80) || null,
     tracking_number: str(fd, "tracking_number", 80) || null,
+    tracking_url: httpsUrl(str(fd, "tracking_url", 500)),
     admin_notes: str(fd, "admin_notes", 3000) || null,
     wearer_first_name: first,
     wearer_last_name: str(fd, "wearer_last_name", 60),
@@ -838,6 +839,43 @@ export async function bookShipmentAction(fd: FormData) {
   const after = await getOrder(id);
   if (after) await autoWhatsApp("shipped", after);
   go(`/admin/orders/${id}`, { msg: "shipped", detail });
+}
+
+/** A parcel booked outside the panel (Prozo / ProShip): save the AWB and tracking link, mark Shipped, tell the customer. */
+export async function markShippedAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) go("/admin/orders", { err: "missing" });
+  const courier = str(fd, "courier", 80);
+  const awb = str(fd, "awb", 40).replace(/\s/g, "");
+  const link = str(fd, "tracking_url", 500);
+  if (!courier || !/^[A-Za-z0-9-]{4,40}$/.test(awb)) go(`/admin/orders/${id}`, { err: "awb" });
+  let trackingUrl: string | null = null;
+  if (link) {
+    try {
+      const u = new URL(link);
+      if (u.protocol !== "https:") throw new Error();
+      trackingUrl = u.toString();
+    } catch {
+      go(`/admin/orders/${id}`, { err: "trackLink" });
+    }
+  }
+  const ok = await saveManualShipment(id, { courier, awb, trackingUrl });
+  if (!ok) go(`/admin/orders/${id}`, { err: "shipNeeds", detail: "This order already has a tracking number, or isn't paid." });
+  await logAction(user.id, "order.ship", `${courier} · AWB ${awb}`);
+  const after = await getOrder(id);
+  if (after) await autoWhatsApp("shipped", after);
+  go(`/admin/orders/${id}`, { msg: "shipped", detail: `${courier} · AWB ${awb}` });
+}
+
+function httpsUrl(v: string): string | null {
+  if (!v) return null;
+  try {
+    const u = new URL(v);
+    return u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function labelAction(fd: FormData) {

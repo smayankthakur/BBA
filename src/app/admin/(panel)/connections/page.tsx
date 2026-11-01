@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/server/auth";
 import { razorpayConfigured } from "@/lib/server/razorpay";
 import { staffEmailConfigured } from "@/lib/server/staffNotify";
-import { PROVIDERS } from "@/lib/server/shipping";
+import { PROVIDERS, manualCourier, manualTrackingUrl } from "@/lib/server/shipping";
 import { TEMPLATES, whatsappProvider } from "@/lib/server/whatsapp";
 import { GA_ID, META_PIXEL_ID } from "@/lib/analytics";
 
@@ -61,7 +61,30 @@ export default async function ConnectionsPage() {
 
         <section className="ad-box">
           <h2>
-            Shipping {PROVIDERS.map((p) => <Status key={p.id} on={p.configured()} label={`${p.name}: ${p.configured() ? "connected" : "not connected"}`} />)}
+            Shipping with {manualCourier()} (ProShip) <Status on label="In use · manual" />
+          </h2>
+          <div className="ad-box-body">
+            <p>
+              Each paid order has a <b>Ship with {manualCourier()}</b> box: copy the details into ProShip (Shipments → Create → Forward), then type the AWB
+              back and press <b>Mark as shipped</b>. The order moves to Shipped, the customer sees the courier and tracking on <b>Track my order</b>, and
+              the WhatsApp &ldquo;shipped&rdquo; message goes out.
+            </p>
+            <p className="ad-help">
+              Standard tracking link: {manualTrackingUrl("X") ? "set" : "not set"}. If ProShip gives you a tracking page address with the AWB in it, set{" "}
+              <code>PROZO_TRACKING_URL</code> with <code>{"{awb}"}</code> where the number goes (e.g. <code>{"https://…/track/{awb}"}</code>) and staff won&apos;t
+              need to paste a link each time.
+            </p>
+            <p className="ad-help">
+              <b>One-click booking:</b> Prozo shares its API documentation and keys only when you ask your Prozo account manager. Ask for the ProShip API
+              docs, a sandbox and a live API key (or API username and password), and your pickup address ID; once they arrive, booking and labels can work
+              from here in one click, like the Shiprocket option below.
+            </p>
+          </div>
+        </section>
+
+        <section className="ad-box">
+          <h2>
+            Other shipping: {PROVIDERS.map((p) => <Status key={p.id} on={p.configured()} label={`${p.name}: ${p.configured() ? "connected" : "not connected"}`} />)}
           </h2>
           <div className="ad-box-body">
             <p>

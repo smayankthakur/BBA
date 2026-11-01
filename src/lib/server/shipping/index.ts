@@ -50,3 +50,40 @@ export async function bookShipment(o: AdminOrder) {
     updated_at = now() where id = ${o.id}`;
   return r;
 }
+
+/* ---------------- Manual shipping (Prozo / ProShip) ----------------
+ * Prozo's API docs and keys are given during onboarding, so until then staff
+ * create the shipment in ProShip and type the AWB here. SHIP_COURIER_NAME
+ * (default "Prozo") pre-fills the courier; PROZO_TRACKING_URL, a link with
+ * {awb} in it (e.g. the tracking page ProShip gives you), fills the customer's
+ * tracking link automatically when staff don't paste one.
+ */
+export const manualCourier = () => process.env.SHIP_COURIER_NAME?.trim() || "Prozo";
+export function manualTrackingUrl(awb: string): string | null {
+  const t = process.env.PROZO_TRACKING_URL?.trim();
+  if (!t || !t.includes("{awb}") || !/^https:\/\//.test(t)) return null;
+  return t.replaceAll("{awb}", encodeURIComponent(awb));
+}
+const num = (v: string | undefined, d: number) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : d;
+};
+/** Parcel size for one bracelet box (same defaults as Shiprocket bookings). */
+export const parcel = () => ({
+  weightKg: num(process.env.SHIP_WEIGHT_KG, 0.15),
+  lengthCm: num(process.env.SHIP_LENGTH_CM, 12),
+  breadthCm: num(process.env.SHIP_BREADTH_CM, 10),
+  heightCm: num(process.env.SHIP_HEIGHT_CM, 5),
+});
+
+/** Saves a shipment booked outside the panel (e.g. in ProShip) and moves the order to Shipped. */
+export async function saveManualShipment(id: string, s: { courier: string; awb: string; trackingUrl: string | null }) {
+  await ensureSchema();
+  const url = s.trackingUrl || manualTrackingUrl(s.awb);
+  const rows = await sql`update orders set ship_provider = 'manual', courier = ${s.courier}, tracking_number = ${s.awb}, tracking_url = ${url},
+    fulfilment_status = case when fulfilment_status in ('delivered', 'cancelled') then fulfilment_status else 'shipped' end,
+    shipped_at = coalesce(shipped_at, now()), making_at = coalesce(making_at, now()), reading_done_at = coalesce(reading_done_at, now()),
+    updated_at = now()
+    where id = ${id} and status = 'paid' and tracking_number is null returning id`;
+  return rows.length > 0;
+}

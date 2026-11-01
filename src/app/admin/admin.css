@@ -1302,3 +1302,76 @@
   font-size: 13px;
   color: var(--ad-soft);
 }
+
+/* Ship with Prozo (manual ProShip booking) */
+.ad-ship {
+  margin-top: 4px;
+}
+.ad-ship > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 6px 0;
+}
+.ad-ship > summary small {
+  font-weight: 400;
+  color: var(--ad-soft);
+}
+.ad-shipcopy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 8px 0 12px;
+  border: 1px solid var(--ad-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ad-shipcopy > div {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-top: 1px solid var(--ad-line);
+}
+.ad-shipcopy > div:first-child {
+  border-top: 0;
+}
+.ad-shipcopy dt {
+  font-size: 13px;
+  color: var(--ad-soft);
+}
+.ad-shipcopy dd {
+  margin: 0;
+  min-width: 0;
+}
+.ad-copytext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ad-copytext > span {
+  overflow-wrap: anywhere;
+}
+.ad-copytext .ad-btn {
+  flex: none;
+}
+.ad-ship-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.ad-ship-form .is-wide,
+.ad-ship-form .ad-btn {
+  grid-column: 1 / -1;
+}
+@media (max-width: 600px) {
+  .ad-shipcopy > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .ad-ship-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

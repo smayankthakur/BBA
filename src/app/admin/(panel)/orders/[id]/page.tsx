@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Notice from "@/components/admin/Notice";
 import { FULFILMENT, getOrder, upgradesFor } from "@/lib/server/orders";
-import { bookShipmentAction, labelAction, sendWhatsAppAction, updateOrderAction } from "@/app/admin/actions";
-import { activeProvider, providerById, shipBlockers } from "@/lib/server/shipping";
+import { bookShipmentAction, labelAction, markShippedAction, sendWhatsAppAction, updateOrderAction } from "@/app/admin/actions";
+import CopyText from "@/components/admin/CopyText";
+import { activeProvider, manualCourier, manualTrackingUrl, parcel, providerById, shipBlockers } from "@/lib/server/shipping";
 import { TEMPLATES, whatsappLog, whatsappProvider } from "@/lib/server/whatsapp";
 import { formatINR } from "@/lib/format";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
@@ -81,6 +82,26 @@ export default async function OrderPage({
   );
   const paidTotal = o.amount_paise + (o.upgrade_paise ?? 0);
   const ship = activeProvider();
+  const courier = manualCourier();
+  const autoLink = !!manualTrackingUrl("X");
+  const box = parcel();
+  const address = [o.address_line1, o.address_line2, o.landmark ? `Near ${o.landmark}` : ""].filter(Boolean).join(", ");
+  const shipCopy: [string, string][] = [
+    ["Order ID", o.ref],
+    ["Customer name", o.delivery_name || `${o.wearer_first_name} ${o.wearer_last_name}`.trim()],
+    ["Phone", o.mobile],
+    ["Email", o.email ?? ""],
+    ["Address", address],
+    ["City", o.city],
+    ["State", o.state],
+    ["PIN code", o.pincode],
+    ["Item", `${o.bracelet_title} crystal bracelet`],
+    ["Quantity", "1"],
+    ["Invoice value (₹)", String(Math.round((o.amount_paise + (o.upgrade_paise ?? 0)) / 100))],
+    ["Payment", "Prepaid"],
+    ["Weight (kg)", String(box.weightKg)],
+    ["Box (L × B × H cm)", `${box.lengthCm} × ${box.breadthCm} × ${box.heightCm}`],
+  ];
   const shippedWith = providerById(o.ship_provider);
   const blockers = shipBlockers(o);
   const waOn = whatsappProvider();
@@ -159,21 +180,62 @@ export default async function OrderPage({
                     )}
                   </div>
                 </>
-              ) : ship ? (
-                <>
-                  <p className="ad-help">Books the parcel with {ship.name}: courier, pickup and label in one go. The tracking number is saved here and shown to the customer.</p>
-                  {blockers.length > 0 && <p className="ad-help ad-callout">Before booking, fill in: {blockers.join(", ")}.</p>}
-                  <form action={bookShipmentAction}>
-                    <input type="hidden" name="id" value={o.id} />
-                    <button className="ad-btn is-primary" type="submit" disabled={blockers.length > 0}>
-                      Book shipment with {ship.name}
-                    </button>
-                  </form>
-                </>
               ) : (
-                <p className="ad-help">
-                  Type the courier and tracking number in the form below, or <Link href="/admin/connections">connect Shiprocket</Link> to book shipments here in one click.
-                </p>
+                <>
+                  {ship && (
+                    <>
+                      <p className="ad-help">Books the parcel with {ship.name}: courier, pickup and label in one go.</p>
+                      {blockers.length > 0 && <p className="ad-help ad-callout">Before booking, fill in: {blockers.join(", ")}.</p>}
+                      <form action={bookShipmentAction}>
+                        <input type="hidden" name="id" value={o.id} />
+                        <button className="ad-btn is-primary" type="submit" disabled={blockers.length > 0}>
+                          Book shipment with {ship.name}
+                        </button>
+                      </form>
+                    </>
+                  )}
+                  <details className="ad-ship" open={!ship}>
+                    <summary>
+                      Ship with {courier} <small>(book in ProShip, then save the AWB here)</small>
+                    </summary>
+                    <ol className="ad-steps">
+                      <li>In ProShip: Shipments → Create → Forward. Copy these in:</li>
+                    </ol>
+                    {blockers.filter((b) => b !== "it already has a tracking number").length > 0 && (
+                      <p className="ad-help ad-callout">Missing: {blockers.join(", ")}. Fill them in the form below first.</p>
+                    )}
+                    <dl className="ad-shipcopy">
+                      {shipCopy.map(([k, v]) => (
+                        <div key={k}>
+                          <dt>{k}</dt>
+                          <dd>{v ? <CopyText value={v} label={k} /> : <span className="ad-muted">—</span>}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <ol className="ad-steps" start={2}>
+                      <li>After ProShip creates it, type the AWB below. The order moves to Shipped, the customer&apos;s tracking page shows it, and the WhatsApp &ldquo;shipped&rdquo; message goes out.</li>
+                    </ol>
+                    <form action={markShippedAction} className="ad-ship-form">
+                      <input type="hidden" name="id" value={o.id} />
+                      <label className="ad-field">
+                        <span>Courier</span>
+                        <input name="courier" defaultValue={courier} maxLength={80} required />
+                      </label>
+                      <label className="ad-field">
+                        <span>AWB / tracking number</span>
+                        <input name="awb" maxLength={40} required pattern="[A-Za-z0-9\- ]{4,40}" autoComplete="off" autoCapitalize="characters" />
+                      </label>
+                      <label className="ad-field is-wide">
+                        <span>Tracking link (optional)</span>
+                        <input name="tracking_url" type="url" inputMode="url" maxLength={500} placeholder="https://…" />
+                        <small>{autoLink ? "Leave empty to use the standard Prozo tracking link." : "Paste the tracking link from ProShip. If empty, the customer sees the AWB on the Track my order page."}</small>
+                      </label>
+                      <button className="ad-btn is-primary" type="submit">
+                        Mark as shipped
+                      </button>
+                    </form>
+                  </details>
+                </>
               )}
             </div>
           </section>
@@ -231,6 +293,7 @@ export default async function OrderPage({
             </label>
             <Text label="Courier" name="courier" value={o.courier} max={80} />
             <Text label="Tracking number" name="tracking_number" value={o.tracking_number} max={80} />
+            <Text label="Tracking link" name="tracking_url" value={o.tracking_url ?? null} max={500} type="url" help="https:// link the customer can open. Optional." />
             <label className="ad-field is-wide">
               <span>Private notes</span>
               <textarea name="admin_notes" rows={3} maxLength={3000} defaultValue={o.admin_notes ?? ""} />
