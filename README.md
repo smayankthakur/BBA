@@ -131,6 +131,10 @@ All pages have their own title/description, canonical, hreflang alternates for t
 - Prepaid only (no COD), free shipping, delivery days from Settings.
 - Without Razorpay keys the funnel falls back to the pre-filled Google order form.
 
+## FAQs (`/faq` and the homepage)
+
+Five questions on the homepage (Admin → Pages → Homepage → *Questions*) and 15 more on the FAQ page (Admin → Pages → FAQ), grouped (Choosing / Wearing / Care, safety and returns); the FAQ page shows the homepage five first. English, हिन्दी and Hinglish built in. Answers can contain links (`[Track my order](/track)`) and `{{price}}`, `{{price2}}`, `{{price3}}`, `{{minDays}}`, `{{maxDays}}`. The FAQ page carries FAQPage structured data; bracelet pages keep their own five questions and link to the full list. The questions follow what similar crystal and numerology bracelet sellers answer (stones real?, which wrist, when to start, recharging, several bracelets, side effects, periods, others touching), answered in Bracelet By Ammit's own words and policies. **Ammit to confirm** the wrist, start-day and periods answers.
+
 ## Track my order (`/track`)
 
 Customers enter the order number (BBA-…) and their WhatsApp number and see the steps (received → reading done → being made → shipped → delivered) with dates, the courier and the tracking link. The order-confirmed screen, emails and WhatsApp messages link to `/track?no=BBA-…` (not `?ref=`, which is the partner code). Limited to 12 lookups per 15 minutes per visitor; a wrong number shows nothing about the order.
@@ -190,7 +194,7 @@ public/brand/        emblem.png, wordmark.png
 - **Shipping & payments (placeholder decisions by Mayank, 24 Oct)**: free shipping, prepaid only, 5–7 days, refunds started within 7 working days. Confirm with Ammit.
 - **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.
 - **Ammit to confirm:** crystals listed for the new purposes (clarity & confidence, self healing, delay in marriage, weight loss) and the wording on the health / weight-loss pages.
-- **Hindi copy:** review by a native speaker (including the four articles).
+- **Hindi copy:** review by a native speaker (including the four articles and the FAQs).
 - **To switch on:** Google Analytics / Meta Pixel IDs; the Prozo tracking-link pattern (and Prozo API access for one-click booking); a WhatsApp Business provider (Interakt or AiSensy) with the three templates approved; `CRON_SECRET`. See Admin → Connections.
 - **Video:** a short clip of Ammit Ji energising a bracelet can go in each bracelet's video field.
 

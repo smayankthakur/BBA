@@ -206,6 +206,11 @@ export default async function BraceletPage({ params }: Params) {
               <p>{f.a}</p>
             </details>
           ))}
+          <p className="faq-more">
+            <Link className="btn btn-line" href="/faq">
+              {ui.common.allQuestions}
+            </Link>
+          </p>
         </section>
       )}
 

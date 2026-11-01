@@ -86,6 +86,30 @@ export const DEFAULTS = {
     careText: "It's the question people ask us most. Ammit's answer on YouTube has been watched more than 14,000 times.",
     careWatch: "Watch Ammit's answer",
     careGuide: "Full care guide",
+    faqTitle: "Questions, answered",
+    faqLede: "What people ask us most before they order.",
+    faqs: [
+      {
+        q: "How is my bracelet made for me?",
+        a: "You choose a purpose, then share the wearer's name and full date of birth. Ammit works out their mulank and bhagyank, studies their planets together with the purpose, and chooses every crystal himself. Before it's couriered, you get a photo and full details of your bracelet on WhatsApp. It's never a ready-made copy.",
+      },
+      {
+        q: "Are the crystals natural?",
+        a: "Yes. Every bead is a 100% natural, authentic crystal, never glass, plastic or dyed stone. Natural crystals vary a little in colour and markings, so no two bracelets look exactly alike. You'll see yours in the photo we send before dispatch.",
+      },
+      {
+        q: "What details do you need? Do I need my birth time?",
+        a: "Just the wearer's name, full date of birth and wrist size. Birth time isn't needed. You pay first with only your name and WhatsApp number, then add the details in under a minute. Ordering as a gift? Give the wearer's details, not yours.",
+      },
+      {
+        q: "How long does delivery take, and how do I pay?",
+        a: "Delivery is free across India and usually takes {{minDays}}–{{maxDays}} days, including the 1 to 2 days your bracelet is cleansed and energised. Payment is prepaid and secure through Razorpay: UPI, cards or net banking (no cash on delivery). You can follow your order any time on [Track my order](/track).",
+      },
+      {
+        q: "What if it doesn't fit, or the thread breaks?",
+        a: "Message us on WhatsApp. If it doesn't fit, we'll tell you how to send it back for resizing. If the thread breaks, keep every bead and Ammit will restring the same crystals for you. See our [returns policy](/returns).",
+      },
+    ],
     seoTitle: "",
     seoDescription: "",
   },
@@ -359,6 +383,94 @@ export const DEFAULTS = {
       "Answer 7 quick questions to find your mulank, bhagyank and the crystal bracelet for your purpose. Newly designed, cleansed and energised.",
   },
 
+  faq: {
+    eyebrow: "Help",
+    title: "Frequently asked questions",
+    lede: "Everything people ask us about choosing, wearing and caring for a Bracelet By Ammit. Can't find your answer? Ask Ammit on WhatsApp.",
+    topGroup: "Before you order",
+    items: [
+      {
+        group: "Choosing your bracelet",
+        q: "How do I know which purpose is right for me?",
+        a: "Start with what matters most to you right now: career, love, health, studies or protection. If you're unsure, [take the 60-second reading](/find-your-bracelet). It works out your numbers and suggests a bracelet. You can also [ask Ammit](/consultation) directly.",
+      },
+      {
+        group: "Choosing your bracelet",
+        q: "Can one bracelet support more than one purpose?",
+        a: "Yes. Ammit can design one bracelet for up to three purposes, balancing the crystals for all of them. One purpose is {{price}}, two are {{price2}} and three are {{price3}}, with free shipping. You can add a purpose while ordering, or after paying as long as Ammit hasn't started designing.",
+      },
+      {
+        group: "Choosing your bracelet",
+        q: "What are mulank and bhagyank?",
+        a: "They're the two main numbers in numerology. Your mulank (birth number) comes from the day you were born: someone born on the 23rd has mulank 5 (2 + 3). Your bhagyank (destiny number) comes from your whole date of birth, added together and reduced to one digit. Ammit reads both before choosing your crystals, and the [60-second reading](/find-your-bracelet) shows you yours.",
+      },
+      {
+        group: "Choosing your bracelet",
+        q: "Can I order a bracelet as a gift?",
+        a: "Yes. Enter the wearer's name and date of birth so Ammit designs it for them, not for you. If the wearer is under 18, a parent or guardian should place the order. Check their size with the [size guide](/size-guide), or choose \"Not sure\" and we'll help.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "Which wrist should I wear it on?",
+        a: "Traditionally, the left wrist is the receiving side, so most people wear their bracelet there to take in the crystals' energy. The right wrist is linked with giving and action. If Ammit suggests a wrist for your bracelet, follow that; otherwise the left wrist is a good default.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "When should I start wearing it?",
+        a: "Your bracelet arrives already cleansed and energised, so you can wear it the day it arrives. Many people like to put it on in the morning after a bath, taking a quiet moment to set their intention. If you'd like a particular day for your purpose, ask Ammit on WhatsApp.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "Can I wear it while sleeping, bathing or exercising?",
+        a: "You can sleep with it on. Take it off before bathing, swimming or a heavy workout: water, soap and sweat can dull some crystals and weaken the thread over time.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "Can I wear it with a watch, other bracelets or a rudraksha?",
+        a: "Yes. Try to keep it from knocking against a metal watch, which can chip the beads. If you already wear other crystals, mention them in the note when you add your details, so Ammit can choose stones that work well together.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "Can I wear it during periods?",
+        a: "Yes. Crystals don't come with rules about periods, so it's your personal choice. If your family prefers to take spiritual items off during those days, that's fine too: cleanse it with rock salt or incense smoke before you wear it again.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "Can other people touch or wear my bracelet?",
+        a: "Someone touching it for a moment is fine. Avoid letting others wear it, because it's designed for your numbers. If a lot of people have handled it, simply cleanse it.",
+      },
+      {
+        group: "Wearing your bracelet",
+        q: "How soon will I notice a difference?",
+        a: "There's no fixed timeline, and we can't promise results: crystal and numerology guidance comes from traditional belief and personal experience. Wear it every day, keep it cleansed and give it a few weeks. It isn't a substitute for medical, legal or financial advice.",
+      },
+      {
+        group: "Care, safety and returns",
+        q: "How do I cleanse and recharge my bracelet?",
+        a: "Once a week, rest it in a bowl of dry rock salt, or pass it through incense or diya smoke for a few minutes. Once a month, leave it under the full moon overnight. Don't soak it in water. The [care guide](/bracelet-care) has more.",
+      },
+      {
+        group: "Care, safety and returns",
+        q: "Is it safe? Can crystals have side effects?",
+        a: "Natural crystals are simply stones, so wearing them has no known side effects. If the thread or a bead ever irritates your skin, take it off and message us. For any health concern, please keep following your doctor's advice.",
+      },
+      {
+        group: "Care, safety and returns",
+        q: "Can I return or exchange my bracelet?",
+        a: "Because each bracelet is made for one person's numbers, we can't take it back for a change of mind. If it arrives damaged or incorrect, we'll repair or replace it, and if it doesn't fit, we'll resize it. Message us on WhatsApp with a photo. Full details are in our [returns policy](/returns).",
+      },
+      {
+        group: "Care, safety and returns",
+        q: "Do you deliver outside India?",
+        a: "We deliver free across India. For an address outside India, message us on WhatsApp before ordering and we'll tell you whether we can send it and what it costs.",
+      },
+    ],
+    ctaTitle: "Still have a question?",
+    ctaText: "Message Ammit on WhatsApp, or take the 60-second reading to find the bracelet that suits you.",
+    seoTitle: "Crystal bracelet FAQs",
+    seoDescription:
+      "Answers about Bracelet By Ammit's crystal bracelets: how they're made from your date of birth, which wrist to wear, care, delivery and returns.",
+  },
   privacy: {
     title: "Privacy policy",
     lede: "We only ask for what we need to read your numbers, make your bracelet and deliver it. This page explains what that is and what we do with it.",

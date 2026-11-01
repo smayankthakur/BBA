@@ -14,6 +14,30 @@ export const CONTENT_HN: Record<string, Record<string, unknown>> = {
     "seoDescription": "Numerologist Ammit Kukreja aapke naam, date of birth aur purpose ke liye naya crystal bracelet design karte hain. Cleanse aur energize karke, free shipping ke saath."
   },
   "home": {
+    "faqTitle": "Aapke sawaal, humare jawaab",
+    "faqLede": "Order karne se pehle log humse sabse zyada yahi poochte hain.",
+    "faqs": [
+      {
+        "q": "Mera bracelet mere liye kaise banaya jaata hai?",
+        "a": "Aap ek purpose chunte hain, phir pehenne waale ka naam aur poori date of birth batate hain. Ammit Ji unka mulank aur bhagyank nikaalte hain, purpose ke saath unke grahon ko samajhte hain, aur har crystal khud chunte hain. Courier se pehle aapko WhatsApp par bracelet ki photo aur poori details milti hain. Yeh kabhi bhi pehle se bana copy bracelet nahi hota."
+      },
+      {
+        "q": "Kya crystals asli aur natural hain?",
+        "a": "Haan. Har bead 100% natural aur asli crystal hai, kabhi glass, plastic ya rangaa hua patthar nahi. Natural crystals ke rang aur nishaan thode alag hote hain, isliye koi bhi do bracelets bilkul ek jaise nahi dikhte. Dispatch se pehle hum jo photo bhejte hain, usmein aap apna bracelet dekh sakte hain."
+      },
+      {
+        "q": "Aapko kaun-si details chahiye? Kya birth time zaroori hai?",
+        "a": "Sirf pehenne waale ka naam, poori date of birth aur wrist size. Birth time zaroori nahi hai. Aap pehle sirf apna naam aur WhatsApp number dekar payment karte hain, phir ek minute se kam mein baaki details jodte hain. Gift ke liye order kar rahe hain? Apni nahi, pehenne waale ki details dijiye."
+      },
+      {
+        "q": "Delivery mein kitna time lagta hai, aur payment kaise karein?",
+        "a": "Poore India mein delivery free hai aur aam taur par {{minDays}}–{{maxDays}} din lagte hain, jismein bracelet ko cleanse aur energise karne ke 1 se 2 din bhi shaamil hain. Payment Razorpay se pehle aur surakshit hota hai: UPI, cards ya net banking (cash on delivery nahi). Aap [Order track karein](/track) page par kabhi bhi apna order dekh sakte hain."
+      },
+      {
+        "q": "Agar bracelet fit na ho ya dhaaga toot jaaye to?",
+        "a": "Humein WhatsApp par message kijiye. Agar fit na ho, to hum batayenge ki size theek karwane ke liye use kaise wapas bhejein. Agar dhaaga toot jaaye, to har bead sambhaal kar rakhiye, Ammit Ji unhi crystals se dobara piro denge. Humari [returns policy](/returns) dekhiye."
+      }
+    ],
     "heroTitle": "Life se aap jo maang rahe hain, uske liye ek bracelet.",
     "heroLede": "Apna purpose chuniye. Numerologist Ammit Kukreja aapka naam, date of birth aur graho ko dekhte hain, sirf aapke liye bracelet design karte hain, aur bhejne se pehle use cleanse aur energize karte hain.",
     "heroPrimary": "Purpose se chuniye",
@@ -403,5 +427,92 @@ export const CONTENT_HN: Record<string, Record<string, unknown>> = {
     "lede": "Har bracelet ek vyakti ke numbers ke liye banaya jaata hai, isliye hum use dobara bech nahi sakte. Lekin agar kuch theek nahi hai, toh hum madad karenge.",
     "updated": "22 October 2026",
     "body": "*Yeh translation aapki suvidha ke liye hai. Kisi bhi difference ki sthiti mein English version hi maanya hoga.*\n\n## Agar bracelet damaged ya galat pahunche\n\nParcel kholte hi bracelet aur packaging ki photo ke saath humein WhatsApp par message karein (link footer mein hai). Hum repair ya replacement ka intezaam karenge.\n\n## Agar bracelet fit na ho\n\nOrder karne se pehle [size guide](/size-guide) check karein. Agar phir bhi bracelet fit nahi hota, toh humein WhatsApp par message karein aur hum aapko batayenge ki resizing ke liye ise waapas kaise bhejein.\n\n## Agar bracelet toot jaaye\n\nHar bead ikattha kar lein aur koi bhi bead phenkein nahi. Photo ke saath humein WhatsApp par message karein, aur hum aapko batayenge ki unhe waapas kaise bhejein taaki Ammit Ji aapke liye unhi crystals ko dobara piro (restring kar) sakein. [Care guide](/bracelet-care) mein bataya gaya hai ki aapka bracelet lambe samay tak kaise chale.\n\n## Mann badal jaane par\n\nKyunki har bracelet ek hi pehenne wale ke numbers padhkar unke liye piroya jaata hai, isliye ek baar ban jaane ke baad mann badalne par hum returns accept nahi kar sakte. Consumer Protection Act, 2019 ke tahat aapke adhikaar isse affect nahi hote.\n\n## Refunds\n\nJahan refund banta hai, wahan hum WhatsApp par aapke saath use confirm karenge aur 7 working days ke andar refund shuru kar denge, usi method mein jisse aapne payment kiya tha. Aapke bank ya UPI app mein ise dikhne mein 5–7 working days aur lag sakte hain."
+  },
+  "faq": {
+    "eyebrow": "Help",
+    "title": "Aksar pooche jaane waale sawaal",
+    "lede": "Bracelet By Ammit chunne, pehenne aur uski dekhbhaal ke baare mein log jo kuch poochte hain, sab yahan hai. Jawaab nahi mila? WhatsApp par Ammit Ji se poochiye.",
+    "topGroup": "Order karne se pehle",
+    "items": [
+      {
+        "group": "Apna bracelet chunna",
+        "q": "Mere liye kaunsa purpose sahi hai, kaise jaanoon?",
+        "a": "Usse shuru kijiye jo abhi aapke liye sabse zaroori hai: career, pyaar, health, padhai ya protection. Agar pakka nahi hai, to [60 second ki reading lijiye](/find-your-bracelet). Yeh aapke numbers nikaal kar ek bracelet suggest karti hai. Aap seedhe [Ammit Ji se bhi pooch sakte hain](/consultation)."
+      },
+      {
+        "group": "Apna bracelet chunna",
+        "q": "Kya ek bracelet ek se zyada purpose ke liye ho sakta hai?",
+        "a": "Haan. Ammit Ji teen purposes tak ke liye ek hi bracelet design kar sakte hain, aur sabke liye crystals ka balance rakhte hain. Ek purpose {{price}}, do {{price2}} aur teen {{price3}} mein, free shipping ke saath. Aap order karte waqt purpose jod sakte hain, ya payment ke baad bhi, jab tak Ammit Ji ne design shuru na kiya ho."
+      },
+      {
+        "group": "Apna bracelet chunna",
+        "q": "Mulank aur bhagyank kya hote hain?",
+        "a": "Yeh numerology ke do main numbers hain. Mulank aapki janm ki tareekh se aata hai: 23 tareekh ko janme vyakti ka mulank 5 (2 + 3) hota hai. Bhagyank poori date of birth ke ankon ko jod kar ek ank tak laane se banta hai. Ammit Ji crystals chunne se pehle dono padhte hain, aur [60 second ki reading](/find-your-bracelet) aapko aapke numbers dikhati hai."
+      },
+      {
+        "group": "Apna bracelet chunna",
+        "q": "Kya main gift ke liye bracelet order kar sakta/sakti hoon?",
+        "a": "Haan. Pehenne waale ka naam aur date of birth daaliye, taaki Ammit Ji unhi ke liye design karein, aapke liye nahi. Agar pehenne waala 18 saal se kam hai, to maata-pita ya guardian order karein. [Size guide](/size-guide) se unka size dekhiye, ya \"Pata nahi\" chuniye, hum madad karenge."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Ise kis kalai par pehenna chahiye?",
+        "a": "Parampara ke hisaab se baayin kalai lene waali hoti hai, isliye zyadatar log crystals ki energy lene ke liye bracelet wahin pehente hain. Daayin kalai dene aur karm se judi maani jaati hai. Agar Ammit Ji aapke bracelet ke liye koi kalai batayein, to wahi maaniye; warna baayin kalai achha option hai."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Ise pehenna kab shuru karein?",
+        "a": "Aapka bracelet pehle se cleanse aur energise hokar aata hai, isliye aap use usi din pehen sakte hain jis din woh pahunche. Kai log subah nahaane ke baad, ek shaant pal mein apna sankalp mann mein rakh kar ise pehenna pasand karte hain. Agar aap apne purpose ke liye koi khaas din chahte hain, to WhatsApp par Ammit Ji se poochiye."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Kya ise sote, nahaate ya exercise karte waqt pehen sakte hain?",
+        "a": "Aap ise pehen kar so sakte hain. Nahaane, swimming ya heavy workout se pehle utaar dijiye: paani, sabun aur paseene se samay ke saath kuch crystals feeke pad sakte hain aur dhaaga kamzor ho sakta hai."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Kya ise ghadi, doosre bracelets ya rudraksha ke saath pehen sakte hain?",
+        "a": "Haan. Koshish kijiye ki yeh metal ki ghadi se na takraaye, isse beads chatak sakte hain. Agar aap pehle se doosre crystals pehente hain, to details bharte waqt note mein unka zikr kijiye, taaki Ammit Ji aise patthar chunein jo saath mein achhe se kaam karein."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Kya periods ke dauraan ise pehen sakte hain?",
+        "a": "Haan. Crystals ke saath periods ko lekar koi niyam nahi hai, yeh aapki apni pasand hai. Agar aapke parivaar mein un dinon spiritual cheezein utaar dene ki parampara hai, to woh bhi theek hai: dobara pehenne se pehle ise sendha namak ya agarbatti ke dhuein se cleanse kar lijiye."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Kya doosre log mera bracelet chhoo ya pehen sakte hain?",
+        "a": "Kisi ka ek pal ke liye chhoona theek hai. Doosron ko ise pehenne mat dijiye, kyunki yeh aapke numbers ke liye design kiya gaya hai. Agar bahut se logon ne ise chhua ho, to bas ise cleanse kar lijiye."
+      },
+      {
+        "group": "Bracelet pehenna",
+        "q": "Farak kitne samay mein mehsoos hoga?",
+        "a": "Iska koi tay samay nahi hai, aur hum results ka vaada nahi kar sakte: crystal aur numerology ka margdarshan paaramparik maanyata aur personal experience par aadhaarit hai. Ise roz pehniye, cleanse rakhiye aur kuch hafte dijiye. Yeh medical, legal ya financial advice ka vikalp nahi hai."
+      },
+      {
+        "group": "Care, safety aur returns",
+        "q": "Apne bracelet ko cleanse aur recharge kaise karein?",
+        "a": "Hafte mein ek baar ise sookhe sendha namak ki katori mein rakhiye, ya kuch minute agarbatti ya diye ke dhuein mein ghumaaiye. Mahine mein ek baar ise poornima ki raat chaandni mein rakhiye. Ise paani mein mat bhigoiye. [Care guide](/bracelet-care) mein aur jaankari hai."
+      },
+      {
+        "group": "Care, safety aur returns",
+        "q": "Kya yeh safe hai? Kya crystals ke koi side effects hote hain?",
+        "a": "Natural crystals bas patthar hain, inhe pehenne ka koi known side effect nahi hai. Agar kabhi dhaage ya kisi bead se skin mein jalan ho, to ise utaar dijiye aur humein message kijiye. Health se judi kisi bhi baat ke liye apne doctor ki salah maante rahiye."
+      },
+      {
+        "group": "Care, safety aur returns",
+        "q": "Kya main apna bracelet return ya exchange kar sakta/sakti hoon?",
+        "a": "Har bracelet ek vyakti ke numbers ke liye banta hai, isliye mann badalne par hum use wapas nahi le sakte. Agar woh toota hua ya galat pahunche, to hum use theek karenge ya badal denge, aur agar fit na ho, to size theek kar denge. Photo ke saath humein WhatsApp par message kijiye. Poori jaankari humari [returns policy](/returns) mein hai."
+      },
+      {
+        "group": "Care, safety aur returns",
+        "q": "Kya aap India ke bahar delivery karte hain?",
+        "a": "Hum poore India mein free delivery karte hain. India ke bahar ke address ke liye order se pehle humein WhatsApp par message kijiye, hum batayenge ki bhej sakte hain ya nahi aur kitna kharcha aayega."
+      }
+    ],
+    "ctaTitle": "Abhi bhi koi sawaal hai?",
+    "ctaText": "WhatsApp par Ammit Ji ko message kijiye, ya 60 second ki reading lekar apne liye sahi bracelet dhoondhiye.",
+    "seoTitle": "Crystal bracelet FAQs",
+    "seoDescription": "Bracelet By Ammit ke crystal bracelets ke baare mein jawaab: date of birth se kaise bante hain, kis kalai par pehnein, care, delivery aur returns."
   }
 };

@@ -141,6 +141,14 @@ export const PAGES: PageDef[] = [
       },
       { title: "Reviews", fields: [t("reviewsTitle", "Heading"), ta("reviewsLede", "Intro"), t("reviewsMore", "Instagram button")] },
       { title: "Care", fields: [t("careTitle", "Heading"), ta("careText", "Text"), t("careWatch", "Video button"), t("careGuide", "Guide button")] },
+      {
+        title: "Questions (homepage; also at the top of the FAQ page)",
+        fields: [
+          t("faqTitle", "Heading"),
+          ta("faqLede", "Intro"),
+          { key: "faqs", label: "Questions", type: "repeater", itemLabel: "Question", help: "Answers can link to pages like [Track my order](/track), and use {{price}}, {{price2}}, {{price3}}, {{minDays}} and {{maxDays}}.", fields: [{ key: "q", label: "Question", type: "text" }, { key: "a", label: "Answer", type: "textarea" }] },
+        ],
+      },
       seo(),
     ],
   },
@@ -226,6 +234,34 @@ export const PAGES: PageDef[] = [
     path: "/consultation",
     sections: [
       { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("button", "Button"), t("coversTitle", "\"What we cover\" heading"), list("covers", "What we cover"), t("stepsTitle", "\"How to book\" heading"), list("steps", "How to book"), ta("callout", "Note"), t("ctaTitle", "Bottom band heading"), ta("ctaText", "Bottom band text")] },
+      seo(),
+    ],
+  },
+  {
+    id: "faq",
+    title: "FAQ",
+    group: "Pages",
+    path: "/faq",
+    sections: [
+      { title: "Page", fields: [t("eyebrow", "Small heading"), t("title", "Heading"), ta("lede", "Intro"), t("topGroup", "Heading for the homepage questions shown first")] },
+      {
+        title: "Questions",
+        fields: [
+          {
+            key: "items",
+            label: "Questions",
+            type: "repeater",
+            itemLabel: "Question",
+            help: "Questions with the same group are shown together, in this order. Answers can link to pages like [Track my order](/track), and use {{price}}, {{price2}}, {{price3}}, {{minDays}} and {{maxDays}}.",
+            fields: [
+              { key: "group", label: "Group (e.g. Wearing your bracelet)", type: "text" },
+              { key: "q", label: "Question", type: "text" },
+              { key: "a", label: "Answer", type: "textarea" },
+            ],
+          },
+        ],
+      },
+      { title: "Bottom band", fields: [t("ctaTitle", "Heading"), ta("ctaText", "Text")] },
       seo(),
     ],
   },

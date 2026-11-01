@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/bracelet-care",
     "/reviews",
     "/track",
+    "/faq",
     "/articles",
     ...ARTICLES.map((a) => `/articles/${a.slug}`),
   ];

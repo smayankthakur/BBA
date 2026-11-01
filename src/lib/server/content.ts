@@ -111,6 +111,8 @@ const siteFor = cache(async (lang: Lang) => {
   const grievance = [`${s.grievanceName}, ${s.grievanceDesignation}`, s.email].filter(Boolean).join(", ");
   const vars: Record<string, string | number> = {
     price: formatINR(s.defaultPrice),
+    price2: formatINR(s.price2),
+    price3: formatINR(s.price3),
     phone: s.phone,
     address: s.address,
     email: s.email,

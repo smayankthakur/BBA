@@ -11,6 +11,7 @@ import MadeForYou from "@/components/MadeForYou";
 import NoteFromAmmit from "@/components/NoteFromAmmit";
 import Testimonials from "@/components/Testimonials";
 import CareSection from "@/components/CareSection";
+import HomeFaq from "@/components/HomeFaq";
 import SiteFooter from "@/components/SiteFooter";
 import QuickOrderMount from "@/components/order/QuickOrderMount";
 import StickyOrder from "@/components/order/StickyOrder";
@@ -59,6 +60,7 @@ export default async function HomePage({ params }: Params) {
         <NoteFromAmmit compact />
         <Testimonials />
         <CareSection />
+        <HomeFaq />
       </main>
       <SiteFooter />
       <StickyOrder label={tf(getUI().quick.sticky, { amount: formatINR(await lowestPrice()) })} href="/find-your-bracelet" />

@@ -98,6 +98,7 @@ export default async function SiteFooter() {
     { label: f.links.reviews, href: "/reviews" },
     { label: f.links.care, href: "/bracelet-care" },
     { label: f.links.size, href: "/size-guide" },
+    { label: f.links.faq, href: "/faq" },
     { label: ui.articles.link, href: "/articles" },
     { label: ui.track.link, href: "/track" },
   ];

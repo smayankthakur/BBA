@@ -47,6 +47,7 @@ export const UI_HI_EXTRA = {
     cols: { purposes: "उद्देश्य के अनुसार ब्रेसलेट", help: "मदद", contact: "हमसे बात करें" },
     trust: { made: "शुद्ध, ऊर्जित और आपकी जन्म कुंडली के अनुसार बना" },
     whatsappCta: "WhatsApp पर बात करें",
+    links: { faq: "अक्सर पूछे सवाल" },
   },
   server: { detailsFailed: "हम यह जानकारी सेव नहीं कर पाए। कृपया इसे हमें WhatsApp पर भेज दें।" },
   quick: {
@@ -122,7 +123,7 @@ export const UI_HI_EXTRA = {
     done: "हो गया",
     sticky: "ऑर्डर करें · {amount}",
   },
-  common: { gallery: { prev: "पिछली फ़ोटो", next: "अगली फ़ोटो", open: "फ़ोटो {n} / {total} बड़ी करके देखें", photo: "फ़ोटो {n} / {total}", close: "बंद करें", zoomIn: "ज़ूम करें", zoomOut: "ज़ूम कम करें", show: "फ़ोटो {n} दिखाएं" }, breadcrumb: "पेज का रास्ता", langNote: "आप पेज के ऊपर से कभी भी भाषा बदल सकते हैं।" },
+  common: { gallery: { prev: "पिछली फ़ोटो", next: "अगली फ़ोटो", open: "फ़ोटो {n} / {total} बड़ी करके देखें", photo: "फ़ोटो {n} / {total}", close: "बंद करें", zoomIn: "ज़ूम करें", zoomOut: "ज़ूम कम करें", show: "फ़ोटो {n} दिखाएं" }, breadcrumb: "पेज का रास्ता", allQuestions: "सभी सवाल देखें", langNote: "आप पेज के ऊपर से कभी भी भाषा बदल सकते हैं।" },
   mulankPage: {
     listAria: "मूलांक 1 से 9",
     daysAria: "किन तारीख़ों पर मूलांक {n} बनता है",
@@ -176,6 +177,7 @@ export const UI_HN_EXTRA = {
     cols: { purposes: "Purpose ke hisaab se bracelets", help: "Help", contact: "Humse baat karein" },
     trust: { made: "Cleansed, energised aur aapke birth chart ke hisaab se bana" },
     whatsappCta: "WhatsApp par baat karein",
+    links: { faq: "Aksar pooche sawaal" },
   },
   server: { detailsFailed: "Hum yeh details save nahi kar paaye. Please humein WhatsApp par bhej dijiye." },
   quick: {
@@ -251,7 +253,7 @@ export const UI_HN_EXTRA = {
     done: "Ho gaya",
     sticky: "Order karein · {amount}",
   },
-  common: { gallery: { prev: "Pichhli photo", next: "Agli photo", open: "Photo {n} / {total} badi karke dekhein", photo: "Photo {n} / {total}", close: "Band karein", zoomIn: "Zoom karein", zoomOut: "Zoom kam karein", show: "Photo {n} dikhayein" }, breadcrumb: "Breadcrumb", langNote: "Aap page ke upar se kabhi bhi language badal sakte hain." },
+  common: { gallery: { prev: "Pichhli photo", next: "Agli photo", open: "Photo {n} / {total} badi karke dekhein", photo: "Photo {n} / {total}", close: "Band karein", zoomIn: "Zoom karein", zoomOut: "Zoom kam karein", show: "Photo {n} dikhayein" }, breadcrumb: "Breadcrumb", allQuestions: "Saare sawaal dekhein", langNote: "Aap page ke upar se kabhi bhi language badal sakte hain." },
   mulankPage: {
     listAria: "Mulank 1 se 9",
     daysAria: "Kin tareekhon par mulank {n} banta hai",
