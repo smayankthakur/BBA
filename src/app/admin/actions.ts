@@ -611,7 +611,7 @@ export async function saveCouponAction(fd: FormData) {
   if (await codeTaken(code, id ?? undefined)) back("codeTaken");
   const kind = str(fd, "kind", 10) === "flat" ? "flat" : "percent";
   const value = Math.round(Number(str(fd, "value", 10)));
-  if (!Number.isFinite(value) || value < 1 || (kind === "percent" ? value > 90 : value > 1_000_000)) back("value");
+  if (!Number.isFinite(value) || value < 1 || (kind === "percent" ? value > 100 : value > 1_000_000)) back("value");
   const maxDiscount = optInt(fd, "maxDiscountInr");
   const usageLimit = optInt(fd, "usageLimit");
   const perCustomer = optInt(fd, "perCustomerLimit");

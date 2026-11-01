@@ -46,7 +46,7 @@ export default function CouponForm({ coupon, bracelets }: { coupon: Coupon | nul
               <label className="ad-field">
                 <span>Discount</span>
                 <input name="value" type="number" min={1} max={1000000} required defaultValue={c?.value ?? 10} />
-                <small>A number: 10 means 10% or ₹10. Percentages go up to 90.</small>
+                <small>A number: 10 means 10% or ₹10. Up to 100%. The customer always pays at least ₹1 (the lowest amount Razorpay accepts), so 100% means a ₹1 order, handy for test orders.</small>
               </label>
             </div>
             <div className="ad-grid-2">

@@ -42,7 +42,7 @@ const ERR: Record<string, string> = {
   status: "Choose a valid status.",
   code: "Coupon codes are 3–24 letters or numbers (dashes and underscores allowed), no spaces.",
   codeTaken: "Another coupon already uses that code.",
-  value: "Enter a discount: 1–90% or ₹1 and up.",
+  value: "Enter a discount: 1–100% or ₹1 and up.",
   dates: "The end date must be on or after the start date.",
   limits: "Limits must be whole numbers of 1 or more (or leave them empty).",
   name: "Please enter a name.",
