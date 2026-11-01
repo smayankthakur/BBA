@@ -104,16 +104,21 @@ export default async function SiteFooter() {
     { label: ui.track.link, href: "/track" },
   ];
 
+  const biz = [
+    { k: f.dt.business, v: site.legalName || site.brand },
+    { k: f.dt.founder, v: site.founder },
+    { k: f.dt.grievance, v: [site.grievanceName, site.grievanceDesignation].filter(Boolean).join(", ") },
+    ...(site.gstin ? [{ k: f.dt.gstin, v: site.gstin }] : []),
+  ].filter((x) => x.v);
+
   return (
     <footer className="foot">
-      {/* Call to action */}
+      {/* Invitation + promises */}
       <section className="foot-cta" aria-labelledby="foot-cta-title">
-        <div className="foot-wrap foot-cta-in">
-          <div className="foot-cta-copy">
-            <p className="foot-kicker">{c.footerKicker}</p>
-            <h2 id="foot-cta-title">{c.footerTitle}</h2>
-            <p>{c.footerText}</p>
-          </div>
+        <div className="foot-wrap">
+          <p className="foot-kicker">{c.footerKicker}</p>
+          <h2 id="foot-cta-title">{c.footerTitle}</h2>
+          <p className="foot-lede">{c.footerText}</p>
           <div className="foot-cta-actions">
             <OrderLink className="btn btn-gold-dark" href="/find-your-bracelet" aria-haspopup="dialog">
               {c.footerOrder}
@@ -122,23 +127,27 @@ export default async function SiteFooter() {
               <Icon kind="wa" /> {c.footerWhatsapp}
             </a>
           </div>
+          <ul className="foot-trust" aria-label={ui.trust.aria}>
+            <li>
+              <Icon kind="truck" /> {c.trustShipping}
+            </li>
+            <li>
+              <Icon kind="lock" /> {c.trustPayment}
+            </li>
+            <li>
+              <Icon kind="spark" /> {f.trust.made}
+            </li>
+          </ul>
         </div>
       </section>
 
-      <div className="foot-wrap">
-        {/* Promises */}
-        <ul className="foot-trust" aria-label={ui.trust.aria}>
-          <li>
-            <Icon kind="truck" /> {c.trustShipping}
-          </li>
-          <li>
-            <Icon kind="lock" /> {c.trustPayment}
-          </li>
-          <li>
-            <Icon kind="spark" /> {f.trust.made}
-          </li>
-        </ul>
+      <div className="foot-orn" aria-hidden="true">
+        <span />
+        <i>◆</i>
+        <span />
+      </div>
 
+      <div className="foot-wrap">
         <div className="foot-main">
           <div className="foot-brand">
             <Image src="/brand/wordmark.png" alt="Bracelet By Ammit" width={128} height={59} />
@@ -166,7 +175,7 @@ export default async function SiteFooter() {
             </ul>
           </nav>
 
-          <nav className="foot-col" aria-label={tf(f.footerNav, { title: f.cols.help })}>
+          <nav className="foot-col foot-help" aria-label={tf(f.footerNav, { title: f.cols.help })}>
             <h3>{f.cols.help}</h3>
             <ul>
               {HELP.map((l) => (
@@ -205,33 +214,17 @@ export default async function SiteFooter() {
         {/* Business details (Consumer Protection (E-Commerce) Rules) and disclaimer */}
         <div className="foot-legal">
           <dl className="foot-biz" aria-label={f.business}>
-            <div>
-              <dt>{f.dt.business}</dt>
-              <dd>{site.legalName || site.brand}</dd>
-            </div>
-            <div>
-              <dt>{f.dt.founder}</dt>
-              <dd>{site.founder}</dd>
-            </div>
-            <div>
-              <dt>{f.dt.grievance}</dt>
-              <dd>
-                {site.grievanceName}, {site.grievanceDesignation}
-              </dd>
-            </div>
-            {site.gstin && (
-              <div>
-                <dt>{f.dt.gstin}</dt>
-                <dd>{site.gstin}</dd>
+            {biz.map((x) => (
+              <div key={x.k}>
+                <dt>{x.k}</dt>
+                <dd>{x.v}</dd>
               </div>
-            )}
+            ))}
           </dl>
           <p className="foot-disclaimer">{site.disclaimer}</p>
         </div>
-      </div>
 
-      <div className="foot-bar">
-        <div className="foot-wrap foot-bar-in">
+        <div className="foot-bar">
           <p>{tf(f.rights, { year, brand: site.brand })}</p>
           <nav className="foot-policies" aria-label={f.policies}>
             <Link href="/privacy">{f.policy.privacy}</Link>
