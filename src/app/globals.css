@@ -1790,10 +1790,17 @@ a:hover {
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 56px;
+  align-items: flex-start;
+  gap: 56px 72px;
+}
+.care-left {
+  flex: 1 1 440px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
 }
 .care-copy {
-  flex: 1 1 380px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1806,7 +1813,6 @@ a:hover {
   max-width: 42ch;
 }
 .care-list {
-  flex: 1 1 440px;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -1820,8 +1826,40 @@ a:hover {
 }
 .care-item dt {
   font-family: var(--serif);
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 600;
+}
+/* Questions beside the care basics */
+.care-faq {
+  flex: 1 1 460px;
+  min-width: 0;
+  padding: 36px 32px 32px;
+  border-radius: 20px;
+  background-color: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--lilac-line);
+}
+.care-faq-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 1.1;
+  color: var(--lapis);
+}
+.care-faq .faq-lede {
+  margin: 4px 0 10px;
+  font-size: 16px;
+}
+.care-faq summary {
+  font-size: 19px;
+  padding: 16px 48px 16px 20px;
+}
+.care-faq summary::after {
+  right: 18px;
+}
+.care-faq details p {
+  padding: 0 20px 18px;
+  font-size: 15px;
 }
 .care-item dd {
   margin: 8px 0 0;
@@ -3412,10 +3450,6 @@ a:hover {
   margin: 12px 0 0;
   text-align: center;
 }
-.home-faq {
-  padding-top: 72px;
-  padding-bottom: 80px;
-}
 /* FAQ page: group shortcuts, then one block per group */
 .faq-toc {
   padding-top: 8px;
@@ -4688,6 +4722,26 @@ a:hover {
   .care-list {
     flex: none;
     grid-auto-columns: min(74vw, 290px);
+  }
+  .care-left {
+    flex: none;
+    gap: 20px;
+  }
+  .care-faq {
+    flex: none;
+    margin-top: 16px;
+    padding: 24px 16px 20px;
+    border-radius: 16px;
+  }
+  .care-faq summary {
+    font-size: 18px;
+    padding: 14px 44px 14px 16px;
+  }
+  .care-faq summary::after {
+    right: 14px;
+  }
+  .care-faq details p {
+    padding: 0 16px 16px;
   }
   .care-item,
   .care-item:last-child {
