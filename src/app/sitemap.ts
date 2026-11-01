@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { getBracelets } from "@/lib/server/catalog";
+import { listArticles } from "@/lib/server/articles";
 import { HREFLANG, LANGS, lp } from "@/lib/i18n/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const BRACELETS = await getBracelets();
+  const [BRACELETS, ARTICLES] = await Promise.all([getBracelets(), listArticles()]);
   const paths = [
     "/",
     "/find-your-bracelet",
@@ -18,6 +19,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/consultation",
     "/bracelet-care",
     "/reviews",
+    "/track",
+    "/articles",
+    ...ARTICLES.map((a) => `/articles/${a.slug}`),
   ];
   // Every page in all three languages, each listing the others as alternates.
   const abs = (path: string) => `${SITE_URL}${path === "/" ? "/" : path}`;

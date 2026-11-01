@@ -16,7 +16,7 @@ export function ensureSchema(): Promise<void> {
 }
 
 /** Bump when the statements below change, so existing databases upgrade once. */
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 async function migrate() {
   // Fast path: an up-to-date database needs one query, not dozens.
@@ -257,5 +257,63 @@ async function createAll() {
     data jsonb not null,
     updated_at timestamptz not null default now(),
     updated_by uuid references admin_users(id) on delete set null
+  )`;
+
+  // v8 (31 Oct 2026): reading queue, shipping, tracking timeline, WhatsApp, articles, 2-step login, previews
+  await sql`alter table orders add column if not exists crystals_chosen text`;
+  await sql`alter table orders add column if not exists reading_notes text`;
+  await sql`alter table orders add column if not exists reading_done_at timestamptz`;
+  await sql`alter table orders add column if not exists making_at timestamptz`;
+  await sql`alter table orders add column if not exists shipped_at timestamptz`;
+  await sql`alter table orders add column if not exists delivered_at timestamptz`;
+  await sql`alter table orders add column if not exists ship_provider text`;
+  await sql`alter table orders add column if not exists shipment_id text`;
+  await sql`alter table orders add column if not exists ship_order_id text`;
+  await sql`alter table orders add column if not exists label_url text`;
+  await sql`alter table orders add column if not exists tracking_url text`;
+  await sql`alter table orders add column if not exists lang text`;
+  await sql`create index if not exists orders_mobile_idx on orders (mobile)`;
+  await sql`create table if not exists whatsapp_messages (
+    id bigserial primary key,
+    order_id uuid references orders(id) on delete cascade,
+    kind text not null,
+    to_mobile text not null,
+    provider text not null,
+    status text not null,
+    detail text,
+    at timestamptz not null default now()
+  )`;
+  await sql`create index if not exists whatsapp_order_idx on whatsapp_messages (order_id, kind)`;
+  await sql`create table if not exists articles (
+    id uuid primary key default gen_random_uuid(),
+    slug text not null unique,
+    title text not null,
+    excerpt text not null default '',
+    body text not null default '',
+    cover text,
+    purpose text,
+    status text not null default 'draft' check (status in ('draft', 'published')),
+    seo_title text,
+    seo_description text,
+    i18n jsonb not null default '{}'::jsonb,
+    published_at timestamptz,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  )`;
+  await sql`alter table admin_users add column if not exists totp_secret text`;
+  await sql`alter table admin_users add column if not exists totp_enabled_at timestamptz`;
+  await sql`alter table admin_users add column if not exists recovery_codes text[] not null default '{}'`;
+  await sql`alter table admin_users add column if not exists totp_last_step bigint`;
+  await sql`create table if not exists admin_2fa_pending (
+    id text primary key,
+    user_id uuid not null references admin_users(id) on delete cascade,
+    expires_at timestamptz not null
+  )`;
+  await sql`create table if not exists content_drafts (
+    id text primary key,
+    user_id uuid references admin_users(id) on delete cascade,
+    page text not null,
+    data jsonb not null,
+    created_at timestamptz not null default now()
   )`;
 }

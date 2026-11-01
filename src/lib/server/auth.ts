@@ -164,3 +164,51 @@ export async function logAction(userId: string | null, action: string, target?: 
 
 export const normEmail = (e: string) => e.trim().toLowerCase();
 export const validEmail = (e: string) => /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e);
+
+/* ------------------------------------------------------------------ */
+/* Two-step login (authenticator app codes)                             */
+/* ------------------------------------------------------------------ */
+
+const PENDING_COOKIE = "bba_2fa";
+const PENDING_MIN = 5;
+
+export type TwoStep = { enabled: boolean; secret: string | null; recoveryLeft: number };
+export async function twoStepFor(userId: string): Promise<TwoStep> {
+  await ensureSchema();
+  const r = await sql<{ totp_secret: string | null; totp_enabled_at: Date | null; recovery_codes: string[] }>`
+    select totp_secret, totp_enabled_at, recovery_codes from admin_users where id = ${userId}`;
+  const u = r[0];
+  return { enabled: !!u?.totp_enabled_at, secret: u?.totp_secret ?? null, recoveryLeft: u?.recovery_codes?.length ?? 0 };
+}
+
+/** After a correct password for an account with two-step on: remember who's half signed in (5 minutes). */
+export async function startTwoStep(userId: string) {
+  const token = crypto.randomBytes(32).toString("base64url");
+  await sql`delete from admin_2fa_pending where expires_at < now() or user_id = ${userId}`;
+  await sql`insert into admin_2fa_pending (id, user_id, expires_at) values (${sha256(token)}, ${userId}, ${new Date(Date.now() + PENDING_MIN * 60_000).toISOString()})`;
+  (await cookies()).set(PENDING_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/admin",
+    maxAge: PENDING_MIN * 60,
+  });
+}
+
+/** The half-signed-in user (password done, code not yet), or null. */
+export async function pendingTwoStepUser(): Promise<{ id: string; email: string } | null> {
+  if (!dbConfigured()) return null;
+  const token = (await cookies()).get(PENDING_COOKIE)?.value;
+  if (!token || token.length > 100) return null;
+  await ensureSchema();
+  const r = await sql<{ id: string; email: string }>`select u.id, u.email from admin_2fa_pending p join admin_users u on u.id = p.user_id
+    where p.id = ${sha256(token)} and p.expires_at > now() and not u.disabled`;
+  return r[0] ?? null;
+}
+
+export async function endTwoStep() {
+  const jar = await cookies();
+  const token = jar.get(PENDING_COOKIE)?.value;
+  if (token) await sql`delete from admin_2fa_pending where id = ${sha256(token)}`.catch(() => {});
+  jar.delete({ name: PENDING_COOKIE, path: "/admin" });
+}

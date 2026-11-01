@@ -9,6 +9,10 @@ import StickyOrder from "@/components/order/StickyOrder";
 import PageShell from "@/components/PageShell";
 import PageHero from "@/components/PageHero";
 import ProductVisual from "@/components/ProductVisual";
+import ProductGallery from "@/components/ProductGallery";
+import PurposeReviews from "@/components/PurposeReviews";
+import { articlesForPurpose } from "@/lib/server/articles";
+import { ViewEvent } from "@/components/AnalyticsEvents";
 import BraceletCard from "@/components/BraceletCard";
 import HowItWorks from "@/components/HowItWorks";
 import OrderCta from "@/components/OrderCta";
@@ -50,6 +54,7 @@ export default async function BraceletPage({ params }: Params) {
   const others = all.filter((o) => o.slug !== b.slug);
   const faqs = c.faqs.filter((f) => f.q.trim()).map((f) => ({ q: fill(f.q, { title: b.title }), a: fill(f.a, { title: b.title }) }));
   const photos = b.photos;
+  const reads = (await articlesForPurpose(b.slug)).slice(0, 2);
   const abs = (p: string) => (p.startsWith("http") ? p : `${SITE_URL}${p}`);
   const ui = getUI();
   const pageUrl = `${SITE_URL}${lp(getLang(), `/bracelets/${b.slug}`)}`;
@@ -90,7 +95,11 @@ export default async function BraceletPage({ params }: Params) {
       />
       <div className="product">
         <div className="product-visual">
-          <ProductVisual cards={b.visual.cards} rings={b.visual.rings} label={tf(ui.common.illustrationOf, { title: b.title })} photosLabel={tf(ui.common.photosOf, { title: b.title })} photos={photos} refNote={s.refNote} />
+          {photos.length ? (
+            <ProductGallery photos={photos} title={tf(ui.common.photosOf, { title: b.title })} refNote={s.refNote} />
+          ) : (
+            <ProductVisual label={tf(ui.common.illustrationOf, { title: b.title })} photos={photos} refNote={s.refNote} />
+          )}
         </div>
         <div className="product-info">
           <PageHero
@@ -103,6 +112,8 @@ export default async function BraceletPage({ params }: Params) {
             {formatINR(b.priceInr)} <span>{c.priceNote}</span>
           </p>
           <SiteTrustBar />
+          <PurposeReviews slug={b.slug} />
+          <ViewEvent name="view_item" params={{ item_id: b.slug, item_name: b.title, value: b.priceInr, currency: "INR" }} meta="ViewContent" />
           <div className="btn-row">
             <OrderLink className="btn btn-lapis" slug={b.slug} href={`/bracelets/${b.slug}?order=${b.slug}`} aria-haspopup="dialog">
               {c.orderButton}
@@ -111,6 +122,17 @@ export default async function BraceletPage({ params }: Params) {
               {c.askButton}
             </Link>
           </div>
+          {reads.length > 0 && (
+            <p className="prod-reads">
+              {ui.articles.onProduct}:{" "}
+              {reads.map((r, i) => (
+                <span key={r.slug}>
+                  {i > 0 && " · "}
+                  <Link href={`/articles/${r.slug}`}>{r.title}</Link>
+                </span>
+              ))}
+            </p>
+          )}
           <p className="product-hint">
             {c.hint} <Link href="/size-guide">{ui.common.sizeGuide}</Link>
           </p>

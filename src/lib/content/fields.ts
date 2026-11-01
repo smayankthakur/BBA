@@ -1,7 +1,8 @@
 import type { PageId } from "./defaults";
 
 /** How each editable value is shown in the admin panel. */
-export type FieldType = "text" | "textarea" | "markdown" | "list" | "number" | "toggle" | "url" | "image" | "color" | "repeater";
+/** "purpose": choose one of the bracelets (stored as its web address) */
+export type FieldType = "text" | "textarea" | "markdown" | "list" | "number" | "toggle" | "url" | "image" | "color" | "purpose" | "repeater";
 
 export type SubField = { key: string; label: string; type: Exclude<FieldType, "repeater" | "markdown">; shared?: boolean };
 
@@ -264,6 +265,7 @@ export const PAGES: PageDef[] = [
             itemLabel: "Screenshot",
             fields: [
               { key: "image", label: "Screenshot", type: "image" },
+              { key: "purpose", label: "Bracelet it's about (shown on that bracelet's page)", type: "purpose" },
               { key: "name", label: "Customer name or handle (optional)", type: "text" },
               { key: "text", label: "What the review says", type: "textarea" },
               { key: "link", label: "Link to the post or highlight (optional)", type: "url" },
@@ -389,7 +391,7 @@ export const pageDef = (id: string) => PAGES.find((p) => p.id === id);
 /* Languages: which values are translated and which are shared          */
 /* ------------------------------------------------------------------ */
 
-const SHARED_TYPES = new Set<FieldType>(["number", "url", "image", "color", "toggle"]);
+const SHARED_TYPES = new Set<FieldType>(["number", "url", "image", "color", "toggle", "purpose"]);
 const SHARED_KEYS = new Set(["videoId", "href", "link", "slug", "intention", "sourceUrl", "number", "staffEmails"]);
 /** Site settings that are the same in every language. */
 const SHARED_SETTINGS = new Set(["brand", "legalName", "address", "phone", "email", "gstin", "grievanceName", "ammitName", "staffEmails"]);

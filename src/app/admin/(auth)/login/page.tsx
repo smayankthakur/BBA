@@ -9,6 +9,7 @@ const ERR: Record<string, string> = {
   missing: "Enter your email and password.",
   bad: "That email and password don't match an account.",
   locked: "Too many attempts. Please wait 15 minutes and try again.",
+  expired: "That took too long. Please sign in again.",
 };
 
 export default async function LoginPage({

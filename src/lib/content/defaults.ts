@@ -281,7 +281,7 @@ export const DEFAULTS = {
     title: "What customers say",
     lede: "Screenshots of messages customers have sent Ammit about their bracelets, straight from our Instagram.",
     shotsTitle: "Straight from our Instagram",
-    shots: [] as { image: string; text: string; name: string; link: string }[],
+    shots: [] as { image: string; text: string; name: string; link: string; purpose?: string }[],
     items: [
       { quote: "I wore the bracelet in August 2025 and now I have finally received a job offer in a prestigious position in Germany. After wearing it I felt very positive and confident, and my job interviews were successful. I want to thank you from my heart.", name: "Sagnik", intention: "career-and-finance", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
       { quote: "I am wearing the spiritual bracelet you made for me as per the mentioned day and time, and I truly feel thankful for your work. I received great news today and I'm feeling very grateful. Your dedication and positive energy really reflect in your work.", name: "Vishakha", intention: "", sourceLabel: "Shared on Instagram", sourceUrl: "https://www.instagram.com/stories/highlights/18046452023799577/" },
@@ -362,7 +362,7 @@ export const DEFAULTS = {
   privacy: {
     title: "Privacy policy",
     lede: "We only ask for what we need to read your numbers, make your bracelet and deliver it. This page explains what that is and what we do with it.",
-    updated: "22 October 2026",
+    updated: "1 November 2026",
     body: `## Who we are
 
 This website is run by {{legalName}} ("we", "us"), founded by {{founder}}. For anything about your data, message us on WhatsApp (link in the footer).
@@ -371,7 +371,7 @@ This website is run by {{legalName}} ("we", "us"), founded by {{founder}}. For a
 
 ### When you browse this website
 
-The website itself does not ask you to log in and does not set advertising cookies. Our hosting provider (Vercel) keeps standard server logs, such as IP address, browser type and the pages requested, to keep the site secure and working. If we turn on analytics, it only runs after you click "Accept" on the cookie notice, and you can change your mind at any time from the footer.
+The website itself does not ask you to log in and does not set advertising cookies. Our hosting provider (Vercel) keeps standard server logs, such as IP address, browser type and the pages requested, to keep the site secure and working. When analytics is switched on, we use Google Analytics and the Meta Pixel to count visits and see which pages help people order (for example, how many people who open a bracelet page go on to pay). They only run after you click "Accept" on the cookie notice, and you can change your mind at any time from the footer.
 
 If you arrive through a link shared by one of our partners (an address with /p/ or ?ref= in it), we store a small cookie for 30 days that says which partner sent you, and a random visitor number so a visit is counted only once a day. If you order in that time, the partner's code is saved with your order so we can pay them their commission. Partners don't see your name, contact details or birth details.
 
@@ -391,6 +391,8 @@ Orders are placed through our website checkout. We collect:
 - delivery address;
 - how you heard about us, and anything you tell us in messages.
 
+You can check your order's progress on our [Track my order](/track) page with your order number and WhatsApp number; it shows the order's steps and courier, never your address or birth details.
+
 ## Why we use it
 
 - to read the wearer's numbers and choose the crystals;
@@ -406,7 +408,9 @@ We do not sell your data. We only send you offers if you've agreed to receive th
 - our order database provider, which stores order details securely for us;
 - our email provider, which sends order details to our own team (never to anyone else);
 - Meta (WhatsApp), if you message us or we message you about your order;
-- courier partners, who need your name, phone number and address to deliver;
+- our shipping platform (Shiprocket) and its courier partners, who need your name, phone number and address to deliver and to send you tracking updates;
+- our WhatsApp messaging service (such as Interakt or AiSensy), which sends your order updates (payment received, a reminder to add the wearer's details, and your tracking link) to your WhatsApp number;
+- Google and Meta, only if you accept analytics cookies (see above);
 - Vercel, which hosts this website;
 - authorities, only where the law requires it.
 

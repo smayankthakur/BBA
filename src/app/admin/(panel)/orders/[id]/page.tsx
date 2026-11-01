@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Notice from "@/components/admin/Notice";
 import { FULFILMENT, getOrder, upgradesFor } from "@/lib/server/orders";
-import { updateOrderAction } from "@/app/admin/actions";
+import { bookShipmentAction, labelAction, sendWhatsAppAction, updateOrderAction } from "@/app/admin/actions";
+import { activeProvider, providerById, shipBlockers } from "@/lib/server/shipping";
+import { TEMPLATES, whatsappLog, whatsappProvider } from "@/lib/server/whatsapp";
 import { formatINR } from "@/lib/format";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
 import { PROGRESS } from "@/lib/orderProgress";
@@ -78,6 +80,11 @@ export default async function OrderPage({
     `Hi ${name}, this is Bracelet By Ammit. You started an order for the ${o.bracelet_title} bracelet but the payment didn't go through. Can we help you finish it? Reply here if you have any questions.`,
   );
   const paidTotal = o.amount_paise + (o.upgrade_paise ?? 0);
+  const ship = activeProvider();
+  const shippedWith = providerById(o.ship_provider);
+  const blockers = shipBlockers(o);
+  const waOn = whatsappProvider();
+  const waLog = await whatsappLog(o.id);
 
   return (
     <>
@@ -86,6 +93,9 @@ export default async function OrderPage({
         <a className="ad-btn" href={`/api/admin/orders/${o.id}/pdf`}>
           Download staff PDF
         </a>
+        <Link className="ad-btn" href={`/admin/orders/${o.id}/card`}>
+          Reading card
+        </Link>
       </div>
       <p className="ad-sub">
         Placed {fmt(o.created_at)} ·{" "}
@@ -120,6 +130,86 @@ export default async function OrderPage({
             "The customer didn't agree to WhatsApp messages, so don't follow up."
           )}
         </p>
+      )}
+
+      {/* Shipping and WhatsApp */}
+      {o.status === "paid" && (
+        <div className="ad-order-tools">
+          <section className="ad-box">
+            <h2>Shipping</h2>
+            <div className="ad-box-body">
+              {o.tracking_number ? (
+                <>
+                  <p>
+                    <b>{o.courier || "Courier"}</b> · AWB <span className="ad-copy">{o.tracking_number}</span>
+                  </p>
+                  <div className="ad-actions">
+                    {(o.tracking_url || shippedWith) && (
+                      <a className="ad-btn" href={o.tracking_url ?? shippedWith!.trackingUrl(o.tracking_number)} target="_blank" rel="noopener noreferrer">
+                        Track parcel ↗
+                      </a>
+                    )}
+                    {o.shipment_id && !o.shipment_id.startsWith("booking:") && (
+                      <form action={labelAction}>
+                        <input type="hidden" name="id" value={o.id} />
+                        <button className="ad-btn" type="submit">
+                          Print label ↗
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </>
+              ) : ship ? (
+                <>
+                  <p className="ad-help">Books the parcel with {ship.name}: courier, pickup and label in one go. The tracking number is saved here and shown to the customer.</p>
+                  {blockers.length > 0 && <p className="ad-help ad-callout">Before booking, fill in: {blockers.join(", ")}.</p>}
+                  <form action={bookShipmentAction}>
+                    <input type="hidden" name="id" value={o.id} />
+                    <button className="ad-btn is-primary" type="submit" disabled={blockers.length > 0}>
+                      Book shipment with {ship.name}
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <p className="ad-help">
+                  Type the courier and tracking number in the form below, or <Link href="/admin/connections">connect Shiprocket</Link> to book shipments here in one click.
+                </p>
+              )}
+            </div>
+          </section>
+          <section className="ad-box">
+            <h2>WhatsApp updates</h2>
+            <div className="ad-box-body">
+              {waOn ? (
+                <div className="ad-actions">
+                  {(Object.keys(TEMPLATES) as (keyof typeof TEMPLATES)[]).map((k) => (
+                    <form action={sendWhatsAppAction} key={k}>
+                      <input type="hidden" name="id" value={o.id} />
+                      <input type="hidden" name="kind" value={k} />
+                      <button className="ad-btn is-small" type="submit" disabled={k === "shipped" && !o.tracking_number}>
+                        Send: {TEMPLATES[k].label}
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              ) : (
+                <p className="ad-help">
+                  Automatic messages are off. <Link href="/admin/connections">Connect a WhatsApp service</Link> to send &ldquo;payment received&rdquo;, &ldquo;add your details&rdquo; and &ldquo;shipped&rdquo; automatically.
+                </p>
+              )}
+              {waLog.length > 0 && (
+                <ul className="ad-walog">
+                  {waLog.map((m) => (
+                    <li key={m.id}>
+                      <span className={`ad-pill ${m.status === "sent" ? "ok" : "err"}`}>{m.status}</span> {TEMPLATES[m.kind as keyof typeof TEMPLATES]?.label ?? m.kind} · {fmt(m.at)}
+                      {m.status !== "sent" && m.detail && <small> · {m.detail.slice(0, 120)}</small>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
       )}
 
       {/* Every detail of the order in one form */}
@@ -176,6 +266,8 @@ export default async function OrderPage({
               <span>Note from the customer</span>
               <textarea name="wearer_note" rows={2} maxLength={500} defaultValue={o.wearer_note ?? ""} />
             </label>
+            <Text label="Crystals chosen (Ammit Ji)" name="crystals_chosen" value={o.crystals_chosen} max={400} wide help="Printed on the reading card." />
+            <Text label="Note on the reading card" name="reading_notes" value={o.reading_notes} max={400} />
             <label className="ad-check">
               <input type="checkbox" name="is_gift" defaultChecked={o.is_gift} />
               <span>It&apos;s a gift</span>

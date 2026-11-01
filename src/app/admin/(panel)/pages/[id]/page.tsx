@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Notice from "@/components/admin/Notice";
 import ContentForm from "@/components/admin/ContentForm";
+import { getBracelets } from "@/lib/server/catalog";
 import { pageDef } from "@/lib/content/fields";
 import { contentKey, contentUpdatedAt, getContent } from "@/lib/server/content";
 import { requireAdmin, roleAtLeast } from "@/lib/server/auth";
@@ -22,6 +23,7 @@ export default async function EditPage({ params, searchParams }: { params: Promi
   const lang: Lang = sp.lang === "hi" || sp.lang === "hn" ? sp.lang : "en";
   const [data, english, updated] = await Promise.all([getContent(def.id, lang), getContent(def.id, "en"), contentUpdatedAt()]);
   const isAdmin = roleAtLeast(user.role, "admin");
+  const purposes = def.id === "reviews" ? (await getBracelets()).filter((b) => b.inList).map((b) => ({ slug: b.slug, title: b.title })) : [];
   const key = contentKey(def.id, lang);
 
   return (
@@ -54,6 +56,7 @@ export default async function EditPage({ params, searchParams }: { params: Promi
         initial={data as Record<string, unknown>}
         english={lang === "en" ? undefined : (english as Record<string, unknown>)}
         viewHref={def.path ? lp(lang, def.path) : undefined}
+        purposes={purposes}
       />
       {isAdmin && updated[key] && (
         <details className="ad-box" style={{ maxWidth: 640 }}>

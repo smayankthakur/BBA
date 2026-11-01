@@ -1,5 +1,11 @@
 const OK: Record<string, string> = {
   saved: "Saved. The website updates on its next visit.",
+  shipped: "Shipment booked. The tracking number is saved and the customer can follow it on the Track my order page.",
+  waSent: "WhatsApp message sent.",
+  moved: "Orders moved.",
+  twoStepOn: "Two-step login is on. You'll be asked for a code from your authenticator app each time you sign in.",
+  twoStepOff: "Two-step login is off.",
+  readingDone: "Reading done. The order moved to \"Reading done\" and the crystals are on its reading card.",
   created: "Created. The website updates on its next visit.",
   trash: "Moved to the trash.",
   published: "Restored and published.",
@@ -45,6 +51,15 @@ const ERR: Record<string, string> = {
   rate: "Commission must be 0–90% or a rupee amount.",
   amount: "Enter the amount paid (at least ₹1).",
   paidOn: "Choose the date it was paid.",
+  crystals: "Add the crystals chosen before marking the reading done.",
+  ship: "The shipment couldn't be booked.",
+  shipOff: "No shipping service is connected yet. See Connections.",
+  shipNeeds: "Fill in the order's delivery details first.",
+  wa: "The WhatsApp message couldn't be sent.",
+  waOff: "Automatic WhatsApp isn't connected yet. See Connections.",
+  pick: "Tick at least one order.",
+  totp: "That code isn't right. Check the time on your phone and try again.",
+  twoStep: "Two-step login couldn't be changed.",
   dob: "Check the date of birth (it can't be in the future).",
   mobile: "Enter a 10-digit Indian mobile number.",
   pincode: "Enter a 6-digit PIN code.",
@@ -61,12 +76,14 @@ export default function Notice({
     return (
       <div className="ad-notice is-err" role="alert">
         <p>{ERR[sp.err]}</p>
+        {sp.detail && <p className="ad-notice-detail">{sp.detail.slice(0, 300)}</p>}
       </div>
     );
   if (sp.msg && OK[sp.msg])
     return (
       <div className="ad-notice" role="status">
         <p>{OK[sp.msg]}</p>
+        {sp.detail && <p className="ad-notice-detail">{sp.detail.slice(0, 300)}</p>}
       </div>
     );
   return null;

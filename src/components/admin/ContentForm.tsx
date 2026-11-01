@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import MediaPicker from "./MediaPicker";
-import { saveContentAction } from "@/app/admin/actions";
+import { previewContentAction, saveContentAction } from "@/app/admin/actions";
 import { fieldIsShared, subIsShared, type FieldDef, type PageDef, type SubField } from "@/lib/content/fields";
 
 type Data = Record<string, unknown>;
@@ -58,6 +58,9 @@ function ImageField({
   );
 }
 
+/** Bracelets for "purpose" fields (set by ContentForm). */
+let PURPOSES: { slug: string; title: string }[] = [];
+
 function Scalar({
   f,
   id,
@@ -70,6 +73,17 @@ function Scalar({
   onChange: (v: unknown) => void;
 }) {
   switch (f.type) {
+    case "purpose":
+      return (
+        <select id={id} value={asText(value)} onChange={(e) => onChange(e.target.value)}>
+          <option value="">Not about one bracelet (show everywhere)</option>
+          {PURPOSES.map((p) => (
+            <option key={p.slug} value={p.slug}>
+              {p.title}
+            </option>
+          ))}
+        </select>
+      );
     case "textarea":
       return (
         <textarea
@@ -367,7 +381,9 @@ export default function ContentForm({
   lang = "en",
   english,
   viewHref,
+  purposes = [],
 }: {
+  purposes?: { slug: string; title: string }[];
   def: PageDef;
   initial: Data;
   canSave?: boolean;
@@ -376,6 +392,7 @@ export default function ContentForm({
   english?: Data;
   viewHref?: string;
 }) {
+  PURPOSES = purposes;
   const tr = lang !== "en";
   const [data, setData] = useState<Data>(initial);
   const [dirty, setDirty] = useState(false);
@@ -436,6 +453,22 @@ export default function ContentForm({
               disabled={!canSave}
             >
               Save changes
+            </button>
+            <button
+              type="button"
+              className="ad-btn"
+              disabled={!canSave}
+              onClick={async (e) => {
+                // Opens the real page with these (unsaved) changes, in a new tab.
+                const w = window.open("about:blank", "_blank");
+                const fd = new FormData(e.currentTarget.form ?? undefined);
+                const url = await previewContentAction(fd).catch(() => null);
+                if (w && url) w.location.href = url;
+                else if (url) window.location.href = url;
+                else w?.close();
+              }}
+            >
+              Preview ↗
             </button>
             {(viewHref ?? def.path) && (
               <a

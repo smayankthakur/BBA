@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cookies, draftMode } from "next/headers";
 import { DEFAULTS, type Defaults, type PageId } from "@/lib/content/defaults";
 import { fieldIsShared, pageDef, subIsShared, type FieldDef, type SubField } from "@/lib/content/fields";
 import type { Lang } from "@/lib/i18n/config";
@@ -19,12 +20,29 @@ const loadAll = cache(async (): Promise<Record<string, Record<string, unknown>>>
   try {
     await ensureSchema();
     const rows = await sql<{ id: string; data: Record<string, unknown> }>`select id, data from site_content`;
-    return Object.fromEntries(rows.map((r) => [r.id, r.data ?? {}]));
+    const out: Record<string, Record<string, unknown>> = Object.fromEntries(rows.map((r) => [r.id, r.data ?? {}]));
+    // Admin "Preview": unsaved page text, only in the previewing browser.
+    const pv = await previewDraft();
+    if (pv) out[pv.page] = pv.data;
+    return out;
   } catch (e) {
     console.error("[content] falling back to defaults:", e instanceof Error ? e.message : e);
     return {};
   }
 });
+
+export const PREVIEW_COOKIE = "bba_preview";
+async function previewDraft(): Promise<{ page: string; data: Record<string, unknown> } | null> {
+  try {
+    if (!(await draftMode()).isEnabled) return null;
+    const id = (await cookies()).get(PREVIEW_COOKIE)?.value;
+    if (!id || !/^[A-Za-z0-9_-]{20,64}$/.test(id)) return null;
+    const r = await sql<{ page: string; data: Record<string, unknown> }>`select page, data from content_drafts where id = ${id} and created_at > now() - interval '2 hours'`;
+    return r[0] ?? null;
+  } catch {
+    return null; // outside a request (static build)
+  }
+}
 
 /** Saved values on top of the defaults. Keys that aren't in the defaults are ignored. */
 function merge<T extends Record<string, unknown>>(base: T, saved: Record<string, unknown> | undefined): T {
@@ -163,6 +181,25 @@ export const contentKey = (id: PageId, lang: Lang) => (lang === "en" ? id : `${i
  * document. For Hindi/Hinglish only the translatable fields are stored.
  */
 export async function saveContent(id: PageId, input: Record<string, unknown>, userId: string, lang: Lang = "en") {
+  const data = await cleanContent(id, input, lang);
+  const key = contentKey(id, lang);
+  await ensureSchema();
+  await sql`insert into site_content (id, data, updated_at, updated_by) values (${key}, ${JSON.stringify(data)}::jsonb, now(), ${userId})
+    on conflict (id) do update set data = excluded.data, updated_at = now(), updated_by = excluded.updated_by`;
+}
+
+/** Stores unsaved page text for "Preview" (2 hours). Returns the draft id. */
+export async function savePreviewDraft(id: PageId, input: Record<string, unknown>, userId: string, lang: Lang = "en") {
+  const data = await cleanContent(id, input, lang);
+  const draftId = (await import("node:crypto")).randomBytes(24).toString("base64url");
+  await ensureSchema();
+  await sql`delete from content_drafts where created_at < now() - interval '1 day'`;
+  await sql`insert into content_drafts (id, user_id, page, data) values (${draftId}, ${userId}, ${contentKey(id, lang)}, ${JSON.stringify(data)}::jsonb)`;
+  return draftId;
+}
+
+/** What would be saved: the form values checked and cleaned like a real save. */
+async function cleanContent(id: PageId, input: Record<string, unknown>, lang: Lang) {
   const def = pageDef(id);
   if (!def) throw new Error("Unknown page");
   const current = (await getContent(id, lang)) as Record<string, unknown>;
@@ -176,10 +213,7 @@ export async function saveContent(id: PageId, input: Record<string, unknown>, us
           ? cleaned.map((it: Record<string, unknown>) => Object.fromEntries((f.fields ?? []).filter((sf) => !subIsShared(sf)).map((sf) => [sf.key, it[sf.key]])))
           : cleaned;
     }
-  const key = contentKey(id, lang);
-  await ensureSchema();
-  await sql`insert into site_content (id, data, updated_at, updated_by) values (${key}, ${JSON.stringify(data)}::jsonb, now(), ${userId})
-    on conflict (id) do update set data = excluded.data, updated_at = now(), updated_by = excluded.updated_by`;
+  return data;
 }
 
 export async function resetContent(id: PageId, lang: Lang = "en") {

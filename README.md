@@ -25,7 +25,10 @@ Requires Node 20+.
 | `RESEND_API_KEY`, `STAFF_ORDER_EMAILS`, `ORDER_EMAIL_FROM` | staff order email | When an order is paid, a **staff-only PDF** with every detail from the order form is emailed to `STAFF_ORDER_EMAILS` (comma-separated). Sent once per order; customers never see it. `ORDER_EMAIL_FROM` needs a domain verified in Resend (until then Resend's test sender only delivers to the Resend account's own email). |
 | `BLOB_READ_WRITE_TOKEN` | admin photo uploads | Set automatically by the Vercel Blob store `bba-media` (connected). Photos uploaded in the admin panel are stored there. For local testing without Blob, `MEDIA_LOCAL=1` writes to `public/uploads` (works with `npm run dev`). |
 | `NEXT_PUBLIC_GA_ID` | optional | Google Analytics 4 ID (G-…). Loads only after the visitor accepts cookies. |
-| `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Funnel fires Lead and InitiateCheckout. |
+| `NEXT_PUBLIC_META_PIXEL_ID` | optional | Meta Pixel ID. Same consent rule. Events: view_item (bracelet page) → order_sheet_open (Meta AddToCart) → begin_checkout (InitiateCheckout) → purchase → order_details, so the drop-off between bracelet page, order form and payment shows in both tools. Both are build-time variables: redeploy after setting them. |
+| `SHIPROCKET_EMAIL`, `SHIPROCKET_PASSWORD`, `SHIPROCKET_PICKUP` | shipping | A Shiprocket **API user** (Shiprocket → Settings → API → Configure, a separate login from your own) and the pickup location's nickname exactly as in Shiprocket. Turns on **Book shipment** in each order: creates the Shiprocket order, assigns a courier, schedules pickup, saves the AWB, courier, label and tracking link, and marks the order Shipped. Optional parcel size: `SHIP_WEIGHT_KG` (0.2), `SHIP_LENGTH_CM`/`SHIP_BREADTH_CM`/`SHIP_HEIGHT_CM` (12/10/6). |
+| `WHATSAPP_PROVIDER` + `INTERAKT_API_KEY` (or `AISENSY_API_KEY`) | WhatsApp updates | `interakt` or `aisensy`. Sends approved template messages: **payment received** (automatic), **please add your details** (daily reminder) and **shipped + tracking link** (automatic when an order is marked Shipped with a tracking number). Template names default to `order_paid`, `order_details_needed`, `order_shipped`; override with `WA_PAID`, `WA_DETAILS`, `WA_SHIPPED`. Each message is sent once per order and logged on the order page. Admin → Connections lists the exact template texts to get approved. |
+| `CRON_SECRET` | WhatsApp reminder | Any long random string. Vercel's daily job (`vercel.json`, 10:00 India time) calls `/api/cron/daily` with it to send the "please add your details" reminder to paid orders still missing a birth date or address after 3 hours. |
 | `NEXT_PUBLIC_SITE_LIVE` | at launch | Set to `true` **only when launching**. Until then every deployment sends `noindex` and robots.txt blocks crawlers. |
 
 ## Admin panel (`/admin`)
@@ -40,6 +43,16 @@ A WordPress-style back office. It needs `DATABASE_URL` (Neon); every table is cr
 - **Orders:** every paid or started order with all reading-form details, filters and search, progress (new → reading → being made → shipped → delivered), courier and tracking, private notes, staff PDF and CSV export.
 - **Coupons** (owner and admins): percentage (with optional cap) or fixed ₹ off, minimum price, start/end dates (India time), total and per-customer limits (by mobile, paid orders), all bracelets or chosen ones, switch on/off, delete. Each coupon has an offer link (`/find-your-bracelet?coupon=CODE`) that applies it at checkout. Customers can also type it at checkout. The server re-checks the code when the payment is created, so the browser can't change the price. Orders, the staff PDF and the CSV show the coupon and discount.
 - **Partners** (owner and admins): add a partner with a unique code, commission (percentage of what the customer pays, or a fixed ₹ per order) and payout details. Their link is `/p/CODE` (or `?ref=CODE` on any page). The visit is remembered for 30 days (last link clicked wins). Each partner page shows clicks, paid orders, revenue, commission earned, payouts recorded and the balance. Commission is fixed when the order is placed; a percentage partner also earns on purposes added after payment. Orders, the staff PDF and the CSV show the partner.
+- **Dashboard:** paid orders, revenue, average order and conversion for 7/30/90 days or all time; sales by purpose; started-but-unpaid orders with a WhatsApp follow-up button (only for people who opted in); top partners; coupon results; shortcuts to the reading queue and to paid orders still missing details.
+- **Reading queue** (for Ammit Ji): paid orders waiting for a reading, oldest first, with name, birth date, mulank/bhagyank, focus and note. Type **Crystals chosen**, press **Reading done** (the order moves to Reading) and print the reading card, which lists the chosen crystals. Orders without a birth date wait in a separate list.
+- **Order board** (Orders → Board view): columns New → Reading → Being made → Shipped → Delivered, made for phones (swipe sideways). Tap → to move a card on, or tick several and move them together; the list view has the same bulk move and a **Details missing** filter.
+- **Shipping and WhatsApp** on each order: Book shipment / Print label / Track parcel, and buttons to send each WhatsApp message by hand, with a log of what was sent. **Connections** (owner and admins) shows what's switched on and what each service needs, without showing any keys.
+- **Articles:** write or edit help articles (English, हिन्दी, Hinglish tabs), linked to a purpose so they show on that bracelet's page. Four come built in: crystals for career, buri nazar bracelet, rose quartz for love and marriage, cleansing a bracelet. Published at `/articles` and in the sitemap.
+- **Review screenshots by purpose:** each screenshot has a *Purpose* choice; a bracelet page shows its own screenshots right above "Order this bracelet" (falls back to untagged ones, then to written reviews).
+- **Preview:** *Preview ↗* on any page opens the unsaved text in a new tab, only for you (a banner says so; visitors never see it). Nothing is saved until you press Save.
+- **Activity log** (owner and admins): who changed what and when, with filters.
+- **Marketing list:** Orders → *Marketing list (opted in)* downloads a CSV of paying customers whose latest order ticked "send me offers on WhatsApp".
+- **Two-step login:** Account → Two-step login. Scan the QR code with Google Authenticator or similar, enter the 6-digit code, then keep the 8 one-time recovery codes safe. Recommended for the owner (the dashboard reminds you).
 - **Media:** upload (phone photos are shrunk in the browser, then converted to WebP ≤2000px), copy link, delete (refused while a product or page uses the image).
 - Security: scrypt passwords, httpOnly session cookie (7 days), sign-in lockout after 8 failures in 15 minutes, same-origin checks on uploads, every change logged in `admin_log`. Changes go live on the next page visit.
 
@@ -117,9 +130,13 @@ All pages have their own title/description, canonical, hreflang alternates for t
 - Prepaid only (no COD), free shipping, delivery days from Settings.
 - Without Razorpay keys the funnel falls back to the pre-filled Google order form.
 
+## Track my order (`/track`)
+
+Customers enter the order number (BBA-…) and their WhatsApp number and see the steps (received → reading done → being made → shipped → delivered) with dates, the courier and the tracking link. The order-confirmed screen, emails and WhatsApp messages link to `/track?no=BBA-…` (not `?ref=`, which is the partner code). Limited to 12 lookups per 15 minutes per visitor; a wrong number shows nothing about the order.
+
 ## Product photos
 
-Drop photos into `public/products/<bracelet-slug>/1.jpg, 2.jpg, 3.jpg` (on wrist, close-up, packaging), or upload them in Admin → Bracelets. Every purpose now has photos: Ammit's own for six, and free-to-use Unsplash/Pexels photos for Clarity & Confidence, Self Healing, Delay in Marriage and Weight Loss until his arrive (credits in `public/products/CREDITS.txt`). The bead-ring illustrations are gone; a bracelet with no photos shows the brand emblem.
+Drop photos into `public/products/<bracelet-slug>/1.jpg, 2.jpg, 3.jpg` (on wrist, close-up, packaging), or upload them in Admin → Bracelets. The bracelet page shows them as a swipeable gallery (photos first on phones) with tap-to-zoom full screen. Every purpose now has photos: Ammit's own for six, and free-to-use Unsplash/Pexels photos for Clarity & Confidence, Self Healing, Delay in Marriage and Weight Loss until his arrive (credits in `public/products/CREDITS.txt`). The bead-ring illustrations are gone; a bracelet with no photos shows the brand emblem.
 
 ## Videos
 
@@ -172,7 +189,9 @@ public/brand/        emblem.png, wordmark.png
 - **Shipping & payments (placeholder decisions by Mayank, 24 Oct)**: free shipping, prepaid only, 5–7 days, refunds started within 7 working days. Confirm with Ammit.
 - **Business details** (`BUSINESS` in `src/data/home.ts`): the footer shows brand, founder, WhatsApp contact and grievance officer (Ammit Kukreja, Founder; client to confirm). Still needed before selling online: legal entity name, registered address, email/phone and GSTIN. Empty fields are hidden automatically.
 - **Ammit to confirm:** crystals listed for the new purposes (clarity & confidence, self healing, delay in marriage, weight loss) and the wording on the health / weight-loss pages.
-- **Hindi copy:** review by a native speaker.
+- **Hindi copy:** review by a native speaker (including the four articles).
+- **To switch on:** Google Analytics / Meta Pixel IDs; a Shiprocket API user; a WhatsApp Business provider (Interakt or AiSensy) with the three templates approved; `CRON_SECRET`. See Admin → Connections.
+- **Video:** a short clip of Ammit Ji energising a bracelet can go in each bracelet's video field.
 
 ## Notes
 

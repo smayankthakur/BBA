@@ -52,6 +52,8 @@ export default function SiteHeader({ instagram, youtube, purposes = [] }: { inst
     { href: "/find-your-bracelet", label: h.more.find },
     { href: "/reviews", label: h.more.reviews },
     { href: "/bracelet-care", label: h.more.care },
+    { href: "/articles", label: ui.articles.link },
+    { href: "/track", label: ui.track.link },
   ];
   // Desktop "Purposes" dropdown
   const [dd, setDd] = useState(false);

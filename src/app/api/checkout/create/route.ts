@@ -143,6 +143,7 @@ export async function POST(req: Request) {
       partner_rate: partner?.rate ?? null,
       commission_paise: partner?.commissionPaise ?? 0,
       order_source: d.source ?? "reading",
+      lang: d.lang ?? "en",
     }).catch((e) => console.error("[checkout] db insert failed", e instanceof Error ? e.message : e));
 
     return NextResponse.json({ orderId: order.id, keyId: razorpayKeyId(), amount: amountPaise, currency: "INR", ref });

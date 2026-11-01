@@ -48,6 +48,8 @@ export type OrderRecord = {
   commission_paise?: number;
   /** "quick" orders add gender/focus/note after payment */
   order_source?: string;
+  /** Language the customer ordered in (WhatsApp messages, tracking) */
+  lang?: string;
   details_at?: string | Date | null;
   wearer_note?: string | null;
 };
@@ -61,7 +63,7 @@ export async function insertOrder(o: OrderRecord) {
       intentions, focus, is_gift, gift_note, delivery_name, mobile, email,
       address_line1, address_line2, landmark, city, state, pincode,
       marketing_opt_in, terms_accepted_at, utm, razorpay_order_id, coupon_code, discount_paise,
-      purposes, partner_code, partner_kind, partner_rate, commission_paise, order_source
+      purposes, partner_code, partner_kind, partner_rate, commission_paise, order_source, lang
     ) values (
       ${o.ref}, ${o.status}, ${o.bracelet_slug}, ${o.bracelet_title}, ${o.amount_paise},
       ${o.wearer_first_name}, ${o.wearer_last_name}, ${o.wearer_dob}, ${o.wearer_gender}, ${o.mulank}, ${o.bhagyank}, ${o.wrist},
@@ -69,7 +71,7 @@ export async function insertOrder(o: OrderRecord) {
       ${o.address_line1}, ${o.address_line2}, ${o.landmark}, ${o.city}, ${o.state}, ${o.pincode},
       ${o.marketing_opt_in}, ${o.terms_accepted_at}, ${JSON.stringify(o.utm)}::jsonb, ${o.razorpay_order_id},
       ${o.coupon_code ?? null}, ${o.discount_paise ?? 0},
-      ${o.purposes ?? [o.bracelet_slug]}, ${o.partner_code ?? null}, ${o.partner_kind ?? null}, ${o.partner_rate ?? null}, ${o.commission_paise ?? 0}, ${o.order_source ?? "reading"}
+      ${o.purposes ?? [o.bracelet_slug]}, ${o.partner_code ?? null}, ${o.partner_kind ?? null}, ${o.partner_rate ?? null}, ${o.commission_paise ?? 0}, ${o.order_source ?? "reading"}, ${o.lang ?? "en"}
     ) on conflict (razorpay_order_id) do nothing`;
 }
 
@@ -211,12 +213,24 @@ export type AdminOrder = StoredOrder & {
   tracking_number: string | null;
   admin_notes: string | null;
   updated_at: string | Date | null;
+  crystals_chosen?: string | null;
+  reading_notes?: string | null;
+  reading_done_at?: string | Date | null;
+  making_at?: string | Date | null;
+  shipped_at?: string | Date | null;
+  delivered_at?: string | Date | null;
+  ship_provider?: string | null;
+  shipment_id?: string | null;
+  ship_order_id?: string | null;
+  label_url?: string | null;
+  tracking_url?: string | null;
+  lang?: string | null;
 };
 
 export const FULFILMENT = ["new", "reading", "making", "shipped", "delivered", "cancelled"] as const;
 export type Fulfilment = (typeof FULFILMENT)[number];
 
-export async function listOrders(opts: { status?: string; fulfilment?: string; q?: string; limit?: number; offset?: number }) {
+export async function listOrders(opts: { status?: string; fulfilment?: string; q?: string; missing?: boolean; limit?: number; offset?: number }) {
   await ensureSchema();
   const q = (opts.q ?? "").trim();
   const like = `%${q.replace(/[%_\\]/g, (m) => "\\" + m)}%`;
@@ -225,6 +239,7 @@ export async function listOrders(opts: { status?: string; fulfilment?: string; q
     from orders
     where (${opts.status ?? ""} = '' or status = ${opts.status ?? ""})
       and (${opts.fulfilment ?? ""} = '' or fulfilment_status = ${opts.fulfilment ?? ""})
+      and (not ${opts.missing ?? false} or (status = 'paid' and (wearer_dob is null or pincode = '' or wearer_gender = 'unspecified')))
       and (${q} = '' or ref ilike ${like} or wearer_first_name ilike ${like} or wearer_last_name ilike ${like}
            or delivery_name ilike ${like} or mobile ilike ${like} or coalesce(email, '') ilike ${like} or pincode ilike ${like})
     order by created_at desc
@@ -263,7 +278,30 @@ export type AdminOrderUpdate = {
   city: string;
   state: string;
   pincode: string;
+  crystals_chosen: string | null;
+  reading_notes: string | null;
 };
+/** Move several orders to a progress step at once (admin board / bulk). */
+export async function setOrdersStatus(ids: string[], f: Fulfilment) {
+  if (!ids.length) return [];
+  await ensureSchema();
+  const rows = await sql<{ id: string; ref: string }>`update orders set fulfilment_status = ${f}, updated_at = now()
+    where id = any(${ids}::uuid[]) returning id, ref`;
+  await stampStatus(ids, f);
+  return rows;
+}
+
+/** When an order first reaches a progress step (for the customer's tracking timeline). */
+async function stampStatus(ids: string[], f: string) {
+  const at = ["reading", "making", "shipped", "delivered"];
+  const i = at.indexOf(f);
+  if (i < 0) return;
+  if (i >= 0) await sql`update orders set reading_done_at = coalesce(reading_done_at, now()) where id = any(${ids}::uuid[])`;
+  if (i >= 1) await sql`update orders set making_at = coalesce(making_at, now()) where id = any(${ids}::uuid[])`;
+  if (i >= 2) await sql`update orders set shipped_at = coalesce(shipped_at, now()) where id = any(${ids}::uuid[])`;
+  if (i >= 3) await sql`update orders set delivered_at = coalesce(delivered_at, now()) where id = any(${ids}::uuid[])`;
+}
+
 /** Staff edit of the whole order (everything except payment and consent). */
 export async function updateOrderAdmin(id: string, f: AdminOrderUpdate) {
   await ensureSchema();
@@ -275,21 +313,25 @@ export async function updateOrderAdmin(id: string, f: AdminOrderUpdate) {
     is_gift = ${f.is_gift}, gift_note = ${f.gift_note}, delivery_name = ${f.delivery_name}, mobile = ${f.mobile}, email = ${f.email},
     address_line1 = ${f.address_line1}, address_line2 = ${f.address_line2}, landmark = ${f.landmark},
     city = ${f.city}, state = ${f.state}, pincode = ${f.pincode},
+    crystals_chosen = ${f.crystals_chosen}, reading_notes = ${f.reading_notes},
     details_at = case when order_source = 'quick' and details_at is null and ${f.wearer_dob}::date is not null and ${f.pincode} <> '' then now() else details_at end,
     updated_at = now() where id = ${id}`;
+  await stampStatus([id], f.fulfilment_status);
 }
 
 export async function orderStats() {
   await ensureSchema();
   const rows = await sql<{
-    paid: number; pending: number; failed: number; revenue: number; today: number; to_ship: number;
+    paid: number; pending: number; failed: number; revenue: number; today: number; to_ship: number; missing: number; to_read: number;
   }>`select
       count(*) filter (where status = 'paid') :: int as paid,
       count(*) filter (where status = 'pending') :: int as pending,
       count(*) filter (where status = 'failed') :: int as failed,
       coalesce(sum(amount_paise + upgrade_paise) filter (where status = 'paid'), 0) :: int as revenue,
       count(*) filter (where status = 'paid' and paid_at >= date_trunc('day', now() at time zone 'Asia/Kolkata') at time zone 'Asia/Kolkata') :: int as today,
-      count(*) filter (where status = 'paid' and fulfilment_status in ('new', 'reading', 'making')) :: int as to_ship
+      count(*) filter (where status = 'paid' and fulfilment_status in ('new', 'reading', 'making')) :: int as to_ship,
+      count(*) filter (where status = 'paid' and fulfilment_status in ('new', 'reading') and (wearer_dob is null or pincode = '')) :: int as missing,
+      count(*) filter (where status = 'paid' and fulfilment_status = 'new') :: int as to_read
     from orders`;
   return rows[0];
 }
@@ -348,4 +390,102 @@ export async function saveOrderDetails(razorpayOrderId: string, d: OrderDetails)
       and paid_at > now() - interval '14 days'
     returning *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text`) as StoredOrder[];
   return rows[0] ?? null;
+}
+
+/* ---------------- Customer order tracking ---------------- */
+
+export type Tracking = {
+  ref: string;
+  purposes: string[];
+  status: string;
+  paidAt: string | null;
+  readingAt: string | null;
+  makingAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  courier: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  detailsMissing: boolean;
+};
+
+/** A paid order looked up by its reference and the mobile it was placed with. */
+export async function trackOrder(ref: string, mobile: string): Promise<Tracking | null> {
+  if (!dbConfigured()) return null;
+  await ensureSchema();
+  const rows = await sql<{
+    ref: string; purposes: string[]; bracelet_slug: string; fulfilment_status: string; paid_at: Date | null; reading_done_at: Date | null;
+    making_at: Date | null; shipped_at: Date | null; delivered_at: Date | null; courier: string | null; tracking_number: string | null;
+    tracking_url: string | null; ship_provider: string | null; order_source: string; details_at: Date | null; wearer_dob: Date | null; pincode: string;
+  }>`select ref, purposes, bracelet_slug, fulfilment_status, paid_at, reading_done_at, making_at, shipped_at, delivered_at,
+      courier, tracking_number, tracking_url, ship_provider, order_source, details_at, wearer_dob, pincode
+    from orders where upper(ref) = ${ref.toUpperCase()} and mobile = ${mobile} and status = 'paid' limit 1`;
+  const o = rows[0];
+  if (!o) return null;
+  const iso = (d: Date | null) => (d ? new Date(d).toISOString() : null);
+  return {
+    ref: o.ref,
+    purposes: o.purposes?.length ? o.purposes : [o.bracelet_slug],
+    status: o.fulfilment_status,
+    paidAt: iso(o.paid_at),
+    readingAt: iso(o.reading_done_at),
+    makingAt: iso(o.making_at),
+    shippedAt: iso(o.shipped_at),
+    deliveredAt: iso(o.delivered_at),
+    courier: o.courier,
+    trackingNumber: o.tracking_number,
+    trackingUrl: o.tracking_url ?? (o.tracking_number && o.ship_provider === "shiprocket" ? `https://shiprocket.co/tracking/${o.tracking_number}` : null),
+    detailsMissing: o.order_source === "quick" && (!o.wearer_dob || !o.pincode),
+  };
+}
+
+/* ---------------- Reading queue (Ammit Ji) ---------------- */
+
+/** Paid orders waiting for Ammit's reading, oldest first. */
+export async function readingQueue() {
+  await ensureSchema();
+  return sql<AdminOrder>`select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text from orders
+    where status = 'paid' and fulfilment_status = 'new' order by paid_at asc nulls last limit 200`;
+}
+/** Recently read (for reprinting cards). */
+export async function recentlyRead(limit = 12) {
+  await ensureSchema();
+  return sql<AdminOrder>`select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text from orders
+    where status = 'paid' and reading_done_at is not null order by reading_done_at desc limit ${limit}`;
+}
+export async function saveReading(id: string, crystals: string | null, note: string | null, done: boolean) {
+  await ensureSchema();
+  await sql`update orders set crystals_chosen = ${crystals}, reading_notes = ${note},
+    fulfilment_status = case when ${done} and fulfilment_status = 'new' then 'reading' else fulfilment_status end,
+    updated_at = now() where id = ${id}`;
+  if (done) await sql`update orders set reading_done_at = coalesce(reading_done_at, now()) where id = ${id}`;
+}
+
+/** A main order by its Razorpay order id (for messages after payment). */
+export async function orderByRazorpayId(razorpayOrderId: string) {
+  if (!dbConfigured()) return null;
+  await ensureSchema();
+  const rows = await sql<AdminOrder>`select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text from orders where razorpay_order_id = ${razorpayOrderId}`;
+  return rows[0] ?? null;
+}
+
+/** Quick orders paid a few hours ago that still have no birth date or address (daily WhatsApp reminder). */
+export async function ordersMissingDetails() {
+  if (!dbConfigured()) return [];
+  await ensureSchema();
+  return sql<AdminOrder>`select o.*, to_char(o.wearer_dob, 'YYYY-MM-DD') as dob_text from orders o
+    where o.status = 'paid' and o.order_source = 'quick' and (o.wearer_dob is null or o.pincode = '')
+      and o.fulfilment_status in ('new', 'reading')
+      and o.paid_at < now() - interval '3 hours' and o.paid_at > now() - interval '14 days'
+      and not exists (select 1 from whatsapp_messages w where w.order_id = o.id and w.kind = 'details' and w.status = 'sent')
+    order by o.paid_at limit 100`;
+}
+
+/** Paid orders for the board (open ones, plus recently delivered). */
+export async function boardOrders() {
+  await ensureSchema();
+  return sql<AdminOrder>`select *, to_char(wearer_dob, 'YYYY-MM-DD') as dob_text from orders
+    where status = 'paid' and (fulfilment_status in ('new', 'reading', 'making', 'shipped')
+      or (fulfilment_status = 'delivered' and coalesce(delivered_at, updated_at) > now() - interval '7 days'))
+    order by paid_at asc nulls last limit 400`;
 }

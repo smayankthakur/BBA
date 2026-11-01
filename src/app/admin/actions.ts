@@ -2,8 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies, draftMode } from "next/headers";
+import { hashRecovery, newRecoveryCodes, newSecret, verifyCode } from "@/lib/server/totp";
 import {
   clearLoginFailures,
+  endTwoStep,
+  pendingTwoStepUser,
+  startTwoStep,
+  twoStepFor,
   createInvite,
   endSession,
   findInvite,
@@ -32,8 +38,11 @@ import {
   slugTaken,
   updateProduct,
 } from "@/lib/server/catalog";
-import { resetContent, saveContent } from "@/lib/server/content";
-import { FULFILMENT, updateOrderAdmin, type Fulfilment } from "@/lib/server/orders";
+import { PREVIEW_COOKIE, resetContent, saveContent, savePreviewDraft } from "@/lib/server/content";
+import { lp } from "@/lib/i18n/config";
+import { FULFILMENT, getOrder, saveReading, setOrdersStatus, updateOrderAdmin, type Fulfilment } from "@/lib/server/orders";
+import { bookShipment, activeProvider, providerById, shipBlockers } from "@/lib/server/shipping";
+import { autoWhatsApp, sendWhatsApp, whatsappProvider, type WaKind } from "@/lib/server/whatsapp";
 import { INDIAN_STATES } from "@/lib/checkoutSchema";
 import { bhagyank, isValidDate, mulank } from "@/lib/numerology";
 import { deleteMedia } from "@/lib/server/media";
@@ -44,6 +53,7 @@ import { pageDef } from "@/lib/content/fields";
 import type { PageId } from "@/lib/content/defaults";
 import { PRODUCT_TEXT_KEYS, SLUG_RE, type Product, type ProductI18n, type ProductKind, type ProductStatus, type Visual } from "@/lib/catalog-types";
 import { safeHref } from "@/lib/content/render";
+import { adminGetArticle, articleSlugTaken, createArticle, deleteArticle, updateArticle, updateArticleTranslation } from "@/lib/server/articles";
 
 const str = (fd: FormData, k: string, max = 300) => String(fd.get(k) ?? "").trim().slice(0, max);
 function go(path: string, params: Record<string, string>): never {
@@ -70,10 +80,116 @@ export async function loginAction(fd: FormData) {
     await recordLoginFailure(email);
     go("/admin/login", { err: "bad" });
   }
+  // Two-step login on: ask for the authenticator code before signing in.
+  if ((await twoStepFor(user.id)).enabled) {
+    await startTwoStep(user.id);
+    redirect("/admin/login/code");
+  }
   await clearLoginFailures(email);
   await startSession(user.id);
   await logAction(user.id, "login");
   redirect("/admin");
+}
+
+/** Second step of signing in: a code from the authenticator app, or a recovery code. */
+export async function twoStepLoginAction(fd: FormData) {
+  await ensureSchema();
+  const pending = await pendingTwoStepUser();
+  if (!pending) go("/admin/login", { err: "expired" });
+  if (await loginBlocked(pending!.email)) go("/admin/login", { err: "locked" });
+  const raw = str(fd, "code", 20).toLowerCase();
+  const u = (
+    await sql<{ totp_secret: string | null; totp_last_step: string | null; recovery_codes: string[] }>`
+      select totp_secret, totp_last_step, recovery_codes from admin_users where id = ${pending!.id}`
+  )[0];
+  let ok = false;
+  let how = "code";
+  const step = u?.totp_secret ? verifyCode(u.totp_secret, raw) : null;
+  // A code can be used once (no replay within its 30 seconds).
+  if (step !== null && (u.totp_last_step === null || step > Number(u.totp_last_step))) {
+    await sql`update admin_users set totp_last_step = ${step} where id = ${pending!.id}`;
+    ok = true;
+  } else if (/^[a-z0-9]{4}-?[a-z0-9]{4}$/.test(raw)) {
+    const h = hashRecovery(raw.includes("-") ? raw : `${raw.slice(0, 4)}-${raw.slice(4)}`);
+    if (u?.recovery_codes?.includes(h)) {
+      await sql`update admin_users set recovery_codes = array_remove(recovery_codes, ${h}) where id = ${pending!.id}`;
+      ok = true;
+      how = "recovery code";
+    }
+  }
+  if (!ok) {
+    await recordLoginFailure(pending!.email);
+    go("/admin/login/code", { err: "totp" });
+  }
+  await endTwoStep();
+  await clearLoginFailures(pending!.email);
+  await startSession(pending!.id);
+  await logAction(pending!.id, "login", `two-step (${how})`);
+  redirect("/admin");
+}
+
+/* ------------------------------------------------------------------ */
+/* Two-step login: set up / turn off (My account)                       */
+/* ------------------------------------------------------------------ */
+
+const RC_COOKIE = "bba_rc";
+async function showRecoveryCodes(codes: string[]) {
+  (await cookies()).set(RC_COOKIE, codes.join(" "), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/admin/account",
+    maxAge: 600,
+  });
+}
+
+export async function setupTwoStepAction() {
+  const me = await requireAdmin();
+  const t = await twoStepFor(me.id);
+  if (t.enabled) go("/admin/account", { err: "twoStep" });
+  await sql`update admin_users set totp_secret = ${newSecret()}, totp_last_step = null where id = ${me.id}`;
+  redirect("/admin/account?setup=1#two-step");
+}
+
+export async function enableTwoStepAction(fd: FormData) {
+  const me = await requireAdmin();
+  const t = await twoStepFor(me.id);
+  if (t.enabled || !t.secret) go("/admin/account", { err: "twoStep" });
+  const step = verifyCode(t.secret!, str(fd, "code", 10));
+  if (step === null) redirect("/admin/account?setup=1&err=totp#two-step");
+  const codes = newRecoveryCodes();
+  await sql`update admin_users set totp_enabled_at = now(), totp_last_step = ${step}, recovery_codes = ${codes.map(hashRecovery)} where id = ${me.id}`;
+  await logAction(me.id, "account.two-step.on");
+  await showRecoveryCodes(codes);
+  go("/admin/account", { msg: "twoStepOn" });
+}
+
+export async function disableTwoStepAction(fd: FormData) {
+  const me = await requireAdmin();
+  const t = await twoStepFor(me.id);
+  if (!t.enabled || !t.secret) go("/admin/account", { err: "twoStep" });
+  if (verifyCode(t.secret!, str(fd, "code", 10)) === null) go("/admin/account", { err: "totp" });
+  await sql`update admin_users set totp_enabled_at = null, totp_secret = null, totp_last_step = null, recovery_codes = '{}' where id = ${me.id}`;
+  await logAction(me.id, "account.two-step.off");
+  go("/admin/account", { msg: "twoStepOff" });
+}
+
+export async function newRecoveryCodesAction(fd: FormData) {
+  const me = await requireAdmin();
+  const t = await twoStepFor(me.id);
+  if (!t.enabled || !t.secret) go("/admin/account", { err: "twoStep" });
+  if (verifyCode(t.secret!, str(fd, "code", 10)) === null) go("/admin/account", { err: "totp" });
+  const codes = newRecoveryCodes();
+  await sql`update admin_users set recovery_codes = ${codes.map(hashRecovery)} where id = ${me.id}`;
+  await logAction(me.id, "account.two-step.recovery-codes");
+  await showRecoveryCodes(codes);
+  go("/admin/account", { msg: "saved" });
+}
+
+export async function hideRecoveryCodesAction() {
+  await requireAdmin();
+  (await cookies()).delete({ name: RC_COOKIE, path: "/admin/account" });
+  redirect("/admin/account");
 }
 
 export async function registerAction(fd: FormData) {
@@ -321,6 +437,8 @@ export async function updateOrderAction(fd: FormData) {
   const f = str(fd, "fulfilment_status", 20) as Fulfilment;
   if (!FULFILMENT.includes(f)) go(`/admin/orders/${id}`, { err: "status" });
   const back = (err: string) => go(`/admin/orders/${id}`, { err });
+  const before = await getOrder(id);
+  if (!before) go("/admin/orders", { err: "missing" });
   // Birth date → numbers
   const dobRaw = str(fd, "wearer_dob", 10);
   let dob: string | null = null;
@@ -369,8 +487,15 @@ export async function updateOrderAction(fd: FormData) {
     city: str(fd, "city", 60),
     state,
     pincode,
+    crystals_chosen: str(fd, "crystals_chosen", 400) || null,
+    reading_notes: str(fd, "reading_notes", 400) || null,
   });
   await logAction(user.id, "order.update", id);
+  // Moved to Shipped with a tracking number: tell the customer (once).
+  if (f === "shipped" && before!.fulfilment_status !== "shipped") {
+    const after = await getOrder(id);
+    if (after?.tracking_number) await autoWhatsApp("shipped", after);
+  }
   go(`/admin/orders/${id}`, { msg: "saved" });
 }
 
@@ -607,4 +732,195 @@ export async function deletePayoutAction(fd: FormData) {
   if (/^[0-9a-f-]{36}$/i.test(payout)) await deletePayout(payout);
   await logAction(user.id, "partner.payout.delete", payout);
   go(`/admin/partners/${id}`, { msg: "deleted" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Articles                                                             */
+/* ------------------------------------------------------------------ */
+
+export async function saveArticleAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  const back = (err: string): never => go(id ? `/admin/articles/${id}` : "/admin/articles/new", { err });
+  const title = str(fd, "title", 140);
+  const slug = str(fd, "slug", 90).toLowerCase();
+  if (!title) back("title");
+  if (!SLUG_RE.test(slug)) back("slug");
+  if (await articleSlugTaken(slug, id || undefined)) back("slugTaken");
+  const purposeIn = str(fd, "purpose", 80);
+  const coverIn = str(fd, "cover", 500);
+  const input = {
+    slug,
+    title,
+    excerpt: str(fd, "excerpt", 300),
+    body: str(fd, "body", 40_000),
+    cover: coverIn && safeHref(coverIn) ? coverIn : null,
+    purpose: purposeIn && SLUG_RE.test(purposeIn) ? purposeIn : null,
+    status: (str(fd, "status", 12) === "published" ? "published" : "draft") as "draft" | "published",
+    seoTitle: str(fd, "seoTitle", 70) || null,
+    seoDescription: str(fd, "seoDescription", 170) || null,
+  };
+  let target = id;
+  if (id) {
+    if (!(await adminGetArticle(id))) go("/admin/articles", { err: "missing" });
+    await updateArticle(id, input);
+  } else target = await createArticle(input);
+  await logAction(user.id, id ? "article.update" : "article.create", slug);
+  refreshSite();
+  go(`/admin/articles/${target}`, { msg: "saved" });
+}
+
+export async function saveArticleTranslationAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  const lang = str(fd, "lang", 4) === "hi" ? "hi" : "hn";
+  if (!(await adminGetArticle(id))) go("/admin/articles", { err: "missing" });
+  const t: Record<string, string> = {};
+  for (const [k, max] of [["title", 140], ["excerpt", 300], ["body", 40_000], ["seoTitle", 70], ["seoDescription", 170]] as const) {
+    const v = str(fd, k, max);
+    if (v) t[k] = v;
+  }
+  await updateArticleTranslation(id, lang, t);
+  await logAction(user.id, "article.translate", `${id}@${lang}`);
+  refreshSite();
+  go(`/admin/articles/${id}`, { msg: "saved", lang });
+}
+
+export async function deleteArticleAction(fd: FormData) {
+  const user = await requireAdmin("admin");
+  const id = str(fd, "id", 40);
+  const a = await adminGetArticle(id);
+  if (!a) go("/admin/articles", { err: "missing" });
+  await deleteArticle(id);
+  await logAction(user.id, "article.delete", a!.slug);
+  refreshSite();
+  go("/admin/articles", { msg: "deleted" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Reading queue                                                        */
+/* ------------------------------------------------------------------ */
+
+export async function saveReadingAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) go("/admin/reading", { err: "missing" });
+  const crystals = str(fd, "crystals", 400) || null;
+  const note = str(fd, "note", 400) || null;
+  const done = str(fd, "intent", 10) === "done";
+  if (done && !crystals) go("/admin/reading", { err: "crystals" });
+  await saveReading(id, crystals, note, done);
+  await logAction(user.id, done ? "order.reading-done" : "order.reading-save", id);
+  go("/admin/reading", { msg: done ? "readingDone" : "saved" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Shipping and WhatsApp (order page)                                  */
+/* ------------------------------------------------------------------ */
+
+export async function bookShipmentAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) go("/admin/orders", { err: "missing" });
+  const o = await getOrder(id);
+  if (!o) go("/admin/orders", { err: "missing" });
+  if (!activeProvider()) go(`/admin/orders/${id}`, { err: "shipOff" });
+  const blockers = shipBlockers(o!);
+  if (blockers.length) go(`/admin/orders/${id}`, { err: "shipNeeds", detail: `Missing or not ready: ${blockers.join(", ")}.` });
+  let detail = "";
+  try {
+    const r = await bookShipment(o!);
+    detail = `${r.courier} · AWB ${r.awb}`;
+  } catch (e) {
+    go(`/admin/orders/${id}`, { err: "ship", detail: e instanceof Error ? e.message : "Unknown error" });
+  }
+  await logAction(user.id, "order.ship", `${o!.ref} ${detail}`);
+  const after = await getOrder(id);
+  if (after) await autoWhatsApp("shipped", after);
+  go(`/admin/orders/${id}`, { msg: "shipped", detail });
+}
+
+export async function labelAction(fd: FormData) {
+  await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  const o = /^[0-9a-f-]{36}$/i.test(id) ? await getOrder(id) : null;
+  if (!o?.shipment_id || o.shipment_id.startsWith("booking:")) go(`/admin/orders/${id}`, { err: "missing" });
+  const p = providerById(o!.ship_provider);
+  let url: string | null = o!.label_url ?? null;
+  try {
+    url = (p ? await p.label(o!.shipment_id!) : null) ?? url;
+  } catch (e) {
+    go(`/admin/orders/${id}`, { err: "ship", detail: e instanceof Error ? e.message : "Label not available" });
+  }
+  if (!url) go(`/admin/orders/${id}`, { err: "ship", detail: "The label isn't ready yet. Try again in a minute." });
+  redirect(url!);
+}
+
+export async function sendWhatsAppAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40);
+  const kind = str(fd, "kind", 10) as WaKind;
+  if (!["paid", "details", "shipped"].includes(kind)) go(`/admin/orders/${id}`, { err: "wa" });
+  const o = /^[0-9a-f-]{36}$/i.test(id) ? await getOrder(id) : null;
+  if (!o) go("/admin/orders", { err: "missing" });
+  if (!whatsappProvider()) go(`/admin/orders/${id}`, { err: "waOff" });
+  let r: Awaited<ReturnType<typeof sendWhatsApp>> | "failed" = "failed";
+  let why = "";
+  try {
+    r = await sendWhatsApp(kind, o!);
+  } catch (e) {
+    why = e instanceof Error ? e.message : "";
+  }
+  if (r !== "sent") go(`/admin/orders/${id}`, { err: "wa", detail: why || "Check the mobile number." });
+  await logAction(user.id, `order.whatsapp.${kind}`, o!.ref);
+  go(`/admin/orders/${id}`, { msg: "waSent" });
+}
+
+/** Board / list: move several orders to one progress step. */
+export async function bulkStatusAction(fd: FormData) {
+  const user = await requireAdmin("editor");
+  const f = str(fd, "to", 20) as Fulfilment;
+  const back = str(fd, "back", 300);
+  const dest = back.startsWith("/admin/orders") ? back.split("?")[0] : "/admin/orders";
+  const keep = Object.fromEntries(new URLSearchParams(back.split("?")[1] ?? "")) as Record<string, string>;
+  delete keep.msg;
+  delete keep.err;
+  if (!FULFILMENT.includes(f)) go(dest, { ...keep, err: "status" });
+  const ids = fd.getAll("ids").map(String).filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+  if (!ids.length) go(dest, { ...keep, err: "pick" });
+  const before = new Map<string, string>();
+  for (const id of ids) {
+    const o = await getOrder(id);
+    if (o) before.set(id, o.fulfilment_status);
+  }
+  const rows = await setOrdersStatus(ids, f);
+  await logAction(user.id, "order.bulk-status", `${f}: ${rows.map((r) => r.ref).join(", ")}`.slice(0, 500));
+  if (f === "shipped")
+    for (const id of ids) {
+      if (before.get(id) === "shipped") continue;
+      const o = await getOrder(id);
+      if (o?.tracking_number) await autoWhatsApp("shipped", o);
+    }
+  go(dest, { ...keep, msg: "moved" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Page text preview                                                    */
+/* ------------------------------------------------------------------ */
+
+/** Shows unsaved page text on the real page, only in this browser. Returns the address to open. */
+export async function previewContentAction(fd: FormData): Promise<string> {
+  const user = await requireAdmin("editor");
+  const id = str(fd, "id", 40) as PageId;
+  const lang = (["hi", "hn"].includes(str(fd, "lang", 4)) ? str(fd, "lang", 4) : "en") as "en" | "hi" | "hn";
+  const def = pageDef(id);
+  if (!def) return "/admin/pages";
+  let data: Record<string, unknown> = {};
+  try {
+    data = JSON.parse(String(fd.get("data") ?? "{}"));
+  } catch {}
+  const draft = await savePreviewDraft(id, data, user.id, lang);
+  (await draftMode()).enable();
+  (await cookies()).set(PREVIEW_COOKIE, draft, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 7200 });
+  return lp(lang, def.path ?? "/");
 }

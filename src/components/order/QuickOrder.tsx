@@ -149,7 +149,7 @@ export default function QuickOrder({ data }: { data: QuickData }) {
       setPicking((cur) => (known ? false : !slug || cur));
       setOpen(true);
       pushHistory();
-      track("order_sheet_open", { bracelet: s ?? "" });
+      track("order_sheet_open", { bracelet: s ?? "" }, "AddToCart");
     },
     [products, slug],
   );
@@ -1109,6 +1109,9 @@ export default function QuickOrder({ data }: { data: QuickData }) {
                   {q.done}
                 </button>
               </div>
+              <p className="small-note">
+                <RichText text={tf(q.trackNote, { ref: paid.ref })} />
+              </p>
               <p className="small-note">{tf(u.questions, { ref: paid.ref })}</p>
             </div>
           </div>

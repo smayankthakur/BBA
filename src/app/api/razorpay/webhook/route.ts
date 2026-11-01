@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/server/razorpay";
 import { markFailed, markPaid } from "@/lib/server/orders";
 import { notifyStaffOfPaidOrder } from "@/lib/server/staffNotify";
+import { notifyCustomerPaid } from "@/lib/server/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,8 @@ export async function POST(req: Request) {
       await notifyStaffOfPaidOrder(mainOrderId).catch((e) =>
         console.error("[webhook] staff email failed", e instanceof Error ? e.message : e),
       );
+      if (mainOrderId === p.order_id) await notifyCustomerPaid(mainOrderId); // sent once per order
+
     } else if (evt.event === "payment.failed" && p?.order_id) {
       await markFailed(p.order_id);
     }

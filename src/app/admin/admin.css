@@ -961,3 +961,344 @@
     grid-column: auto;
   }
 }
+.ad-ref {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 420px;
+  overflow: auto;
+  margin: 0;
+}
+
+/* Reading queue */
+.rq {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  gap: 16px;
+}
+.rq-card {
+  background: var(--ad-panel);
+  border: 1px solid var(--ad-line);
+  border-top: 3px solid var(--ad-gold);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rq-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.rq-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.rq-head p {
+  margin: 2px 0 0;
+}
+.rq-nums {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.rq-nums span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--ad-bg);
+  font-size: 11px;
+  color: var(--ad-soft);
+  text-align: center;
+}
+.rq-nums b {
+  font-size: 22px;
+  color: var(--ad-accent);
+}
+.rq-dl {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 14px;
+}
+.rq-dl dt {
+  color: var(--ad-soft);
+}
+.rq-dl dd {
+  margin: 0;
+}
+.rq-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rq-form textarea {
+  min-height: 0 !important;
+}
+.rq-wait {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+.ad-empty {
+  padding: 30px;
+  text-align: center;
+  background: var(--ad-panel);
+  border: 1px dashed var(--ad-line);
+}
+.rq-print {
+  max-width: 420px;
+}
+.ad-notice-detail {
+  margin-top: 4px;
+  font-size: 12.5px;
+  opacity: 0.85;
+  overflow-wrap: anywhere;
+}
+.ad-order-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  max-width: 980px;
+}
+.ad-order-tools .ad-box-body p {
+  margin: 0 0 10px;
+}
+.ad-walog {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .ad-order-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ad-conn {
+  max-width: 980px;
+}
+.ad-conn .ad-box > h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.ad-conn .ad-box-body p {
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+.ad-conn code {
+  font-size: 12.5px;
+  background: var(--ad-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.ad-conn .ad-table td {
+  vertical-align: top;
+  font-size: 13px;
+}
+.ad-stat.is-link {
+  color: inherit;
+  text-decoration: none;
+}
+.ad-stat.is-link:hover {
+  border-color: var(--ad-accent);
+}
+.ad-stat.is-warn b {
+  color: #9a6700;
+}
+.ad-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 26px 0 12px;
+}
+.ad-period h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.ad-period nav {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--ad-line);
+  border-radius: 999px;
+  background: var(--ad-panel);
+}
+.ad-period nav a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--ad-ink);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ad-period nav a[aria-current="page"] {
+  background: var(--ad-accent);
+  color: #fff;
+}
+.ad-bars td:first-child {
+  position: relative;
+  min-width: 160px;
+}
+.ad-bar {
+  display: block;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 4px;
+  background: var(--ad-gold);
+}
+/* Orders: bulk move, board */
+.ad-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+.ad-bulk label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.ad-bulk select {
+  width: auto;
+}
+.ad-tick {
+  width: 32px;
+}
+.ad-tick input {
+  width: 18px;
+  height: 18px;
+}
+.ad-orders .ad-pill.warn {
+  display: inline-block;
+  margin-top: 4px;
+}
+.ad-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(250px, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+}
+.ad-col {
+  scroll-snap-align: start;
+  background: var(--ad-panel);
+  border: 1px solid var(--ad-line);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 200px;
+}
+.ad-col h2 {
+  margin: 2px 4px 10px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+.ad-count {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--ad-bg);
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+}
+.ad-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.ad-card {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 4px 8px;
+  padding: 10px;
+  border: 1px solid var(--ad-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.ad-card-tick {
+  padding-top: 2px;
+}
+.ad-card-tick input {
+  width: 18px;
+  height: 18px;
+}
+.ad-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 13.5px;
+  min-width: 0;
+}
+.ad-card-main:hover b {
+  text-decoration: underline;
+}
+.ad-card form {
+  grid-column: 2;
+  margin-top: 4px;
+}
+.ad-card .ad-btn {
+  width: 100%;
+}
+@media (max-width: 760px) {
+  .ad-board {
+    grid-auto-columns: 86%;
+  }
+}
+.ad-codes {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 6px 24px;
+  font-size: 15px;
+}
+.ad-qr svg {
+  width: 200px;
+  height: 200px;
+  border: 1px solid var(--ad-line);
+  background: #fff;
+}
+.ad-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+.ad-inline-form .ad-field {
+  flex: 1 1 200px;
+}
+.ad-steps {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.ad-log-target {
+  max-width: 420px;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  color: var(--ad-soft);
+}

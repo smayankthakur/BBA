@@ -5,6 +5,7 @@ import { VerifySchema } from "@/lib/checkoutSchema";
 import { fetchPayment, razorpayConfigured, verifyPaymentSignature } from "@/lib/server/razorpay";
 import { markPaid, orderAmount } from "@/lib/server/orders";
 import { notifyStaffOfPaidOrder } from "@/lib/server/staffNotify";
+import { notifyCustomerPaid } from "@/lib/server/notify";
 import { clientIp, rateLimited } from "@/lib/server/rateLimit";
 import { fetchOrderAmount } from "@/lib/server/razorpay";
 
@@ -49,6 +50,8 @@ export async function POST(req: Request) {
     await notifyStaffOfPaidOrder(mainOrderId).catch((e) =>
       console.error("[checkout] staff email failed", e instanceof Error ? e.message : e),
     );
+    // Only for the first payment (a top-up is a different Razorpay order).
+    if (mainOrderId === razorpay_order_id) await notifyCustomerPaid(mainOrderId);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[checkout] verify failed", e instanceof Error ? e.message : e);

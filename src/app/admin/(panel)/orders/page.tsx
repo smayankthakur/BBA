@@ -4,6 +4,7 @@ import Notice from "@/components/admin/Notice";
 import { requireAdmin, roleAtLeast } from "@/lib/server/auth";
 import { FULFILMENT, listOrders } from "@/lib/server/orders";
 import { formatINR } from "@/lib/format";
+import { bulkStatusAction } from "@/app/admin/actions";
 import { PROGRESS } from "@/lib/orderProgress";
 
 export const metadata: Metadata = { title: "Orders" };
@@ -33,11 +34,13 @@ export default async function OrdersPage({
     ? sp.fulfilment
     : "";
   const q = (sp.q ?? "").slice(0, 80);
+  const missing = sp.missing === "1";
   const page = Math.max(1, Math.min(1000, Number(sp.page) || 1));
   const { rows, total } = await listOrders({
     status,
     fulfilment,
     q,
+    missing,
     limit: PER_PAGE,
     offset: (page - 1) * PER_PAGE,
   });
@@ -47,6 +50,7 @@ export default async function OrdersPage({
       ...(status && { status }),
       ...(fulfilment && { fulfilment }),
       ...(q && { q }),
+      ...(missing && { missing: "1" }),
     });
     for (const [k, v] of Object.entries(extra)) p.set(k, String(v));
     return p.toString();
@@ -56,10 +60,18 @@ export default async function OrdersPage({
     <>
       <div className="ad-head">
         <h1>Orders</h1>
+        <Link className="ad-btn" href="/admin/orders/board">
+          Board view
+        </Link>
         {roleAtLeast(user.role, "admin") && (
-          <a className="ad-btn" href={`/api/admin/orders/export?${qs({})}`}>
-            Download CSV
-          </a>
+          <>
+            <a className="ad-btn" href={`/api/admin/orders/export?${qs({})}`}>
+              Download CSV
+            </a>
+            <a className="ad-btn" href="/api/admin/customers/export" title="Customers who paid and agreed to WhatsApp offers">
+              Marketing list (opted in)
+            </a>
+          </>
         )}
       </div>
       <Notice sp={sp} />
@@ -93,16 +105,42 @@ export default async function OrdersPage({
             placeholder="Order no., name, phone, email, PIN"
           />
         </label>
+        <label className="ad-check">
+          <input type="checkbox" name="missing" value="1" defaultChecked={missing} />
+          <span>Details missing</span>
+        </label>
         <button className="ad-btn" type="submit">
           Filter
         </button>
-        {(status || fulfilment || q) && <Link href="/admin/orders">Clear</Link>}
+        {(status || fulfilment || q || missing) && <Link href="/admin/orders">Clear</Link>}
+      </form>
+
+      <form action={bulkStatusAction} id="bulk">
+        <input type="hidden" name="back" value={`/admin/orders?${qs({ page })}`} />
+        <div className="ad-bulk">
+          <label>
+            <span>Move ticked orders to</span>
+            <select name="to" defaultValue="reading">
+              {FULFILMENT.map((f) => (
+                <option key={f} value={f}>
+                  {PROGRESS[f]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="ad-btn" type="submit">
+            Move
+          </button>
+        </div>
       </form>
 
       <div className="ad-table-wrap">
-        <table className="ad-table">
+        <table className="ad-table ad-orders">
           <thead>
             <tr>
+              <th scope="col" className="ad-tick">
+                <span className="sr-only">Select</span>
+              </th>
               <th scope="col">Order</th>
               <th scope="col">Date</th>
               <th scope="col">Customer</th>
@@ -115,8 +153,8 @@ export default async function OrdersPage({
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="ad-empty">
-                  {q || status || fulfilment
+                <td colSpan={8} className="ad-empty">
+                  {q || status || fulfilment || missing
                     ? "No orders match these filters."
                     : "No orders yet."}
                 </td>
@@ -124,6 +162,9 @@ export default async function OrdersPage({
             )}
             {rows.map((o) => (
               <tr key={o.id}>
+                <td className="ad-tick">
+                  <input type="checkbox" name="ids" value={o.id} form="bulk" aria-label={`Select ${o.ref}`} />
+                </td>
                 <td>
                   <Link className="t-title" href={`/admin/orders/${o.id}`}>
                     {o.ref}
@@ -157,6 +198,7 @@ export default async function OrdersPage({
                   >
                     {PROGRESS[o.fulfilment_status] ?? o.fulfilment_status}
                   </span>
+                  {o.status === "paid" && (!o.dob_text || !o.pincode) && <div className="ad-pill warn">details missing</div>}
                 </td>
                 <td>
                   {formatINR((o.amount_paise + (o.upgrade_paise ?? 0)) / 100)}

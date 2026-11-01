@@ -16,6 +16,10 @@ const I = {
   hand: "M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7",
   tag: "M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01",
   me: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  read: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  pen: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
+  clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
+  plug: "M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4",
 };
 
 function Icon({ d }: { d: string }) {
@@ -57,6 +61,7 @@ export default function AdminNav({
       match: (p) => p === "/admin",
     },
     { href: "/admin/orders", label: "Orders", icon: I.cart },
+    { href: "/admin/reading", label: "Reading queue", icon: I.read },
     {
       href: "/admin/products?kind=bracelet",
       label: "Bracelets",
@@ -72,12 +77,15 @@ export default function AdminNav({
       icon: I.page,
       match: (p) => p.startsWith("/admin/pages") && !p.endsWith("/settings"),
     },
+    { href: "/admin/articles", label: "Articles", icon: I.pen },
     {
       href: "/admin/pages/settings",
       label: "Settings",
       icon: I.gear,
       min: "admin",
     },
+    { href: "/admin/connections", label: "Connections", icon: I.plug, min: "admin" },
+    { href: "/admin/log", label: "Activity log", icon: I.clock, min: "admin" },
     { href: "/admin/users", label: "Users", icon: I.users, min: "owner" },
     { href: "/admin/account", label: "My account", icon: I.me },
   ];
