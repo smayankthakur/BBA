@@ -106,7 +106,7 @@ export async function deleteCoupon(id: string) {
 /* ------------------------------------------------------------------ */
 
 export type CouponCheck =
-  | { ok: true; code: string; discountInr: number; totalInr: number; label: string }
+  | { ok: true; code: string; discountInr: number; totalInr: number }
   | { ok: false; error: string };
 
 /**
@@ -142,5 +142,5 @@ export async function checkCoupon(
   }
   const discountInr = discountFor(c, product.priceInr);
   if (discountInr <= 0) return { ok: false, error: nope };
-  return { ok: true, code, discountInr, totalInr: product.priceInr - discountInr, label: c.description || "" };
+  return { ok: true, code, discountInr, totalInr: product.priceInr - discountInr };
 }
