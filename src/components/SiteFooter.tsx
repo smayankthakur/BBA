@@ -4,7 +4,6 @@ import CookieSettingsLink from "./CookieSettingsLink";
 import OrderLink from "./order/OrderLink";
 import { CREDIT } from "@/data/home";
 import { formatINR, getContent, getSite } from "@/lib/server/content";
-import { getBracelets } from "@/lib/server/catalog";
 import { getUI } from "@/lib/server/lang";
 import { tf } from "@/lib/i18n/ui";
 
@@ -83,10 +82,9 @@ function Icon({ kind }: { kind: "ig" | "yt" | "wa" | "truck" | "lock" | "spark" 
 
 export default async function SiteFooter() {
   const year = new Date().getFullYear();
-  const [{ s: site }, c, bracelets] = await Promise.all([getSite(), getContent("shared"), getBracelets()]);
+  const [{ s: site }, c] = await Promise.all([getSite(), getContent("shared")]);
   const ui = getUI();
   const f = ui.footer;
-  const purposes = bracelets.filter((b) => b.inList);
   const phone = site.phone?.trim();
   const SOCIAL = [
     { label: "Instagram", href: site.instagram, icon: "ig" as const },
@@ -163,17 +161,6 @@ export default async function SiteFooter() {
               ))}
             </ul>
           </div>
-
-          <nav className="foot-col foot-purposes" aria-label={tf(f.footerNav, { title: f.cols.purposes })}>
-            <h3>{f.cols.purposes}</h3>
-            <ul>
-              {purposes.map((b) => (
-                <li key={b.slug}>
-                  <Link href={`/bracelets/${b.slug}`}>{b.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
 
           <nav className="foot-col foot-help" aria-label={tf(f.footerNav, { title: f.cols.help })}>
             <h3>{f.cols.help}</h3>
