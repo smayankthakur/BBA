@@ -27,7 +27,16 @@ export default async function CareSection() {
               </Link>
             </div>
           </div>
-          <dl className="care-list" tabIndex={0} aria-label={ui.care.listAria}>
+          {/* Big screens: accordion. Phones: swipeable cards. */}
+          <div className="care-acc">
+            {care.items.map((x, i) => (
+              <details key={i} className="care-acc-item" open={i === 0}>
+                <summary>{x.term}</summary>
+                <p>{x.detail}</p>
+              </details>
+            ))}
+          </div>
+          <dl className="care-list care-cards" tabIndex={0} aria-label={ui.care.listAria}>
             {care.items.map((x, i) => (
               <div key={i} className="care-item">
                 <dt>{x.term}</dt>

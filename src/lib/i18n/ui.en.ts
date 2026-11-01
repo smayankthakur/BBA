@@ -48,7 +48,7 @@ export const UI_EN = {
     breadcrumb: "Breadcrumb",
   },
   header: {
-    nav: { purposes: "Purposes", byNumber: "By number", gifts: "Gifts", ammit: "Ammit", consultation: "Consultation" },
+    nav: { purposes: "Purposes", faq: "FAQ", byNumber: "By number", gifts: "Gifts", ammit: "Ammit", consultation: "Consultation" },
     more: { find: "Find my bracelet", care: "Bracelet care", reviews: "Reviews" },
     shop: "Shop",
     orderNow: "Order now",

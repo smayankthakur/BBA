@@ -1829,6 +1829,68 @@ a:hover {
   font-size: 26px;
   font-weight: 600;
 }
+/* Care basics: accordion on big screens, swipeable cards on phones */
+.care-acc {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--hairline);
+}
+.care-acc-item {
+  border-top: 1px solid var(--hairline);
+}
+.care-acc-item summary {
+  list-style: none;
+  cursor: pointer;
+  position: relative;
+  padding: 20px 44px 20px 0;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--lapis);
+}
+.care-acc-item summary::-webkit-details-marker {
+  display: none;
+}
+.care-acc-item summary::after {
+  content: "+";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--gold-deep);
+}
+.care-acc-item[open] summary::after {
+  content: "–";
+}
+.care-acc-item summary:hover {
+  color: var(--lapis-hover);
+}
+.care-acc-item summary:focus-visible {
+  outline: 3px solid var(--amethyst);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.care-acc-item p {
+  margin: -6px 0 0;
+  padding: 0 44px 22px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+@media (min-width: 761px) {
+  .care-cards {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .care-acc {
+    display: none;
+  }
+}
 /* Questions beside the care basics */
 .care-faq {
   flex: 1 1 460px;

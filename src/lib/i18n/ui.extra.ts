@@ -42,7 +42,7 @@ export const UI_HI_EXTRA = {
     waText: "नमस्ते, मेरे ऑर्डर {ref} के बारे में एक सवाल है।",
     link: "ऑर्डर ट्रैक करें",
   },
-  header: { allPurposes: "होमपेज पर सभी देखें", purposesMenu: "उद्देश्य के अनुसार ब्रेसलेट", from: "{price} से" },
+  header: { nav: { faq: "सवाल-जवाब" }, allPurposes: "होमपेज पर सभी देखें", purposesMenu: "उद्देश्य के अनुसार ब्रेसलेट", from: "{price} से" },
   footer: {
     cols: { purposes: "उद्देश्य के अनुसार ब्रेसलेट", help: "मदद", contact: "हमसे बात करें" },
     trust: { made: "शुद्ध, ऊर्जित और आपकी जन्म कुंडली के अनुसार बना" },
@@ -172,7 +172,7 @@ export const UI_HN_EXTRA = {
     waText: "Namaste, mere order {ref} ke baare mein ek sawaal hai.",
     link: "Order track karein",
   },
-  header: { allPurposes: "Homepage par sab dekhein", purposesMenu: "Purpose ke hisaab se bracelets", from: "{price} se" },
+  header: { nav: { faq: "FAQ" }, allPurposes: "Homepage par sab dekhein", purposesMenu: "Purpose ke hisaab se bracelets", from: "{price} se" },
   footer: {
     cols: { purposes: "Purpose ke hisaab se bracelets", help: "Help", contact: "Humse baat karein" },
     trust: { made: "Cleansed, energised aur aapke birth chart ke hisaab se bana" },
